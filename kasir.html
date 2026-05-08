@@ -10,7 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css?v=5">
   <style>
-    .pos-wrapper { display: grid; grid-template-columns: 1fr 380px; gap: 16px; height: calc(100vh - var(--header-height) - 32px); overflow: visible; }
+    .page-content { min-height: 0; }
+    .pos-wrapper { display: grid; grid-template-columns: 1fr 380px; gap: 16px; height: calc(100vh - var(--header-height) - 32px); overflow: hidden; min-height: 0; }
     .product-panel { display: flex; flex-direction: column; gap: 12px; overflow: hidden; min-height: 0; height: 100%; }
     .product-panel-top { display: flex; gap: 8px; flex-wrap: wrap; }
     .category-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
@@ -21,7 +22,7 @@
     }
     .category-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
     .category-chip:hover:not(.active) { border-color: var(--border-strong); color: var(--text-primary); }
-    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; overflow-y: auto; flex: 1; min-height: 0; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); grid-auto-rows: minmax(0, auto); gap: 12px; overflow-y: auto; flex: 1; min-height: 0; max-height: 100%; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; }
 
     /* Barcode scanner area */
     #scanner-area { position: relative; overflow: hidden; border-radius: var(--radius-md); background: #000; }
