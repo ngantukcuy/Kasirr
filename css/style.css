@@ -1452,27 +1452,42 @@ tbody td {
 @media (max-width: 1024px) {
   :root { --sidebar-width: 68px; }
   .brand-name, .nav-item span, .nav-section,
-  .user-info, .btn-logout { display: none; }
-  .nav-item { justify-content: center; padding: 10px; }
-  .sidebar-brand { justify-content: center; padding: 20px 12px; }
+  .user-info, .btn-logout { display: none !important; }
+  .nav-item { justify-content: center !important; padding: 10px !important; }
+  .sidebar-brand { justify-content: center !important; padding: 20px 12px !important; }
+  .sidebar { width: 68px !important; }
+  .sidebar.mobile-open {
+    width: 260px !important;
+    transform: translateX(0);
+  }
+  .sidebar.mobile-open .brand-name,
+  .sidebar.mobile-open .nav-item span,
+  .sidebar.mobile-open .nav-section,
+  .sidebar.mobile-open .user-info { display: block !important; }
+  .sidebar.mobile-open .btn-logout { display: flex !important; }
+  .sidebar.mobile-open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+  .sidebar.mobile-open .sidebar-brand { justify-content: flex-start !important; padding: 22px 20px 18px !important; }
   .pos-layout { grid-template-columns: 1fr 320px; }
 }
 
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
-    width: var(--sidebar-width) !important;
+    width: 260px !important;
   }
+  .sidebar .brand-name, .sidebar .nav-item span, .sidebar .nav-section,
+  .sidebar .user-info, .sidebar .btn-logout { display: none !important; }
+  .sidebar .nav-item { justify-content: center !important; padding: 10px !important; }
   .sidebar.mobile-open {
     transform: translateX(0);
-    width: 260px !important;
   }
   .sidebar.mobile-open .brand-name,
   .sidebar.mobile-open .nav-item span,
   .sidebar.mobile-open .nav-section,
-  .sidebar.mobile-open .user-info { display: block; }
-  .sidebar.mobile-open .btn-logout { display: flex; }
-  .sidebar.mobile-open .nav-item { justify-content: flex-start; padding: 10px 12px; }
+  .sidebar.mobile-open .user-info { display: block !important; }
+  .sidebar.mobile-open .btn-logout { display: flex !important; }
+  .sidebar.mobile-open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+  .sidebar.mobile-open .sidebar-brand { justify-content: flex-start !important; padding: 22px 20px 18px !important; }
   .main-content { margin-left: 0 !important; }
   .page-content { padding: 16px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }

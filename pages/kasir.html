@@ -12,7 +12,7 @@
   <style>
     .page-content { min-height: 0; }
     .pos-wrapper { display: grid; grid-template-columns: 1fr 380px; gap: 16px; height: calc(100vh - var(--header-height) - 32px); overflow: hidden; min-height: 0; }
-    .product-panel { display: flex; flex-direction: column; gap: 12px; overflow: hidden; min-height: 0; height: 100%; }
+    .product-panel { display: flex; flex-direction: column; gap: 12px; overflow: hidden; min-height: 0; height: 100%; max-height: 100%; }
     .product-panel-top { display: flex; gap: 8px; flex-wrap: wrap; }
     .category-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
     .category-chip {
@@ -22,7 +22,7 @@
     }
     .category-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
     .category-chip:hover:not(.active) { border-color: var(--border-strong); color: var(--text-primary); }
-    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 165px)); grid-auto-rows: auto; gap: 12px; overflow-y: auto; flex: 1; min-height: 0; max-height: 100%; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; justify-content: start; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 165px)); grid-auto-rows: auto; gap: 12px; overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; justify-content: start; }
 
     /* Barcode scanner area */
     #scanner-area { position: relative; overflow: hidden; border-radius: var(--radius-md); background: #000; }
@@ -163,7 +163,7 @@
     </header>
 
     <div class="page-content" style="height:calc(100vh - var(--header-height)); overflow:hidden; padding: 16px 16px 0; display:flex; flex-direction:column;">
-      <div class="pos-wrapper" style="flex:1; min-height:0;">
+      <div class="pos-wrapper" style="flex:1; min-height:0; overflow:hidden;">
 
         <!-- LEFT: Product Browser -->
         <div class="product-panel">
