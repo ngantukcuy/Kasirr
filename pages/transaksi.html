@@ -145,21 +145,66 @@
   </main>
 </div>
 
-<!-- Edit Note Modal -->
+<!-- Edit Transaction Modal -->
 <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:440px; width:100%;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;">Edit Catatan Transaksi</span>
-      <button class="icon-btn" onclick="document.getElementById('edit-modal').style.display='none'">
+  <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:620px; width:100%; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;">Edit Transaksi</span>
+      <button class="icon-btn" onclick="closeEditModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Invoice: <strong id="edit-invoice-label"></strong></p>
+    <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:16px;">Invoice: <strong id="edit-invoice-label"></strong></p>
+
+    <!-- Item list -->
+    <div style="margin-bottom:12px; font-weight:700; font-size:0.85rem; color:var(--text-secondary);">Produk yang Dibeli</div>
+    <div id="edit-items-list" style="margin-bottom:12px;"></div>
+
+    <!-- Add product row -->
+    <div style="background:var(--bg-tertiary); border:1px dashed var(--border); border-radius:10px; padding:12px; margin-bottom:16px;">
+      <div style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">+ Tambah Produk</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+        <div style="flex:2; min-width:140px;">
+          <label class="form-label" style="font-size:0.75rem;">Nama Produk</label>
+          <input type="text" id="new-item-name" class="form-control" placeholder="Nama produk..." style="font-size:0.82rem;">
+        </div>
+        <div style="flex:1; min-width:70px;">
+          <label class="form-label" style="font-size:0.75rem;">Qty</label>
+          <input type="number" id="new-item-qty" class="form-control" placeholder="1" min="1" style="font-size:0.82rem;">
+        </div>
+        <div style="flex:1; min-width:110px;">
+          <label class="form-label" style="font-size:0.75rem;">Harga Satuan (Rp)</label>
+          <input type="number" id="new-item-price" class="form-control" placeholder="0" min="0" style="font-size:0.82rem;">
+        </div>
+        <div>
+          <button class="btn btn-sm btn-primary" onclick="addEditItem()" style="white-space:nowrap;">+ Tambah</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discount & Totals -->
+    <div style="background:var(--bg-tertiary); border-radius:10px; padding:12px; margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.85rem;">
+        <span style="color:var(--text-muted);">Subtotal</span>
+        <span id="edit-subtotal-display" style="font-weight:600;">Rp 0</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:0.85rem;">
+        <span style="color:var(--text-muted); white-space:nowrap;">Diskon (Rp)</span>
+        <input type="number" id="edit-discount" class="form-control" placeholder="0" min="0" style="font-size:0.82rem; max-width:140px;" oninput="updateEditTotals()">
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:1rem; font-weight:800; font-family:var(--font-display); border-top:1px solid var(--border); padding-top:8px;">
+        <span>Total</span>
+        <span id="edit-total-display" style="color:var(--accent-light);">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Catatan -->
     <label class="form-label">Catatan</label>
-    <textarea id="edit-notes" class="form-control" rows="3" placeholder="Tambahkan catatan untuk transaksi ini..."></textarea>
-    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
-      <button class="btn" onclick="document.getElementById('edit-modal').style.display='none'" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);">Batal</button>
-      <button class="btn btn-primary" onclick="saveEditNote()">Simpan</button>
+    <textarea id="edit-notes" class="form-control" rows="2" placeholder="Catatan transaksi..." style="margin-bottom:16px;"></textarea>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" onclick="closeEditModal()" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" id="btn-save-edit" onclick="saveEditTx()">💾 Simpan Perubahan</button>
     </div>
   </div>
 </div>
@@ -232,11 +277,22 @@
       <td><span class="payment-badge ${payClass[tx.payment_method] || ''}">${payLabel[tx.payment_method] || tx.payment_method}</span></td>
       <td style="font-family:var(--font-display); font-weight:700; color:var(--accent-light);">${formatRupiah(tx.total_amount)}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-sm" onclick="openDetail('${tx.id}')" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.75rem; padding:4px 8px; margin-right:4px;">Detail</button>
-        <button class="btn btn-sm" onclick="openEditNote('${tx.id}')" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.75rem; padding:4px 8px; margin-right:4px;">✏️ Edit</button>
-        <button class="btn btn-sm" onclick="deleteTx('${tx.id}','${tx.invoice_number}')" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.75rem; padding:4px 8px;">🗑️</button>
+        <button class="btn btn-sm" data-tx-id="${tx.id}" data-action="detail" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.75rem; padding:4px 8px; margin-right:4px;">Detail</button>
+        <button class="btn btn-sm" data-tx-id="${tx.id}" data-action="edit" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.75rem; padding:4px 8px; margin-right:4px;">✏️ Edit</button>
+        <button class="btn btn-sm" data-tx-id="${tx.id}" data-tx-invoice="${tx.invoice_number}" data-action="delete" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.75rem; padding:4px 8px;">🗑️</button>
       </td>
     </tr>`).join('');
+
+    // Attach event delegation
+    tbody.querySelectorAll('button[data-tx-id]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-tx-id');
+        const action = this.getAttribute('data-action');
+        if (action === 'detail') openDetail(id);
+        else if (action === 'edit') openEditNote(id);
+        else if (action === 'delete') deleteTx(id, this.getAttribute('data-tx-invoice'));
+      });
+    });
   }
 
   function updateSummary() {
@@ -302,24 +358,134 @@
   }
 
   let editTxId = null;
+  let editItems = []; // [{product_id, product_name, quantity, unit, selling_price, buying_price}]
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+  }
 
   function openEditNote(id) {
     editTxId = id;
     const tx = transactions.find(t => t.id === id);
-    document.getElementById('edit-invoice-label').textContent = tx ? tx.invoice_number : id;
-    document.getElementById('edit-notes').value = (tx && tx.notes) ? tx.notes : '';
+    if (!tx) return;
+    document.getElementById('edit-invoice-label').textContent = tx.invoice_number;
+    document.getElementById('edit-notes').value = tx.notes || '';
+    document.getElementById('edit-discount').value = tx.discount_amount || 0;
+    // Build editItems from transaction_items if available
+    if (tx.transaction_items && tx.transaction_items.length > 0) {
+      editItems = tx.transaction_items.map(it => ({
+        product_id: it.product_id || null,
+        product_name: it.product_name,
+        quantity: it.quantity,
+        unit: it.unit || 'pcs',
+        selling_price: parseFloat(it.selling_price),
+        buying_price: parseFloat(it.buying_price || 0)
+      }));
+    } else {
+      // Need to fetch full detail
+      editItems = [];
+      KasirkuDB.Transactions.getById(id).then(fullTx => {
+        editItems = (fullTx.transaction_items || []).map(it => ({
+          product_id: it.product_id || null,
+          product_name: it.product_name,
+          quantity: it.quantity,
+          unit: it.unit || 'pcs',
+          selling_price: parseFloat(it.selling_price),
+          buying_price: parseFloat(it.buying_price || 0)
+        }));
+        renderEditItems();
+        updateEditTotals();
+      });
+    }
+    renderEditItems();
+    updateEditTotals();
     document.getElementById('edit-modal').style.display = 'flex';
   }
 
-  async function saveEditNote() {
+  function renderEditItems() {
+    const el = document.getElementById('edit-items-list');
+    if (!editItems.length) {
+      el.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">Belum ada produk. Tambahkan di bawah.</div>';
+      return;
+    }
+    el.innerHTML = editItems.map((it, i) => `
+      <div style="display:flex; gap:8px; align-items:center; padding:8px; background:var(--bg-tertiary); border-radius:8px; margin-bottom:6px; flex-wrap:wrap;">
+        <div style="flex:2; min-width:120px; font-weight:600; font-size:0.85rem;">${it.product_name}</div>
+        <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+          <label style="font-size:0.72rem; color:var(--text-muted);">Qty</label>
+          <input type="number" value="${it.quantity}" min="1"
+            style="width:60px; padding:4px 6px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text-primary); font-size:0.82rem;"
+            onchange="updateItemQty(${i}, this.value)">
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+          <label style="font-size:0.72rem; color:var(--text-muted);">Harga</label>
+          <input type="number" value="${it.selling_price}" min="0"
+            style="width:110px; padding:4px 6px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text-primary); font-size:0.82rem;"
+            onchange="updateItemPrice(${i}, this.value)">
+        </div>
+        <div style="font-size:0.82rem; font-weight:700; color:var(--accent-light); min-width:80px; text-align:right;">${formatRupiah(it.quantity * it.selling_price)}</div>
+        <button onclick="removeEditItem(${i})" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem; flex-shrink:0;">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  function updateItemQty(i, val) {
+    editItems[i].quantity = parseInt(val) || 1;
+    renderEditItems();
+    updateEditTotals();
+  }
+
+  function updateItemPrice(i, val) {
+    editItems[i].selling_price = parseFloat(val) || 0;
+    renderEditItems();
+    updateEditTotals();
+  }
+
+  function removeEditItem(i) {
+    editItems.splice(i, 1);
+    renderEditItems();
+    updateEditTotals();
+  }
+
+  function addEditItem() {
+    const name = document.getElementById('new-item-name').value.trim();
+    const qty = parseInt(document.getElementById('new-item-qty').value) || 1;
+    const price = parseFloat(document.getElementById('new-item-price').value) || 0;
+    if (!name) { Toast.error('Nama produk wajib diisi'); return; }
+    if (price <= 0) { Toast.error('Harga harus lebih dari 0'); return; }
+    editItems.push({ product_id: null, product_name: name, quantity: qty, unit: 'pcs', selling_price: price, buying_price: 0 });
+    document.getElementById('new-item-name').value = '';
+    document.getElementById('new-item-qty').value = '';
+    document.getElementById('new-item-price').value = '';
+    renderEditItems();
+    updateEditTotals();
+  }
+
+  function updateEditTotals() {
+    const subtotal = editItems.reduce((s, it) => s + it.quantity * it.selling_price, 0);
+    const discount = parseFloat(document.getElementById('edit-discount').value) || 0;
+    const total = Math.max(0, subtotal - discount);
+    document.getElementById('edit-subtotal-display').textContent = formatRupiah(subtotal);
+    document.getElementById('edit-total-display').textContent = formatRupiah(total);
+  }
+
+  async function saveEditTx() {
     if (!editTxId) return;
+    if (!editItems.length) { Toast.error('Transaksi harus memiliki minimal 1 produk'); return; }
+    const subtotal = editItems.reduce((s, it) => s + it.quantity * it.selling_price, 0);
+    const discount = parseFloat(document.getElementById('edit-discount').value) || 0;
+    const total = Math.max(0, subtotal - discount);
     const notes = document.getElementById('edit-notes').value;
+    const btn = document.getElementById('btn-save-edit');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
     try {
+      await KasirkuDB.Transactions.updateItems(editTxId, editItems, subtotal, discount, total);
       await KasirkuDB.Transactions.updateNote(editTxId, notes);
-      Toast.success('Catatan berhasil disimpan');
-      document.getElementById('edit-modal').style.display = 'none';
+      Toast.success('Transaksi berhasil diperbarui');
+      closeEditModal();
       await loadTransactions();
-    } catch(e) { Toast.error('Gagal menyimpan catatan'); }
+    } catch(e) { Toast.error('Gagal menyimpan: ' + (e.message || ''));
+    } finally { btn.disabled = false; btn.textContent = '💾 Simpan Perubahan'; }
   }
 
   async function deleteTx(id, invoice) {

@@ -291,13 +291,23 @@
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
         <span style="font-weight:700; color:#ef4444;">${formatRupiah(e.amount)}</span>
-        <button onclick="openEditExpense('${e.id}')" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">✏️ Edit</button>
-        <button onclick="deleteExpense('${e.id}')" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">🗑️</button>
+        <button data-exp-id="${e.id}" data-action="edit" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">✏️ Edit</button>
+        <button data-exp-id="${e.id}" data-action="delete" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">🗑️</button>
       </div>
     </div>`).join('') +
     `<div style="display:flex; justify-content:space-between; padding-top:12px; font-weight:700; border-top:1px solid var(--border);">
       <span>Total Pengeluaran</span><span style="color:#ef4444;">${formatRupiah(total)}</span>
     </div>`;
+
+    // Attach event listeners via delegation
+    el.querySelectorAll('button[data-exp-id]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-exp-id');
+        const action = this.getAttribute('data-action');
+        if (action === 'edit') openEditExpense(id);
+        else if (action === 'delete') deleteExpense(id);
+      });
+    });
   }
 
   function openExpenseModal() { document.getElementById('expense-modal').style.display = 'flex'; }

@@ -402,7 +402,7 @@ const KasirkuDB = {
 
     async getAll(filters = {}) {
       let q = _sb.from('transactions')
-        .select('*, profiles!cashier_id(full_name), customers(name, phone)')
+        .select('*, profiles!cashier_id(full_name), customers(name, phone), transaction_items(id, product_id, product_name, quantity, unit, selling_price, buying_price, subtotal)')
         .order('created_at', { ascending: false });
       const startDate = filters.startDate || filters.date_from;
       const endDate   = filters.endDate   || filters.date_to;
@@ -452,6 +452,34 @@ const KasirkuDB = {
     async updateNote(id, notes) {
       const { error } = await _sb.from('transactions').update({ notes }).eq('id', id);
       if (error) throw error;
+    },
+
+    async updateItems(txId, items, subtotal, discountAmount, totalAmount) {
+      // Delete old items
+      const { error: delErr } = await _sb.from('transaction_items').delete().eq('transaction_id', txId);
+      if (delErr) throw delErr;
+      // Insert new items
+      const rows = items.map(it => ({
+        transaction_id: txId,
+        product_id: it.product_id || null,
+        product_name: it.product_name,
+        quantity: it.quantity,
+        unit: it.unit || 'pcs',
+        buying_price: it.buying_price || 0,
+        selling_price: it.selling_price,
+        subtotal: it.quantity * it.selling_price
+      }));
+      if (rows.length > 0) {
+        const { error: insErr } = await _sb.from('transaction_items').insert(rows);
+        if (insErr) throw insErr;
+      }
+      // Update transaction totals
+      const { error: txErr } = await _sb.from('transactions').update({
+        subtotal: subtotal,
+        discount_amount: discountAmount,
+        total_amount: totalAmount
+      }).eq('id', txId);
+      if (txErr) throw txErr;
     }
   },
 

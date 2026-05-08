@@ -1399,7 +1399,7 @@ tbody td {
    SIDEBAR HIDDEN (fully hidden via hamburger)
    ============================================================ */
 .sidebar.sidebar-hidden {
-  transform: translateX(-100%);
+  transform: translateX(-260px);
   width: 0 !important;
   min-width: 0 !important;
   overflow: hidden;
@@ -1407,7 +1407,7 @@ tbody td {
 }
 .main-content.sidebar-hidden-main {
   margin-left: 0 !important;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================================
