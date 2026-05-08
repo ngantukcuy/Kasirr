@@ -265,14 +265,17 @@ async function loadStats() {
     let totalTransactions = todayRow?.total_transactions ?? 0;
 
     // Fallback jika view belum ada / error jaringan
-    if (!todayRow) {
+    if (!todayRow || (totalRevenue === 0 && totalTransactions === 0)) {
       try {
         const startOfDay = today + 'T00:00:00';
         const endOfDay   = today + 'T23:59:59';
         const txs = await KasirkuDB.Transactions.getAll({ startDate: startOfDay, endDate: endOfDay });
-        const paid = (txs || []).filter(t => t.payment_status === 'paid');
-        totalRevenue = paid.reduce((sum, t) => sum + (t.total_amount || 0), 0);
-        totalTransactions = paid.length;
+        // Hitung semua transaksi yang bukan void/dibatalkan
+        const validTxs = (txs || []).filter(t => t.status !== 'void' && t.status !== 'cancelled');
+        if (validTxs.length > 0 || !todayRow) {
+          totalRevenue = validTxs.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+          totalTransactions = validTxs.length;
+        }
       } catch (_) {}
     }
 
@@ -358,11 +361,24 @@ async function loadChart(period, btn) {
     startDate.setDate(startDate.getDate() - days + 1);
     const startStr = startDate.toISOString().split('T')[0];
 
-    const report = await KasirkuDB.Transactions.getReport(startStr, endDate);
-
-    // Fill in missing dates
+    let report = [];
+    try { report = await KasirkuDB.Transactions.getReport(startStr, endDate); } catch(_) {}
+    
+    // Fallback: jika view kosong, ambil dari transactions langsung
     const dateMap = {};
-    report.forEach(r => { dateMap[r.sale_date] = r; });
+    if (report && report.length > 0) {
+      report.forEach(r => { dateMap[r.sale_date] = r; });
+    } else {
+      try {
+        const rawTxs = await KasirkuDB.Transactions.getAll({ startDate: startStr + 'T00:00:00', endDate: endDate + 'T23:59:59' });
+        (rawTxs || []).filter(t => t.status !== 'void').forEach(t => {
+          const key = t.created_at.split('T')[0];
+          if (!dateMap[key]) dateMap[key] = { sale_date: key, total_revenue: 0, total_transactions: 0 };
+          dateMap[key].total_revenue += parseFloat(t.total_amount) || 0;
+          dateMap[key].total_transactions += 1;
+        });
+      } catch(_) {}
+    }
     const labels = [], revenues = [], txCounts = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);

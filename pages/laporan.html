@@ -156,6 +156,41 @@
   </div>
 </div>
 
+<!-- Edit Expense Modal -->
+<div id="edit-expense-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:440px; width:100%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;">Edit Pengeluaran</span>
+      <button class="icon-btn" onclick="document.getElementById('edit-expense-modal').style.display='none'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kategori</label>
+      <select id="edit-exp-category" class="form-control">
+        <option>Gaji Karyawan</option><option>Listrik & Air</option><option>Transportasi</option>
+        <option>Perawatan Toko</option><option>Pembelian Barang</option><option>Lain-lain</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keterangan <span class="required">*</span></label>
+      <input type="text" id="edit-exp-desc" class="form-control" placeholder="Detail pengeluaran...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Jumlah (Rp) <span class="required">*</span></label>
+      <input type="number" id="edit-exp-amount" class="form-control" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal</label>
+      <input type="date" id="edit-exp-date" class="form-control">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+      <button class="btn" onclick="document.getElementById('edit-expense-modal').style.display='none'" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" id="btn-edit-exp" onclick="saveEditExpense()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=5"></script>
 <script src="_sidebar.js?v=5"></script>
@@ -249,12 +284,16 @@
     const el = document.getElementById('expense-list');
     if (!expenses.length) { el.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Tidak ada pengeluaran pada periode ini</div>'; return; }
     const total = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
-    el.innerHTML = expenses.map(e => `<div class="expense-row">
-      <div>
+    el.innerHTML = expenses.map(e => `<div class="expense-row" style="flex-wrap:wrap; gap:8px;">
+      <div style="flex:1; min-width:0;">
         <div style="font-weight:600;">${e.description}</div>
         <div style="font-size:0.75rem; color:var(--text-muted);">${e.category} · ${formatDate(e.date)}</div>
       </div>
-      <div style="font-weight:700; color:#ef4444;">${formatRupiah(e.amount)}</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:700; color:#ef4444;">${formatRupiah(e.amount)}</span>
+        <button onclick="openEditExpense('${e.id}')" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">✏️ Edit</button>
+        <button onclick="deleteExpense('${e.id}')" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">🗑️</button>
+      </div>
     </div>`).join('') +
     `<div style="display:flex; justify-content:space-between; padding-top:12px; font-weight:700; border-top:1px solid var(--border);">
       <span>Total Pengeluaran</span><span style="color:#ef4444;">${formatRupiah(total)}</span>
@@ -285,6 +324,50 @@
       await loadReport();
     } catch(e) { Toast.error(e.message || 'Gagal menyimpan pengeluaran');
     } finally { btn.disabled = false; btn.textContent = 'Simpan'; }
+  }
+
+  let editExpenseId = null;
+
+  function openEditExpense(id) {
+    const exp = expensesData.find(e => e.id === id);
+    if (!exp) return;
+    editExpenseId = exp.id;
+    document.getElementById('edit-exp-category').value = exp.category || 'Lain-lain';
+    document.getElementById('edit-exp-desc').value = exp.description || '';
+    document.getElementById('edit-exp-amount').value = exp.amount || '';
+    document.getElementById('edit-exp-date').value = exp.date || '';
+    document.getElementById('edit-expense-modal').style.display = 'flex';
+  }
+
+  async function saveEditExpense() {
+    if (!editExpenseId) return;
+    const desc = document.getElementById('edit-exp-desc').value.trim();
+    const amount = parseFloat(document.getElementById('edit-exp-amount').value);
+    if (!desc) { Toast.error('Keterangan wajib diisi'); return; }
+    if (!amount || amount <= 0) { Toast.error('Jumlah harus lebih dari 0'); return; }
+    const btn = document.getElementById('btn-edit-exp');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      await KasirkuDB.Reports.updateExpense(editExpenseId, {
+        category: document.getElementById('edit-exp-category').value,
+        description: desc, amount,
+        date: document.getElementById('edit-exp-date').value
+      });
+      Toast.success('Pengeluaran berhasil diperbarui');
+      document.getElementById('edit-expense-modal').style.display = 'none';
+      await loadReport();
+    } catch(e) { Toast.error(e.message || 'Gagal memperbarui pengeluaran');
+    } finally { btn.disabled = false; btn.textContent = 'Simpan'; }
+  }
+
+  async function deleteExpense(id) {
+    Modal.confirm('Hapus Pengeluaran', 'Yakin ingin menghapus catatan pengeluaran ini?', async () => {
+      try {
+        await KasirkuDB.Reports.deleteExpense(id);
+        Toast.success('Pengeluaran berhasil dihapus');
+        await loadReport();
+      } catch(e) { Toast.error('Gagal menghapus pengeluaran'); }
+    });
   }
 
   function exportCSV() {

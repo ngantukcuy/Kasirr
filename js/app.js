@@ -440,6 +440,18 @@ const KasirkuDB = {
     async void(id, reason) {
       const { error } = await _sb.from('transactions').update({ status: 'void', void_reason: reason }).eq('id', id);
       if (error) throw error;
+    },
+
+    async delete(id) {
+      // delete items first
+      await _sb.from('transaction_items').delete().eq('transaction_id', id);
+      const { error } = await _sb.from('transactions').delete().eq('id', id);
+      if (error) throw error;
+    },
+
+    async updateNote(id, notes) {
+      const { error } = await _sb.from('transactions').update({ notes }).eq('id', id);
+      if (error) throw error;
     }
   },
 
@@ -518,6 +530,17 @@ const KasirkuDB = {
       const { data, error } = await _sb.from('expenses').insert(d).select().single();
       if (error) throw error;
       return data;
+    },
+
+    async updateExpense(id, d) {
+      const { data, error } = await _sb.from('expenses').update(d).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+
+    async deleteExpense(id) {
+      const { error } = await _sb.from('expenses').delete().eq('id', id);
+      if (error) throw error;
     }
   },
 

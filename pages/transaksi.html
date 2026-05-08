@@ -145,6 +145,25 @@
   </main>
 </div>
 
+<!-- Edit Note Modal -->
+<div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:440px; width:100%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;">Edit Catatan Transaksi</span>
+      <button class="icon-btn" onclick="document.getElementById('edit-modal').style.display='none'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Invoice: <strong id="edit-invoice-label"></strong></p>
+    <label class="form-label">Catatan</label>
+    <textarea id="edit-notes" class="form-control" rows="3" placeholder="Tambahkan catatan untuk transaksi ini..."></textarea>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+      <button class="btn" onclick="document.getElementById('edit-modal').style.display='none'" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" onclick="saveEditNote()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- Detail Modal -->
 <div id="detail-modal" class="modal-backdrop" style="display:none;">
   <div class="modal-box">
@@ -165,6 +184,7 @@
 <script src="../js/supabase.js?v=5"></script>
 <script src="_sidebar.js?v=5"></script>
 <script src="../js/app.js?v=5"></script>
+<script src="../js/receipt.js?v=5"></script>
 <script>
   let transactions = [];
   let currentTx = null;
@@ -211,8 +231,10 @@
       <td style="color:var(--text-secondary);">${tx.profiles?.full_name || '—'}</td>
       <td><span class="payment-badge ${payClass[tx.payment_method] || ''}">${payLabel[tx.payment_method] || tx.payment_method}</span></td>
       <td style="font-family:var(--font-display); font-weight:700; color:var(--accent-light);">${formatRupiah(tx.total_amount)}</td>
-      <td>
-        <button class="btn btn-sm" onclick="openDetail('${tx.id}')" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.75rem; padding:4px 10px;">Detail</button>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm" onclick="openDetail('${tx.id}')" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.75rem; padding:4px 8px; margin-right:4px;">Detail</button>
+        <button class="btn btn-sm" onclick="openEditNote('${tx.id}')" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.75rem; padding:4px 8px; margin-right:4px;">✏️ Edit</button>
+        <button class="btn btn-sm" onclick="deleteTx('${tx.id}','${tx.invoice_number}')" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.75rem; padding:4px 8px;">🗑️</button>
       </td>
     </tr>`).join('');
   }
@@ -277,6 +299,41 @@
     link.download = `transaksi-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     Toast.success('Data berhasil diexport');
+  }
+
+  let editTxId = null;
+
+  function openEditNote(id) {
+    editTxId = id;
+    const tx = transactions.find(t => t.id === id);
+    document.getElementById('edit-invoice-label').textContent = tx ? tx.invoice_number : id;
+    document.getElementById('edit-notes').value = (tx && tx.notes) ? tx.notes : '';
+    document.getElementById('edit-modal').style.display = 'flex';
+  }
+
+  async function saveEditNote() {
+    if (!editTxId) return;
+    const notes = document.getElementById('edit-notes').value;
+    try {
+      await KasirkuDB.Transactions.updateNote(editTxId, notes);
+      Toast.success('Catatan berhasil disimpan');
+      document.getElementById('edit-modal').style.display = 'none';
+      await loadTransactions();
+    } catch(e) { Toast.error('Gagal menyimpan catatan'); }
+  }
+
+  async function deleteTx(id, invoice) {
+    Modal.confirm(
+      'Hapus Transaksi',
+      `Yakin ingin menghapus transaksi ${invoice}? Tindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        try {
+          await KasirkuDB.Transactions.delete(id);
+          Toast.success(`Transaksi ${invoice} berhasil dihapus`);
+          await loadTransactions();
+        } catch(e) { Toast.error('Gagal menghapus transaksi: ' + (e.message || '')); }
+      }
+    );
   }
 
   init();
