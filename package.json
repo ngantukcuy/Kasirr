@@ -1,0 +1,11 @@
+{
+  "name": "kasirku",
+  "version": "1.0.0",
+  "description": "KASIRKU - Aplikasi Point of Sale",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "preview": "npx serve ."
+  },
+  "dependencies": {}
+}
