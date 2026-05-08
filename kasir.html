@@ -22,7 +22,7 @@
     }
     .category-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
     .category-chip:hover:not(.active) { border-color: var(--border-strong); color: var(--text-primary); }
-    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 165px)); grid-auto-rows: auto; gap: 12px; overflow-y: auto; flex: 1; min-height: 0; max-height: 100%; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; justify-content: start; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); grid-auto-rows: minmax(0, auto); gap: 12px; overflow-y: auto; flex: 1; min-height: 0; max-height: 100%; padding: 4px 8px 16px 2px; align-content: start; scrollbar-width: thin; }
 
     /* Barcode scanner area */
     #scanner-area { position: relative; overflow: hidden; border-radius: var(--radius-md); background: #000; }
@@ -43,7 +43,7 @@
     @keyframes scan { 0% { top: 0; } 100% { top: calc(100% - 2px); } }
 
     /* Cart */
-    .cart-panel { display: flex; flex-direction: column; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; position: sticky; top: 0; height: calc(100vh - var(--header-height) - 32px); align-self: start; }
+    .cart-panel { display: flex; flex-direction: column; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
     .cart-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
     .cart-item-row { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px; }
     .cart-item-top { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
