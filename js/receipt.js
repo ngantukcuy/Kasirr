@@ -22,7 +22,7 @@ function generateReceiptHTML(transaction, storeName, storeAddress, storePhone) {
     ${item.discount_percent>0?`<tr><td colspan="2" style="font-size:10px;color:#888;">Diskon ${item.discount_percent}%</td><td style="text-align:right;font-size:10px;color:#e53e3e;">-${fmt(item.discount_amount)}</td></tr>`:''}
   `).join('');
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Struk - ${invoice_number}</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff}.center{text-align:center}.line{border-top:1px dashed #333;margin:6px 0}.double-line{border-top:2px solid #333;margin:6px 0}table{width:100%;border-collapse:collapse}.store-name{font-size:18px;font-weight:bold;margin:4px 0}.total-row td{font-size:14px;font-weight:bold}.footer{margin-top:8px;font-size:10px;text-align:center}@media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff}.center{text-align:center}.line{border-top:1px dashed #333;margin:6px 0}.double-line{border-top:2px solid #333;margin:6px 0}table{width:100%;border-collapse:collapse}.store-name{font-size:18px;font-weight:bold;margin:4px 0}.total-row td{font-size:14px;font-weight:bold}.footer{margin-top:8px;font-size:10px;text-align:center}.section-label{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 2px;}@media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}</style>
 </head><body>
 <div class="center"><div class="store-name">${storeName}</div>${storeAddress?`<div>${storeAddress}</div>`:''}${storePhone?`<div>Telp: ${storePhone}</div>`:''}</div>
 <div class="double-line"></div>
@@ -30,9 +30,10 @@ function generateReceiptHTML(transaction, storeName, storeAddress, storePhone) {
   <tr><td>No. Faktur</td><td style="text-align:right;">${invoice_number}</td></tr>
   <tr><td>Tanggal</td><td style="text-align:right;">${fmtDate(created_at)}</td></tr>
   <tr><td>Kasir</td><td style="text-align:right;">${profiles?.full_name||'Admin'}</td></tr>
-  ${customers?`<tr><td>Pelanggan</td><td style="text-align:right;">${customers.name}</td></tr>`:''}
+  <tr><td>Pelanggan</td><td style="text-align:right;">${customers?customers.name:'Pelanggan Umum'}</td></tr>
 </table>
 <div class="line"></div>
+<div class="section-label">Daftar Belanjaan</div>
 <table>${itemsHTML}</table>
 <div class="line"></div>
 <table>
@@ -101,7 +102,7 @@ function generateOrderSlipHTML(transaction, storeName, storeAddress, storePhone)
   .double-line{border-top:2px solid #333;margin:6px 0}
   table{width:100%;border-collapse:collapse}
   .store-name{font-size:16px;font-weight:bold;margin:4px 0}
-  .order-label{font-size:20px;font-weight:bold;text-align:center;letter-spacing:2px;margin:6px 0;border:2px solid #000;padding:4px;}
+  .order-label{font-size:20px;font-weight:bold;text-align:center;letter-spacing:2px;margin:6px 0;padding:4px;}
   @media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}
 </style>
 </head><body>

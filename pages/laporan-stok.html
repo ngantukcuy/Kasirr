@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../css/style.css?v=7">
   <style>
     .mv-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .mv-table thead { position: sticky; top: 0; z-index: 10; }
     .mv-table th { padding: 10px 14px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-tertiary); white-space: nowrap; }
     .mv-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .mv-table tr:hover td { background: var(--bg-elevated); }
@@ -230,7 +231,7 @@
 
       <!-- ── Table ── -->
       <div class="card" style="padding:0; overflow:hidden;">
-        <div class="mv-table-wrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+        <div class="mv-table-wrap" style="overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; max-height:70vh; overflow-y:auto;">
           <table class="mv-table">
             <thead>
               <tr>

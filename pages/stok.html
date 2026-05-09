@@ -23,7 +23,27 @@
     @media (max-width: 768px) {
       .filter-bar { flex-direction: column; gap: 8px; }
       .filter-bar > * { width: 100% !important; }
+      /* Hide table on mobile, show cards */
+      .stok-table-wrap { display: none; }
+      .stok-card-list { display: flex; flex-direction: column; gap: 10px; }
     }
+    @media (min-width: 769px) {
+      /* Hide cards on desktop, show table */
+      .stok-card-list { display: none; }
+      .stok-table-wrap { display: block; }
+    }
+    .stok-product-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stok-card-row { display: flex; justify-content: space-between; align-items: center; }
+    .stok-card-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stok-card-val { font-size: 0.875rem; color: var(--text-primary); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -94,7 +114,7 @@
       </div>
 
       <div class="card" style="padding:0; overflow:hidden;">
-        <div style="overflow-x:auto;">
+        <div class="stok-table-wrap" style="overflow-x:auto;">
           <table class="stok-table">
             <thead>
               <tr>
@@ -110,6 +130,9 @@
               <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">Memuat data...</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="stok-card-list" id="stok-cardlist" style="padding:12px;">
+          <div style="text-align:center; padding:20px; color:var(--text-muted);">Memuat data...</div>
         </div>
       </div>
     </div>
@@ -200,17 +223,22 @@
     document.getElementById('stok-count').textContent = `${products.length} produk`;
 
     const tbody = document.getElementById('stok-tbody');
+    const cardlist = document.getElementById('stok-cardlist');
     if (!products.length) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada produk</td></tr>`;
+      cardlist.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Tidak ada produk</div>`;
       return;
     }
-    tbody.innerHTML = products.map(p => {
+    const rows = products.map(p => {
       const status = getStockStatus(p.stock, p.min_stock);
       const colorMap = { 'stock-ok': '#22c55e', 'stock-warning': '#eab308', 'stock-low': '#f97316', 'stock-empty': '#ef4444' };
       const fillColor = colorMap[status.cls] || '#22c55e';
       const pct = p.min_stock > 0 ? Math.min(100, (p.stock / (p.min_stock * 3)) * 100) : 100;
       const cat = p.categories;
-      return `<tr>
+      return { p, status, fillColor, pct, cat };
+    });
+
+    tbody.innerHTML = rows.map(({ p, status, fillColor, pct, cat }) => `<tr>
         <td><div style="display:flex; align-items:center; gap:10px;">
           <div style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:${cat?.color ? cat.color + '20' : 'var(--bg-elevated)'};">${cat?.icon || '📦'}</div>
           <div><div style="font-weight:600; font-size:0.875rem;">${p.name}</div>${p.barcode ? `<div style="font-size:0.72rem; color:var(--text-muted);">${p.barcode}</div>` : ''}</div>
@@ -223,8 +251,35 @@
           <span style="font-size:0.72rem; font-weight:700; color:${fillColor};">${status.label}</span>
         </div></td>
         <td><button class="btn btn-sm" onclick="quickAdjust('${p.id}')" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.75rem; padding:4px 10px;">Sesuaikan</button></td>
-      </tr>`;
-    }).join('');
+      </tr>`).join('');
+
+    cardlist.innerHTML = rows.map(({ p, status, fillColor, pct, cat }) => `
+      <div class="stok-product-card">
+        <div class="stok-card-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; background:${cat?.color ? cat.color + '20' : 'var(--bg-elevated)'};">${cat?.icon || '📦'}</div>
+            <div>
+              <div style="font-weight:700; font-size:0.9rem;">${p.name}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${cat?.name || '—'}${p.barcode ? ' · ' + p.barcode : ''}</div>
+            </div>
+          </div>
+          <span style="font-size:0.72rem; font-weight:700; color:${fillColor}; background:${fillColor}18; padding:3px 8px; border-radius:99px;">${status.label}</span>
+        </div>
+        <div style="height:6px; border-radius:3px; background:var(--bg-elevated); overflow:hidden;">
+          <div style="width:${pct}%; height:100%; border-radius:3px; background:${fillColor};"></div>
+        </div>
+        <div class="stok-card-row">
+          <div>
+            <div class="stok-card-label">Stok Saat Ini</div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:1.1rem; color:${fillColor};">${formatNumber(p.stock)} <span style="font-size:0.78rem; font-weight:400; color:var(--text-muted);">${p.unit}</span></div>
+          </div>
+          <div style="text-align:center;">
+            <div class="stok-card-label">Min. Stok</div>
+            <div class="stok-card-val">${formatNumber(p.min_stock)} ${p.unit}</div>
+          </div>
+          <button class="btn btn-sm" onclick="quickAdjust('${p.id}')" style="background:var(--accent); border:none; color:#fff; font-size:0.75rem; padding:6px 14px; border-radius:8px;">Sesuaikan</button>
+        </div>
+      </div>`).join('');
   }
 
   function updateAlertBanner() {
