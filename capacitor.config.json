@@ -1,0 +1,11 @@
+{
+  "appId": "com.Kasirku.app",
+  "appName": "kasirku",
+  "webDir": "./../build",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
