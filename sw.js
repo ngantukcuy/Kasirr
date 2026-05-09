@@ -2,7 +2,7 @@
 // KASIRKU — Service Worker v10
 // ============================================================
 
-const CACHE_NAME = 'kasirku-v11';
+const CACHE_NAME = 'kasirku-v16';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
