@@ -134,4 +134,3 @@ KASIRKU/
 → Buka Supabase → Authentication → Policies dan pastikan Row Level Security dikonfigurasi sesuai `supabase_init.sql`
 "# Kasir" 
 "# Kasirku" 
-"# Kasirr" 
