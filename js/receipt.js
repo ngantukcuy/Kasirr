@@ -1,6 +1,6 @@
 // js/receipt.js — Browser global script (no ES modules)
 function generateReceiptHTML(transaction, storeName, storeAddress, storePhone) {
-  storeName    = storeName    || 'Toko Bangunan';
+  storeName    = storeName    || 'Masri Jaya';
   storeAddress = storeAddress || '';
   storePhone   = storePhone   || '';
   const {

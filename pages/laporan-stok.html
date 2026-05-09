@@ -51,6 +51,35 @@
     .chart-col { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; }
     .bar-in  { background:#22c55e; border-radius:3px 3px 0 0; min-height:2px; }
     .bar-out { background:#ef4444; border-radius:3px 3px 0 0; min-height:2px; }
+
+    /* Checkbox */
+    .row-checkbox { width:16px; height:16px; cursor:pointer; accent-color:var(--accent); }
+    .mv-table tr.selected td { background:rgba(99,102,241,0.07); }
+
+    /* Delete action bar */
+    .delete-bar {
+      display:none; align-items:center; gap:12px;
+      background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+      border-radius:var(--radius-md); padding:10px 16px;
+      margin-bottom:12px; animation: fadeIn .2s ease;
+    }
+    .delete-bar.visible { display:flex; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    .delete-bar .sel-count { font-size:0.85rem; font-weight:700; color:#ef4444; flex:1; }
+    .btn-delete-sel {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 16px; border-radius:8px; border:none; cursor:pointer;
+      background:#ef4444; color:#fff; font-size:0.82rem; font-weight:700;
+      font-family:inherit; transition:var(--transition);
+    }
+    .btn-delete-sel:hover { background:#dc2626; }
+    .btn-cancel-sel {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:8px; border:1px solid var(--border); cursor:pointer;
+      background:var(--bg-elevated); color:var(--text-secondary); font-size:0.82rem;
+      font-family:inherit; transition:var(--transition);
+    }
+    .btn-cancel-sel:hover { border-color:var(--accent-border); color:var(--accent); }
   </style>
 </head>
 <body>
@@ -181,12 +210,26 @@
         <div id="top-movers-list" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
       </div>
 
+      <!-- ── Delete Action Bar ── -->
+      <div class="delete-bar" id="delete-bar">
+        <span class="sel-count" id="sel-count-label">0 data dipilih</span>
+        <button class="btn-cancel-sel" onclick="clearSelection()">
+          <i class='bx bx-x'></i> Batal
+        </button>
+        <button class="btn-delete-sel" onclick="confirmDeleteSelected()">
+          <i class='bx bx-trash'></i> Hapus yang Dipilih
+        </button>
+      </div>
+
       <!-- ── Table ── -->
       <div class="card" style="padding:0; overflow:hidden;">
         <div style="overflow-x:auto;">
           <table class="mv-table">
             <thead>
               <tr>
+                <th style="width:36px; text-align:center;">
+                  <input type="checkbox" id="check-all" class="row-checkbox" title="Pilih semua" onchange="toggleSelectAll(this.checked)">
+                </th>
                 <th>Tanggal & Waktu</th>
                 <th>Produk</th>
                 <th>Tipe</th>
@@ -199,7 +242,7 @@
               </tr>
             </thead>
             <tbody id="mv-tbody">
-              <tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Memuat data...</td></tr>
+              <tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted);">Memuat data...</td></tr>
             </tbody>
           </table>
         </div>
@@ -219,6 +262,7 @@
   let allMovements = [];   // semua data dari Supabase (sudah difilter range tanggal)
   let filtered     = [];   // setelah filter UI
   let currentPage  = 1;
+  let selectedIds  = new Set(); // id baris yang dipilih
 
   // ── Init ─────────────────────────────────────────────────────
   async function init() {
@@ -251,7 +295,6 @@
 
     setLoading(true);
     try {
-      // Query langsung ke stock_movements dengan join products & profiles
       let q = _sb.from('stock_movements')
         .select('*, products(id, name, unit), profiles!created_by(full_name)')
         .order('created_at', { ascending: false })
@@ -263,6 +306,8 @@
       const { data, error } = await q;
       if (error) throw error;
       allMovements = data || [];
+      selectedIds.clear();
+      updateDeleteBar();
       applyFilters();
     } catch(e) {
       console.error(e);
@@ -325,7 +370,6 @@
     const sec = document.getElementById('top-movers-section');
     if (filtered.length === 0) { sec.style.display = 'none'; return; }
 
-    // Hitung total pergerakan per produk
     const map = {};
     for (const m of filtered) {
       if (!m.product_id) continue;
@@ -371,7 +415,7 @@
 
     if (!filtered.length) {
       tbody.innerHTML = `
-        <tr><td colspan="9">
+        <tr><td colspan="10">
           <div class="empty-state">
             <div class="es-icon">📭</div>
             <div class="es-title">Belum ada pergerakan stok</div>
@@ -379,6 +423,7 @@
           </div>
         </td></tr>`;
       document.getElementById('pagination').style.display = 'none';
+      updateCheckAll();
       return;
     }
 
@@ -398,11 +443,15 @@
       const refType   = m.reference_type || 'manual';
       const srcBg     = sourceColors[refType] || 'var(--bg-elevated)';
       const srcColor  = sourceText[refType]   || 'var(--text-muted)';
+      const diff      = (m.after_stock ?? 0) - (m.before_stock ?? 0);
+      const isSelected = selectedIds.has(m.id);
 
-      // Hitung selisih stok (after - before) untuk tanda panah
-      const diff = (m.after_stock ?? 0) - (m.before_stock ?? 0);
-
-      return `<tr>
+      return `<tr class="${isSelected ? 'selected' : ''}" data-id="${m.id}">
+        <td style="text-align:center;">
+          <input type="checkbox" class="row-checkbox" data-id="${m.id}"
+            ${isSelected ? 'checked' : ''}
+            onchange="toggleRow('${m.id}', this.checked)">
+        </td>
         <td style="color:var(--text-secondary); white-space:nowrap;">
           <div style="font-size:0.82rem;">${formatDate(m.created_at, 'datetime')}</div>
         </td>
@@ -442,6 +491,92 @@
     }).join('');
 
     renderPagination(totalPages);
+    updateCheckAll();
+  }
+
+  // ── Checkbox: pilih satu baris ────────────────────────────
+  function toggleRow(id, checked) {
+    if (checked) selectedIds.add(id);
+    else         selectedIds.delete(id);
+
+    // update visual row highlight
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) row.classList.toggle('selected', checked);
+
+    updateDeleteBar();
+    updateCheckAll();
+  }
+
+  // ── Checkbox: pilih semua di halaman ini ─────────────────
+  function toggleSelectAll(checked) {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+    pageItems.forEach(m => {
+      if (checked) selectedIds.add(m.id);
+      else         selectedIds.delete(m.id);
+    });
+
+    renderTable(); // re-render to update all checkboxes
+    updateDeleteBar();
+  }
+
+  // ── Sinkronisasi state checkbox "Pilih Semua" ─────────────
+  function updateCheckAll() {
+    const checkAll = document.getElementById('check-all');
+    if (!checkAll) return;
+    const start     = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + PAGE_SIZE);
+    if (!pageItems.length) { checkAll.checked = false; checkAll.indeterminate = false; return; }
+    const selOnPage = pageItems.filter(m => selectedIds.has(m.id)).length;
+    if (selOnPage === 0)              { checkAll.checked = false; checkAll.indeterminate = false; }
+    else if (selOnPage === pageItems.length) { checkAll.checked = true;  checkAll.indeterminate = false; }
+    else                              { checkAll.checked = false; checkAll.indeterminate = true;  }
+  }
+
+  // ── Tampilkan / sembunyikan delete bar ───────────────────
+  function updateDeleteBar() {
+    const bar   = document.getElementById('delete-bar');
+    const label = document.getElementById('sel-count-label');
+    const count = selectedIds.size;
+    if (count > 0) {
+      bar.classList.add('visible');
+      label.textContent = `${count} data dipilih`;
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+  // ── Batalkan semua seleksi ───────────────────────────────
+  function clearSelection() {
+    selectedIds.clear();
+    updateDeleteBar();
+    renderTable();
+  }
+
+  // ── Konfirmasi & hapus data terpilih ─────────────────────
+  async function confirmDeleteSelected() {
+    if (!selectedIds.size) return;
+    const count = selectedIds.size;
+    const ok = confirm(`Hapus ${count} catatan pergerakan stok yang dipilih?\n\nData yang dihapus tidak dapat dikembalikan.`);
+    if (!ok) return;
+
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await _sb.from('stock_movements').delete().in('id', ids);
+      if (error) throw error;
+
+      // Hapus dari array lokal tanpa reload penuh
+      allMovements = allMovements.filter(m => !selectedIds.has(m.id));
+      selectedIds.clear();
+      updateDeleteBar();
+      applyFilters(); // re-filter & re-render → summary otomatis terupdate
+
+      Toast.success(`${count} catatan berhasil dihapus`);
+    } catch(e) {
+      console.error(e);
+      Toast.error('Gagal menghapus data: ' + (e.message || ''));
+    }
   }
 
   // ── Pagination ────────────────────────────────────────────
@@ -456,7 +591,6 @@
 
     html += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ Prev</button>`;
 
-    // Show max 7 page buttons
     const start = Math.max(1, currentPage - 3);
     const end   = Math.min(totalPages, start + 6);
     for (let i = start; i <= end; i++) {
@@ -480,7 +614,7 @@
     const tbody = document.getElementById('mv-tbody');
     if (on) {
       tbody.innerHTML = Array(8).fill(0).map(() => `
-        <tr>${Array(9).fill(0).map(() =>
+        <tr>${Array(10).fill(0).map(() =>
           `<td><div class="skeleton" style="height:14px; width:${60+Math.random()*40}%;"></div></td>`
         ).join('')}</tr>`).join('');
     }
