@@ -556,28 +556,40 @@
 
   // ── Konfirmasi & hapus data terpilih ─────────────────────
   async function confirmDeleteSelected() {
-    if (!selectedIds.size) return;
-    const count = selectedIds.size;
-    const ok = confirm(`Hapus ${count} catatan pergerakan stok yang dipilih?\n\nData yang dihapus tidak dapat dikembalikan.`);
-    if (!ok) return;
+  if (!selectedIds.size) return;
+  const count = selectedIds.size;
+  const ok = confirm(`Hapus ${count} catatan pergerakan stok yang dipilih?\n\nData yang dihapus tidak dapat dikembalikan.`);
+  if (!ok) return;
 
-    try {
-      const ids = Array.from(selectedIds);
-      const { error } = await _sb.from('stock_movements').delete().in('id', ids);
-      if (error) throw error;
+  try {
+    const ids = Array.from(selectedIds);
 
-      // Hapus dari array lokal tanpa reload penuh
-      allMovements = allMovements.filter(m => !selectedIds.has(m.id));
-      selectedIds.clear();
-      updateDeleteBar();
-      applyFilters(); // re-filter & re-render → summary otomatis terupdate
+    const { data, error, status } = await _sb
+      .from('stock_movements')
+      .delete()
+      .in('id', ids)
+      .select();
 
-      Toast.success(`${count} catatan berhasil dihapus`);
-    } catch(e) {
-      console.error(e);
-      Toast.error('Gagal menghapus data: ' + (e.message || ''));
+    console.log('DELETE result:', { data, error, status });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      Toast.error('Tidak ada data terhapus — kemungkinan diblokir RLS. Cek Console (F12).');
+      return;
     }
+
+    allMovements = allMovements.filter(m => !selectedIds.has(m.id));
+    selectedIds.clear();
+    updateDeleteBar();
+    applyFilters();
+
+    Toast.success(`${data.length} catatan berhasil dihapus`);
+  } catch(e) {
+    console.error('DELETE error:', e);
+    alert('Gagal menghapus:\n' + (e.message || JSON.stringify(e)));
   }
+}
 
   // ── Pagination ────────────────────────────────────────────
   function renderPagination(totalPages) {
