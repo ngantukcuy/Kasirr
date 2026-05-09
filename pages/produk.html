@@ -42,12 +42,6 @@
       .form-grid { grid-template-columns: 1fr !important; }
       .product-table-wrap table { min-width: 600px; }
     }
-  
-    @media (max-width: 768px) {
-      /* Hide Barcode and Satuan columns (redundant with stock badge) */
-      .product-table th:nth-child(2), .product-table td:nth-child(2) { display: none; }
-      .product-table th:nth-child(6), .product-table td:nth-child(6) { display: none; }
-    }
   </style>
 </head>
 <body>
@@ -124,7 +118,7 @@
 
       <!-- Table -->
       <div class="card" style="padding:0; overflow:hidden;">
-        <div class="product-table-wrap table-scroll">
+        <div class="product-table-wrap">
           <table class="product-table">
             <thead>
               <tr>

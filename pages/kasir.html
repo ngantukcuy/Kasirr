@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="../css/style.css?v=5">
   <style>
     /* Override agar halaman kasir tidak scroll penuh */
-    .main-content { min-height: unset !important; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    .page-content { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 16px 16px 0; }
-    .pos-wrapper { display: grid; grid-template-columns: 1fr 380px; gap: 16px; flex: 1; min-height: 0; overflow: hidden; }
+    .main-content { min-height: unset !important; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+    .page-content { flex: 1; min-height: 0; overflow: hidden !important; display: flex !important; flex-direction: column !important; padding: 0 !important; }
+    .pos-wrapper { display: grid; grid-template-columns: 1fr 380px; gap: 16px; flex: 1; min-height: 0; overflow: hidden; padding: 16px 16px 0; }
     .product-panel { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden; }
     .product-panel-top { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
     .category-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; flex-shrink: 0; }
@@ -110,12 +110,17 @@
       position: sticky;
       top: 0;
       z-index: 50;
+      height: var(--mob-tab-height);
       background: var(--bg-secondary);
       border-bottom: 2px solid var(--border);
+      flex-shrink: 0;
     }
     .mobile-pos-tab {
       flex: 1;
-      padding: 11px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
       text-align: center;
       font-size: 0.82rem;
       font-weight: 600;
@@ -143,20 +148,43 @@
       .mobile-pos-tabs { display: flex !important; }
       .product-panel { display: none !important; }
       .product-panel.pos-active { display: flex !important; }
+      /* Keranjang: tinggi penuh dalam viewport, scroll internal, button bayar selalu kelihatan */
       .cart-panel {
         display: none !important;
         position: static !important;
-        height: auto !important;
-        min-height: 90vh;
+        height: calc(100dvh - var(--header-height) - var(--mob-tab-height)) !important;
+        min-height: unset !important;
+        overflow: hidden !important;
       }
       .cart-panel.pos-active { display: flex !important; }
+      /* pos-wrapper harus punya tinggi tetap agar product-panel bisa flex column penuh */
+      .pos-wrapper {
+        height: calc(100dvh - var(--header-height) - var(--mob-tab-height)) !important;
+        overflow: hidden;
+        padding: 0 !important;
+        gap: 0 !important;
+      }
+      .product-panel.pos-active {
+        height: 100% !important;
+        overflow: hidden !important;
+        padding: 12px 12px 0 !important;
+      }
+      /* Cart panel gets padding too */
+      .cart-panel.pos-active {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+      }
     }
 
     /* ── Product Panel Footer (mobile sticky bayar) ── */
+    /* Default: hidden everywhere, shown only on mobile when cart has items */
     .product-panel-footer {
       display: none;
     }
     @media (max-width: 768px) {
+      /* Show by default on mobile, hide when .hidden */
       .product-panel-footer {
         display: flex !important;
         align-items: center;
@@ -166,9 +194,6 @@
         background: var(--bg-secondary);
         border-top: 1px solid var(--border);
         flex-shrink: 0;
-        position: sticky;
-        bottom: 0;
-        z-index: 10;
       }
       .product-panel-footer.hidden { display: none !important; }
       .ppf-info { display: flex; flex-direction: column; gap: 1px; }
@@ -178,7 +203,7 @@
         flex-shrink: 0;
         padding: 10px 18px;
         background: var(--accent);
-        color: #fff;
+        color: var(--bg-primary);
         border: none;
         border-radius: var(--radius-md);
         font-size: 0.88rem;
@@ -188,7 +213,7 @@
         transition: var(--transition);
         white-space: nowrap;
       }
-      .ppf-btn:hover { background: var(--accent-hover, #4f46e5); }
+      .ppf-btn:hover { background: var(--accent-light); }
     }
 
     /* Product card override — konsisten dan tidak kepotong */
@@ -298,7 +323,7 @@
           </div>
 
           <!-- Product Panel Footer (mobile: sticky summary + bayar btn) -->
-          <div class="product-panel-footer" id="product-panel-footer" style="display:none;">
+          <div class="product-panel-footer hidden" id="product-panel-footer">
             <div class="ppf-info">
               <span class="ppf-count" id="ppf-count">0 item</span>
               <span class="ppf-total" id="ppf-total">Rp 0</span>
