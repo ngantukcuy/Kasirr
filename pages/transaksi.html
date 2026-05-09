@@ -386,6 +386,7 @@
 
   let editTxId = null;
   let editItems = []; // [{product_id, product_name, quantity, unit, selling_price, purchase_price}]
+  let isSavingEdit = false; // guard agar saveEditTx tidak bisa dipanggil ganda
 
   function closeEditModal() {
     document.getElementById('edit-modal').style.display = 'none';
@@ -504,10 +505,11 @@
 
   async function saveEditTx() {
     await _waitReady();
-    if (!editTxId) return;
+    if (!editTxId || isSavingEdit) return; // guard: tolak panggilan ganda
+    isSavingEdit = true; // kunci sebelum proses apapun dimulai
     // ── Pastikan nilai terbaru dari DOM tersync ke editItems ──
     syncItemsFromDOM();
-    if (!editItems.length) { Toast.error('Transaksi harus memiliki minimal 1 produk'); return; }
+    if (!editItems.length) { Toast.error('Transaksi harus memiliki minimal 1 produk'); isSavingEdit = false; return; }
     const subtotal = editItems.reduce((s, it) => s + it.quantity * it.selling_price, 0);
     const discount = parseFloat(document.getElementById('edit-discount').value) || 0;
     const total = Math.max(0, subtotal - discount);
@@ -515,16 +517,17 @@
     const btn = document.getElementById('btn-save-edit');
     btn.disabled = true; btn.textContent = 'Menyimpan...';
     const txIdToSave = editTxId; // snapshot supaya tidak berubah saat proses
+    const itemsToSave = [...editItems]; // snapshot items
+    editTxId = null; // reset segera agar tidak bisa disave ulang
+    editItems = [];
     try {
-      await KasirkuDB.Transactions.updateItems(txIdToSave, editItems, subtotal, discount, total);
+      await KasirkuDB.Transactions.updateItems(txIdToSave, itemsToSave, subtotal, discount, total);
       await KasirkuDB.Transactions.updateNote(txIdToSave, notes);
-      editTxId = null; // reset supaya tidak bisa disave ulang
-      editItems = [];
       closeEditModal();
       Toast.success('Transaksi berhasil diperbarui');
       await loadTransactions();
     } catch(e) { Toast.error('Gagal menyimpan: ' + (e.message || ''));
-    } finally { btn.disabled = false; btn.textContent = '💾 Simpan Perubahan'; }
+    } finally { isSavingEdit = false; btn.disabled = false; btn.textContent = '💾 Simpan Perubahan'; }
   }
 
   async function deleteTx(id, invoice) {
