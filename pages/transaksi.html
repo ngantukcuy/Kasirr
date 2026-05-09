@@ -221,6 +221,10 @@
     </div>
     <div id="detail-content"></div>
     <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+      <button class="btn btn-secondary btn-sm" onclick="printCurrentOrderSlip()" style="border:1px solid var(--accent-light); color:var(--accent-light);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Cetak Pesanan
+      </button>
       <button class="btn btn-primary btn-sm" id="btn-print-receipt" onclick="printCurrentReceipt()">🖨️ Cetak Struk</button>
     </div>
   </div>
@@ -336,6 +340,12 @@
     if (!currentTx) return;
     const user = getCurrentUser();
     printReceipt(currentTx, { store_name: user?.store_name, store_address: user?.store_address, store_phone: user?.store_phone });
+  }
+
+  function printCurrentOrderSlip() {
+    if (!currentTx) return;
+    const user = getCurrentUser();
+    printOrderSlip(currentTx, { store_name: user?.store_name, store_address: user?.store_address, store_phone: user?.store_phone });
   }
 
   function exportCSV() {
