@@ -596,7 +596,8 @@ const KasirkuDB = {
           created_by:     user?.id || null
         });
       }
-    },
+    }
+  },
 
   // ── Customers ───────────────────────────────────────────
   Customers: {
