@@ -226,10 +226,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase.js?v=8"></script>
-<script src="_sidebar.js?v=8"></script>
-<script src="../js/app.js?v=8"></script>
-<script src="../js/receipt.js?v=8"></script>
+<script src="../js/supabase.js?v=10"></script>
+<script src="_sidebar.js?v=10"></script>
+<script src="../js/app.js?v=10"></script>
+<script src="../js/receipt.js?v=10"></script>
 <script>
   let transactions = [];
   let currentTx = null;
@@ -365,9 +365,12 @@
   }
 
   function openEditNote(id) {
-    editTxId = id;
+    // Reset state dulu supaya tidak ada sisa dari edit sebelumnya
+    editTxId = null;
+    editItems = [];
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
+    editTxId = id;
     document.getElementById('edit-invoice-label').textContent = tx.invoice_number;
     document.getElementById('edit-notes').value = tx.notes || '';
     document.getElementById('edit-discount').value = tx.discount_amount || 0;
@@ -415,13 +418,15 @@
           <label style="font-size:0.72rem; color:var(--text-muted);">Qty</label>
           <input type="number" value="${it.quantity}" min="1"
             style="width:60px; padding:4px 6px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text-primary); font-size:0.82rem;"
-            onchange="updateItemQty(${i}, this.value)">
+            data-idx="${i}" data-field="qty"
+            onchange="editItems[${i}].quantity = parseInt(this.value)||1; updateEditTotals();">
         </div>
         <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
           <label style="font-size:0.72rem; color:var(--text-muted);">Harga</label>
           <input type="number" value="${it.selling_price}" min="0"
             style="width:110px; padding:4px 6px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; color:var(--text-primary); font-size:0.82rem;"
-            onchange="updateItemPrice(${i}, this.value)">
+            data-idx="${i}" data-field="price"
+            onchange="editItems[${i}].selling_price = parseFloat(this.value)||0; updateEditTotals();">
         </div>
         <div style="font-size:0.82rem; font-weight:700; color:var(--accent-light); min-width:80px; text-align:right;">${formatRupiah(it.quantity * it.selling_price)}</div>
         <button onclick="removeEditItem(${i})" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem; flex-shrink:0;">🗑️</button>
@@ -431,14 +436,12 @@
 
   function updateItemQty(i, val) {
     editItems[i].quantity = parseInt(val) || 1;
-    renderEditItems();
-    updateEditTotals();
+    updateEditTotals(); // tidak re-render agar input tidak reset
   }
 
   function updateItemPrice(i, val) {
     editItems[i].selling_price = parseFloat(val) || 0;
-    renderEditItems();
-    updateEditTotals();
+    updateEditTotals(); // tidak re-render agar input tidak reset
   }
 
   function removeEditItem(i) {
@@ -479,11 +482,14 @@
     const notes = document.getElementById('edit-notes').value;
     const btn = document.getElementById('btn-save-edit');
     btn.disabled = true; btn.textContent = 'Menyimpan...';
+    const txIdToSave = editTxId; // snapshot supaya tidak berubah saat proses
     try {
-      await KasirkuDB.Transactions.updateItems(editTxId, editItems, subtotal, discount, total);
-      await KasirkuDB.Transactions.updateNote(editTxId, notes);
-      Toast.success('Transaksi berhasil diperbarui');
+      await KasirkuDB.Transactions.updateItems(txIdToSave, editItems, subtotal, discount, total);
+      await KasirkuDB.Transactions.updateNote(txIdToSave, notes);
+      editTxId = null; // reset supaya tidak bisa disave ulang
+      editItems = [];
       closeEditModal();
+      Toast.success('Transaksi berhasil diperbarui');
       await loadTransactions();
     } catch(e) { Toast.error('Gagal menyimpan: ' + (e.message || ''));
     } finally { btn.disabled = false; btn.textContent = '💾 Simpan Perubahan'; }
@@ -497,7 +503,13 @@
         await _waitReady();
         try {
           await KasirkuDB.Transactions.delete(id);
+          // Hapus langsung dari array lokal supaya UI langsung update
+          transactions = transactions.filter(t => t.id !== id);
+          renderTable();
+          updateSummary();
+          document.getElementById('tx-count').textContent = `${transactions.length} transaksi`;
           Toast.success(`Transaksi ${invoice} berhasil dihapus`);
+          // Reload dari server untuk sinkronisasi
           await loadTransactions();
         } catch(e) { Toast.error('Gagal menghapus transaksi: ' + (e.message || '')); }
       }
