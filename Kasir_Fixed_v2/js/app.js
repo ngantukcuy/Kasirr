@@ -585,32 +585,17 @@ const KasirkuDB = {
         const beforeStock = prod.stock || 0;
         const afterStock  = beforeStock + diff; // diff positif = tambah stok, negatif = kurangi
         await _sb.from('products').update({ stock: Math.max(0, afterStock) }).eq('id', productId);
-
-        // Cek apakah DB trigger sudah mencatat movement ini (cegah duplikasi)
-        const noteText = `Edit transaksi — qty ${prod.name}: ${qtyOld} → ${qtyNew}`;
-        const recentCutoff = new Date(Date.now() - 10000).toISOString(); // 10 detik
-        const { data: existingMov } = await _sb.from('stock_movements')
-          .select('id')
-          .eq('product_id', productId)
-          .eq('reference_id', txId)
-          .eq('quantity', Math.abs(diff))
-          .gte('created_at', recentCutoff)
-          .limit(1);
-
-        // Hanya insert jika belum ada catatan serupa (mencegah double-entry dari DB trigger)
-        if (!existingMov || existingMov.length === 0) {
-          await _sb.from('stock_movements').insert({
-            product_id:     productId,
-            type:           diff > 0 ? 'in' : 'out',
-            quantity:       Math.abs(diff),
-            before_stock:   beforeStock,
-            after_stock:    Math.max(0, afterStock),
-            reference_id:   txId,
-            reference_type: 'transaction',
-            notes:          noteText,
-            created_by:     user?.id || null
-          });
-        }
+        await _sb.from('stock_movements').insert({
+          product_id:     productId,
+          type:           diff > 0 ? 'in' : 'out',
+          quantity:       Math.abs(diff),
+          before_stock:   beforeStock,
+          after_stock:    Math.max(0, afterStock),
+          reference_id:   txId,
+          reference_type: 'transaction',
+          notes:          `Edit transaksi — qty ${prod.name}: ${qtyOld} → ${qtyNew}`,
+          created_by:     user?.id || null
+        });
       }
     }
   },

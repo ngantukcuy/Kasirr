@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">kasirku</string>
-    <string name="title_activity_main">kasirku</string>
-    <string name="package_name">com.Kasirku.app</string>
-    <string name="custom_url_scheme">com.Kasirku.app</string>
-</resources>

@@ -30,10 +30,6 @@
       .filter-bar > * { width: 100% !important; }
       .filter-bar input, .filter-bar select { width: 100% !important; box-sizing: border-box; }
     }
-  
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
-    }
   </style>
 </head>
 <body>
@@ -133,7 +129,7 @@
       </div>
 
       <div class="card" style="padding:0; overflow:hidden;">
-        <div class="table-scroll">
+        <div style="overflow-x:auto;">
           <table class="tx-table">
             <thead>
               <tr>

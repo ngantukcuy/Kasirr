@@ -87,13 +87,6 @@
       .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .mv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
-  
-    @media (max-width: 768px) {
-      .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      /* Condensed delete bar */
-      .delete-bar { flex-wrap: wrap; gap: 8px; }
-      /* Hide Oleh and Keterangan cols on tiny screens */
-    }
   </style>
 </head>
 <body>
@@ -237,7 +230,7 @@
 
       <!-- ── Table ── -->
       <div class="card" style="padding:0; overflow:hidden;">
-        <div class="table-scroll">
+        <div style="overflow-x:auto;">
           <table class="mv-table">
             <thead>
               <tr>
@@ -268,9 +261,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase.js?v=11"></script>
-<script src="../js/app.js?v=11"></script>
-<script src="_sidebar.js?v=11"></script>
+<script src="../js/supabase.js?v=10"></script>
+<script src="../js/app.js?v=10"></script>
+<script src="_sidebar.js?v=10"></script>
 <script>
   const PAGE_SIZE = 50;
   let allMovements = [];   // semua data dari Supabase (sudah difilter range tanggal)
@@ -578,7 +571,6 @@
   try {
     const ids = Array.from(selectedIds);
 
-    // Try with .select() first for RLS compatibility
     const { data, error, status } = await _sb
       .from('stock_movements')
       .delete()
@@ -589,16 +581,17 @@
 
     if (error) throw error;
 
-    // Some Supabase configs return empty array even on success (RLS RETURNING policy)
-    // So we trust the absence of error as success
-    const deletedCount = (data && data.length > 0) ? data.length : ids.length;
+    if (!data || data.length === 0) {
+      Toast.error('Tidak ada data terhapus — kemungkinan diblokir RLS. Cek Console (F12).');
+      return;
+    }
 
     allMovements = allMovements.filter(m => !selectedIds.has(m.id));
     selectedIds.clear();
     updateDeleteBar();
     applyFilters();
 
-    Toast.success(`${deletedCount} catatan berhasil dihapus`);
+    Toast.success(`${data.length} catatan berhasil dihapus`);
   } catch(e) {
     console.error('DELETE error:', e);
     alert('Gagal menghapus:\n' + (e.message || JSON.stringify(e)));

@@ -24,12 +24,6 @@
       .filter-bar { flex-direction: column; gap: 8px; }
       .filter-bar > * { width: 100% !important; }
     }
-  
-    @media (max-width: 768px) {
-      .report-grid, .laporan-grid { grid-template-columns: 1fr !important; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
-      .top-header .header-actions { flex-wrap: wrap; gap: 6px; }
-    }
   </style>
 </head>
 <body>
@@ -78,7 +72,10 @@
       </button>
       <div class="header-title"><h1>Laporan Penjualan</h1><p id="report-range">Memuat...</p></div>
       <div class="header-actions">
-        <div class="laporan-date-wrap" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><input type="date" id="date-from" class="form-control" style="width:140px;" onchange="loadReport()"><span style="color:var(--text-muted);font-size:0.8rem;">s/d</span><input type="date" id="date-to" class="form-control" style="width:140px;" onchange="loadReport()"><button class="btn btn-sm" onclick="exportCSV()" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);white-space:nowrap;">Export</button></div>
+        <input type="date" id="date-from" class="form-control" style="width:155px;" onchange="loadReport()">
+        <span style="color:var(--text-muted); font-size:0.8rem;">s/d</span>
+        <input type="date" id="date-to" class="form-control" style="width:155px;" onchange="loadReport()">
+        <button class="btn btn-sm" onclick="exportCSV()" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);">Export CSV</button>
       </div>
     </header>
 
@@ -104,7 +101,7 @@
       </div>
 
       <!-- Chart & Top Products -->
-      <div class="report-grid laporan-grid" style="margin-bottom:16px;">
+      <div class="report-grid" style="margin-bottom:16px;">
         <div class="chart-card">
           <div style="font-weight:700; margin-bottom:16px;">📈 Grafik Penjualan Harian</div>
           <canvas id="sales-chart" height="120"></canvas>
