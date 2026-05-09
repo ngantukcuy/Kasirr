@@ -521,7 +521,7 @@ const KasirkuDB = {
         .eq('transaction_id', txId);
       if (oldErr) throw oldErr;
 
-      // Buat map: product_id → qty lama (hanya item yang punya product_id)
+      // Buat map: product_id → qty lama
       const oldQtyMap = {};
       for (const it of (oldItems || [])) {
         if (!it.product_id) continue;
@@ -538,12 +538,11 @@ const KasirkuDB = {
       // ── Kumpulkan semua product_id yang terpengaruh ──
       const allProductIds = new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)]);
 
-      // ── Hapus items lama — WAJIB berhasil dulu sebelum insert baru ──
+      // ── Hapus transaction_items lama, insert yang baru ──
       const { error: delErr } = await _sb
         .from('transaction_items').delete().eq('transaction_id', txId);
       if (delErr) throw delErr;
 
-      // ── Insert items baru ──
       const rows = newItems.map(it => {
         const row = {
           transaction_id: txId,
@@ -562,7 +561,7 @@ const KasirkuDB = {
         if (insErr) throw insErr;
       }
 
-      // ── Update transaction totals ──
+      // ── STEP 4: Update transaction totals ──
       const { error: txErr } = await _sb.from('transactions').update({
         subtotal:        subtotal,
         discount_amount: discountAmount,
@@ -570,35 +569,34 @@ const KasirkuDB = {
       }).eq('id', txId);
       if (txErr) throw txErr;
 
-      // ── Adjust stok berdasarkan selisih qty lama vs baru ──
-      // selisih > 0 → item dikurangi/dihapus → stok dikembalikan (in)
-      // selisih < 0 → item ditambah            → stok dikurangi (out)
+      // ── Adjust stok hanya berdasarkan SELISIH qty lama vs qty baru ──
+      // Contoh: qty lama=1, qty baru=3 → diff=-2 → stok kurang 2 lagi (out 2)
+      // Di laporan stok: baris asli -1 tetap, ditambah baris edit -2. Total -3. ✅
       for (const productId of allProductIds) {
         const qtyOld = oldQtyMap[productId] || 0;
         const qtyNew = newQtyMap[productId] || 0;
-        const diff   = qtyOld - qtyNew; // positif = stok balik
+        const diff   = qtyOld - qtyNew; // positif=stok balik, negatif=stok berkurang
         if (diff === 0) continue;
 
         const { data: prod } = await _sb.from('products').select('stock, name').eq('id', productId).single();
         if (!prod) continue;
 
         const beforeStock = prod.stock || 0;
-        const afterStock  = beforeStock + diff; // diff positif = tambah stok, negatif = kurangi
-        await _sb.from('products').update({ stock: Math.max(0, afterStock) }).eq('id', productId);
+        const afterStock  = Math.max(0, beforeStock + diff);
+        await _sb.from('products').update({ stock: afterStock }).eq('id', productId);
         await _sb.from('stock_movements').insert({
           product_id:     productId,
           type:           diff > 0 ? 'in' : 'out',
           quantity:       Math.abs(diff),
           before_stock:   beforeStock,
-          after_stock:    Math.max(0, afterStock),
+          after_stock:    afterStock,
           reference_id:   txId,
           reference_type: 'transaction',
           notes:          `Edit transaksi — qty ${prod.name}: ${qtyOld} → ${qtyNew}`,
           created_by:     user?.id || null
         });
       }
-    }
-  },
+    },
 
   // ── Customers ───────────────────────────────────────────
   Customers: {

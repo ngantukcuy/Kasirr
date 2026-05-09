@@ -1679,3 +1679,208 @@ tbody td {
     padding: 10px;
   }
 }
+
+/* ============================================================
+   RESPONSIVE FIX v6 — Semua halaman menyesuaikan layar mobile
+   ============================================================ */
+
+/* ── Pastikan app-wrapper tidak overflow horizontal ── */
+.app-wrapper {
+  overflow-x: hidden;
+}
+
+/* ── quick-action-grid: 2 kolom di tablet, 2 kolom di mobile ── */
+@media (max-width: 768px) {
+  .quick-action-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+  .quick-action .qa-icon {
+    width: 38px;
+    height: 38px;
+  }
+  .quick-action span {
+    font-size: 0.72rem;
+  }
+}
+
+/* ── Tabel: semua halaman kolom bisa scroll tapi container pas layar ── */
+@media (max-width: 768px) {
+  /* Wrapper tabel: tidak overflow ke luar layar */
+  .table-wrapper,
+  .mv-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Kolom yang kurang penting disembunyikan di mobile */
+
+  /* Riwayat Transaksi: sembunyikan kolom kasir & catatan */
+  .tx-table th:nth-child(6),
+  .tx-table td:nth-child(6) { display: none; }
+
+  /* Produk & Stok: sembunyikan kategori & deskripsi */
+  .produk-table th:nth-child(3),
+  .produk-table td:nth-child(3),
+  .produk-table th:nth-child(6),
+  .produk-table td:nth-child(6) { display: none; }
+
+  /* Monitor Stok: sembunyikan kolom min stok */
+  .stok-table th:nth-child(5),
+  .stok-table td:nth-child(5) { display: none; }
+
+  /* Laporan Stok: sembunyikan kolom stok sebelum & oleh */
+  .mv-table th:nth-child(6),
+  .mv-table td:nth-child(6),
+  .mv-table th:nth-child(10),
+  .mv-table td:nth-child(10) { display: none; }
+
+  /* Laporan Penjualan: sembunyikan kolom kasir */
+  .laporan-table th:nth-child(5),
+  .laporan-table td:nth-child(5) { display: none; }
+
+  /* Manajemen User: sembunyikan created_at */
+  .user-table th:nth-child(4),
+  .user-table td:nth-child(4) { display: none; }
+
+  /* Pelanggan: sembunyikan kolom telepon atau email */
+  .pelanggan-table th:nth-child(4),
+  .pelanggan-table td:nth-child(4) { display: none; }
+
+  /* Padding tabel lebih compact */
+  thead th { padding: 8px 10px !important; font-size: 0.68rem !important; }
+  tbody td { padding: 9px 10px !important; font-size: 0.82rem !important; }
+
+  /* Stats cards: 2 kolom */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+
+  /* Summary grid laporan stok: 2 kolom */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+
+  /* Grid layouts jadi 1 kolom */
+  .grid-2,
+  .grid-3,
+  .grid-cols-2-1,
+  .grid-cols-1-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Card padding lebih kecil */
+  .card { padding: 12px !important; }
+  .card-body { padding: 12px !important; }
+
+  /* Filter bar stack vertical */
+  .filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px;
+  }
+  .filter-bar > * {
+    width: 100% !important;
+    flex: unset !important;
+    box-sizing: border-box;
+  }
+  .filter-bar input,
+  .filter-bar select {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Page header wrap */
+  .page-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-header h1,
+  .header-title h1 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Delete action bar wrap */
+  .delete-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Sembunyikan teks tombol di header, simpan ikon saja */
+  .header-actions .btn-text,
+  .header-actions .btn span:not(.nav-badge) {
+    display: none;
+  }
+
+  /* Pagination compact */
+  .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px 8px;
+    gap: 4px;
+  }
+  .page-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  /* Top movers di laporan stok: scroll horizontal */
+  #top-movers-list {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px;
+  }
+  #top-movers-list > div {
+    min-width: 140px;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 1 kolom di HP kecil */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .quick-action-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .page-content {
+    padding: 10px !important;
+  }
+  /* Stat card lebih compact */
+  .stat-card { padding: 14px 12px !important; }
+  .stat-value { font-size: 1.3rem !important; }
+}
+
+/* ── Product table & wrap ── */
+@media (max-width: 768px) {
+  .product-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  .product-table th:nth-child(3),
+  .product-table td:nth-child(3) { display: none; }
+  .product-table th:nth-child(6),
+  .product-table td:nth-child(6) { display: none; }
+
+  /* user-grid: 1 kolom di mobile */
+  .user-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+  /* Pelanggan cards, laporan charts: tetap 1 kolom */
+  .laporan-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr !important; }
+}
