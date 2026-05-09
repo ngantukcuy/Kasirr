@@ -139,12 +139,7 @@ function formatDate(date, fmt = 'short') {
 }
 
 function getToday() {
-  // Gunakan timezone lokal (WIB UTC+7), bukan UTC
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return new Date().toISOString().split('T')[0];
 }
 
 function debounce(fn, delay = 300) {
@@ -320,29 +315,9 @@ const KasirkuDB = {
     },
 
     async delete(id) {
-  const { data: tx } = await _sb.from('transactions')
-    .select('invoice_number, transaction_items(product_id, quantity)')
-    .eq('id', id).single();
-
-  for (const item of (tx?.transaction_items || [])) {
-    if (!item.product_id) continue;
-    const { data: prod } = await _sb.from('products').select('stock').eq('id', item.product_id).single();
-    if (!prod) continue;
-    const newStock = (prod.stock || 0) + item.quantity;
-    await _sb.from('products').update({ stock: newStock }).eq('id', item.product_id);
-    await _sb.from('stock_movements').insert({
-      product_id: item.product_id, type: 'in', quantity: item.quantity,
-      before_stock: prod.stock, after_stock: newStock,
-      reference_id: id, reference_type: 'transaction',
-      notes: 'Pembatalan transaksi ' + (tx.invoice_number || id)
-    });
-  }
-
-  await _sb.from('transaction_items').delete().eq('transaction_id', id);
-  const { error, data: deleted } = await _sb.from('transactions').delete().eq('id', id).select('id');
-  if (error) throw error;
-  if (!deleted?.length) throw new Error('Tidak memiliki izin menghapus transaksi');
-},
+      const { error } = await _sb.from('products').update({ is_active: false }).eq('id', id);
+      if (error) throw error;
+    },
 
     async adjustStock(productId, quantity, type, notes, userId) {
       const { data: prod } = await _sb.from('products').select('stock').eq('id', productId).single();
@@ -422,17 +397,12 @@ const KasirkuDB = {
 
     async getAll(filters = {}) {
       let q = _sb.from('transactions')
-        .select('*, profiles!cashier_id(full_name), customers(name, phone), transaction_items(id, product_id, product_name, quantity, unit, selling_price, purchase_price, subtotal)')
+        .select('*, profiles!cashier_id(full_name), customers(name, phone)')
         .order('created_at', { ascending: false });
       const startDate = filters.startDate || filters.date_from;
       const endDate   = filters.endDate   || filters.date_to;
-      if (startDate && endDate) {
-        q = q.gte('created_at', startDate).lte('created_at', endDate);
-      } else if (startDate) {
-        q = q.gte('created_at', startDate);
-      } else if (endDate) {
-        q = q.lte('created_at', endDate);
-      }
+      if (startDate) q = q.gte('created_at', startDate);
+      if (endDate)   q = q.lte('created_at', endDate);
       if (filters.cashier_id)     q = q.eq('cashier_id', filters.cashier_id);
       if (filters.payment_method) q = q.eq('payment_method', filters.payment_method);
       if (filters.limit)          q = q.limit(filters.limit);
@@ -467,136 +437,48 @@ const KasirkuDB = {
       if (error) throw error;
     },
 
-    async delete(id) {
-      // ── Ambil data transaksi + items sebelum dihapus ──
-      const { data: tx, error: txFetchErr } = await _sb
-        .from('transactions')
-        .select('invoice_number, transaction_items(product_id, quantity)')
-        .eq('id', id)
-        .single();
-      if (txFetchErr) throw txFetchErr;
+    async updateItemQty(transactionId, itemId, newQty, productId, oldQty, invoiceNumber) {
+      // 1. Get current item data
+      const { data: item, error: iErr } = await _sb.from('transaction_items')
+        .select('selling_price').eq('id', itemId).single();
+      if (iErr) throw iErr;
 
-      // ── Kembalikan stok untuk setiap item yang punya product_id ──
-      const user = getCurrentUser();
-      for (const item of (tx?.transaction_items || [])) {
-        if (!item.product_id) continue;
-        const { data: prod } = await _sb.from('products').select('stock').eq('id', item.product_id).single();
-        if (!prod) continue;
-        const beforeStock = prod.stock || 0;
-        const afterStock  = beforeStock + item.quantity;
-        await _sb.from('products').update({ stock: afterStock }).eq('id', item.product_id);
-        await _sb.from('stock_movements').insert({
-          product_id:     item.product_id,
-          type:           'in',
-          quantity:       item.quantity,
-          before_stock:   beforeStock,
-          after_stock:    afterStock,
-          reference_id:   id,
-          reference_type: 'transaction',
-          notes:          'Pembatalan transaksi ' + (tx.invoice_number || id),
-          created_by:     user?.id || null
-        });
-      }
+      const newSubtotal = newQty * item.selling_price;
 
-      // ── Hapus items lalu transaksi ──
-      const { error: itemErr } = await _sb.from('transaction_items').delete().eq('transaction_id', id);
+      // 2. Update transaction_item
+      const { error: itemErr } = await _sb.from('transaction_items')
+        .update({ quantity: newQty, subtotal: newSubtotal }).eq('id', itemId);
       if (itemErr) throw itemErr;
-      const { error, data: deleted } = await _sb.from('transactions').delete().eq('id', id).select('id');
-      if (error) throw error;
-      if (!deleted?.length) throw new Error('Tidak memiliki izin untuk menghapus transaksi ini');
-    },
 
-    async updateNote(id, notes) {
-      const { error } = await _sb.from('transactions').update({ notes }).eq('id', id);
-      if (error) throw error;
-    },
-
-    async updateItems(txId, newItems, subtotal, discountAmount, totalAmount) {
-      const user = getCurrentUser();
-
-      // ── Ambil items LAMA sebelum dihapus ──
-      const { data: oldItems, error: oldErr } = await _sb
-        .from('transaction_items')
-        .select('product_id, quantity')
-        .eq('transaction_id', txId);
-      if (oldErr) throw oldErr;
-
-      // Buat map: product_id → qty lama (hanya item yang punya product_id)
-      const oldQtyMap = {};
-      for (const it of (oldItems || [])) {
-        if (!it.product_id) continue;
-        oldQtyMap[it.product_id] = (oldQtyMap[it.product_id] || 0) + it.quantity;
+      // 3. Adjust stock by diff only (bukan qty penuh!)
+      const diff = newQty - oldQty;
+      if (productId && diff !== 0) {
+        const { data: prod } = await _sb.from('products').select('stock').eq('id', productId).single();
+        if (prod) {
+          const newStock = prod.stock - diff;
+          await _sb.from('products').update({ stock: newStock }).eq('id', productId);
+          await _sb.from('stock_movements').insert({
+            product_id: productId,
+            type: diff > 0 ? 'out' : 'in',
+            quantity: Math.abs(diff),
+            before_stock: prod.stock,
+            after_stock: newStock,
+            notes: `Edit qty transaksi ${invoiceNumber}: ${oldQty} → ${newQty}`
+          });
+        }
       }
 
-      // Buat map: product_id → qty baru
-      const newQtyMap = {};
-      for (const it of newItems) {
-        if (!it.product_id) continue;
-        newQtyMap[it.product_id] = (newQtyMap[it.product_id] || 0) + it.quantity;
-      }
+      // 4. Recalculate transaction total
+      const { data: allItems } = await _sb.from('transaction_items')
+        .select('subtotal').eq('transaction_id', transactionId);
+      const newSubtotalTx = (allItems || []).reduce((s, i) => s + i.subtotal, 0);
 
-      // ── Kumpulkan semua product_id yang terpengaruh ──
-      const allProductIds = new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)]);
+      const { data: tx } = await _sb.from('transactions')
+        .select('discount_amount').eq('id', transactionId).single();
+      const newTotal = newSubtotalTx - (tx?.discount_amount || 0);
 
-      // ── Hapus items lama — WAJIB berhasil dulu sebelum insert baru ──
-      const { error: delErr } = await _sb
-        .from('transaction_items').delete().eq('transaction_id', txId);
-      if (delErr) throw delErr;
-
-      // ── Insert items baru ──
-      const rows = newItems.map(it => {
-        const row = {
-          transaction_id: txId,
-          product_name:   it.product_name,
-          quantity:       it.quantity,
-          unit:           it.unit || 'pcs',
-          purchase_price: it.purchase_price || it.buying_price || 0,
-          selling_price:  it.selling_price,
-          subtotal:       it.quantity * it.selling_price
-        };
-        if (it.product_id) row.product_id = it.product_id;
-        return row;
-      });
-      if (rows.length > 0) {
-        const { error: insErr } = await _sb.from('transaction_items').insert(rows);
-        if (insErr) throw insErr;
-      }
-
-      // ── Update transaction totals ──
-      const { error: txErr } = await _sb.from('transactions').update({
-        subtotal:        subtotal,
-        discount_amount: discountAmount,
-        total_amount:    totalAmount
-      }).eq('id', txId);
-      if (txErr) throw txErr;
-
-      // ── Adjust stok berdasarkan selisih qty lama vs baru ──
-      // selisih > 0 → item dikurangi/dihapus → stok dikembalikan (in)
-      // selisih < 0 → item ditambah            → stok dikurangi (out)
-      for (const productId of allProductIds) {
-        const qtyOld = oldQtyMap[productId] || 0;
-        const qtyNew = newQtyMap[productId] || 0;
-        const diff   = qtyOld - qtyNew; // positif = stok balik
-        if (diff === 0) continue;
-
-        const { data: prod } = await _sb.from('products').select('stock, name').eq('id', productId).single();
-        if (!prod) continue;
-
-        const beforeStock = prod.stock || 0;
-        const afterStock  = beforeStock + diff; // diff positif = tambah stok, negatif = kurangi
-        await _sb.from('products').update({ stock: Math.max(0, afterStock) }).eq('id', productId);
-        await _sb.from('stock_movements').insert({
-          product_id:     productId,
-          type:           diff > 0 ? 'in' : 'out',
-          quantity:       Math.abs(diff),
-          before_stock:   beforeStock,
-          after_stock:    Math.max(0, afterStock),
-          reference_id:   txId,
-          reference_type: 'transaction',
-          notes:          `Edit transaksi — qty ${prod.name}: ${qtyOld} → ${qtyNew}`,
-          created_by:     user?.id || null
-        });
-      }
+      await _sb.from('transactions')
+        .update({ subtotal: newSubtotalTx, total_amount: newTotal }).eq('id', transactionId);
     }
   },
 
@@ -675,17 +557,6 @@ const KasirkuDB = {
       const { data, error } = await _sb.from('expenses').insert(d).select().single();
       if (error) throw error;
       return data;
-    },
-
-    async updateExpense(id, d) {
-      const { data, error } = await _sb.from('expenses').update(d).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
-    },
-
-    async deleteExpense(id) {
-      const { error } = await _sb.from('expenses').delete().eq('id', id);
-      if (error) throw error;
     }
   },
 
@@ -743,7 +614,6 @@ async function requireAuth(activePage) {
 // Expose globals
 // ============================================================
 window.KasirkuDB      = KasirkuDB;
-window._waitReady     = _waitReady;
 window.Toast          = Toast;
 window.Modal          = Modal;
 window.getCurrentUser = getCurrentUser;
