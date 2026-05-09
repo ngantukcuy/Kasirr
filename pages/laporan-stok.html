@@ -86,7 +86,7 @@
       .filter-bar { flex-direction: column; gap: 8px; }
       .filter-bar > * { width: 100% !important; box-sizing: border-box; }
       .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .mv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .mv-table-wrap { max-height: 60vh; }
     }
   </style>
 </head>
@@ -230,8 +230,8 @@
       </div>
 
       <!-- ── Table ── -->
-      <div class="card" style="padding:0; overflow:hidden;">
-        <div class="mv-table-wrap" style="overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; max-height:70vh; overflow-y:auto;">
+      <div class="card" style="padding:0; border-radius:var(--radius-lg); overflow:hidden;">
+        <div class="mv-table-wrap" style="overflow-x:auto; overflow-y:auto; max-height:65vh; -webkit-overflow-scrolling:touch; border-radius:var(--radius-lg);">
           <table class="mv-table">
             <thead>
               <tr>

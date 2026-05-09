@@ -794,18 +794,19 @@ function generateOrderSlipHTML(transaction, storeName, storeAddress, storePhone)
       <td style="padding:4px 6px; vertical-align:top;"><strong>${item.product_name||item.products?.name||'-'}</strong></td>
       <td style="padding:4px 0; text-align:right; vertical-align:top; white-space:nowrap;"><strong>${item.quantity} ${item.unit||'pcs'}</strong></td>
     </tr>
+    ${item.notes ? `<tr><td></td><td colspan="2" style="font-size:10px;color:#555;padding:0 6px 4px;">↳ ${item.notes}</td></tr>` : ''}
   `).join('');
   const customerSection = customers ? `
     <div style="margin:8px 0; padding:8px; border:1px solid #ccc; border-radius:4px;">
-      <div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase;">DATA PELANGGAN</div>
+      <div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">DATA PELANGGAN</div>
       <table style="width:100%; border-collapse:collapse; font-size:12px;">
         <tr><td style="padding:1px 0; width:40%;">Nama</td><td>: <strong>${customers.name}</strong></td></tr>
         ${customers.phone ? `<tr><td style="padding:1px 0;">No. HP</td><td>: ${customers.phone}</td></tr>` : ''}
         ${customers.address ? `<tr><td style="padding:1px 0; vertical-align:top;">Alamat</td><td style="vertical-align:top;">: ${customers.address}</td></tr>` : ''}
       </table>
-    </div>` : `<div style="margin:8px 0; padding:8px; border:1px dashed #ccc; border-radius:4px; text-align:center; font-size:11px; color:#888;">Pelanggan Umum</div>`;
+    </div>` : `<div style="margin:8px 0; padding:6px; border:1px dashed #ccc; text-align:center; font-size:11px; color:#888;">Pelanggan Umum</div>`;
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pesanan - ${invoice_number}</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff}.center{text-align:center}.line{border-top:1px dashed #333;margin:6px 0}.double-line{border-top:2px solid #333;margin:6px 0}table{width:100%;border-collapse:collapse}.store-name{font-size:16px;font-weight:bold;margin:4px 0}.order-label{font-size:20px;font-weight:bold;text-align:center;letter-spacing:2px;margin:6px 0;border:2px solid #000;padding:4px;}@media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff}.center{text-align:center}.line{border-top:1px dashed #333;margin:6px 0}.double-line{border-top:2px solid #333;margin:6px 0}table{width:100%;border-collapse:collapse}.store-name{font-size:16px;font-weight:bold;margin:4px 0}.order-label{font-size:20px;font-weight:bold;text-align:center;letter-spacing:2px;margin:6px 0;padding:4px;}@media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}</style>
 </head><body>
 <div class="center"><div class="order-label">PESANAN</div><div class="store-name">${storeName}</div>${storeAddress?`<div>${storeAddress}</div>`:''}${storePhone?`<div>Telp: ${storePhone}</div>`:''}</div>
 <div class="double-line"></div>
@@ -816,7 +817,7 @@ function generateOrderSlipHTML(transaction, storeName, storeAddress, storePhone)
 </table>
 ${customerSection}
 <div class="line"></div>
-<div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase;">DAFTAR PESANAN</div>
+<div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">DAFTAR PESANAN</div>
 <table>${itemsHTML}</table>
 <div class="double-line"></div>
 <div style="font-size:11px; font-weight:bold;">Total Item: ${(transaction_items||[]).reduce((s,i)=>s+(i.quantity||0),0)} pcs</div>
@@ -837,15 +838,15 @@ function printOrderSlip(transaction, storeInfo) {
 // ── Printer — cetak struk via browser print window ──────────
 const Printer = {
   printReceipt(tx, settings = {}) {
-    const storeName    = settings.store_name    || 'KASIRKU';
-    const storeAddr    = settings.store_address || '';
-    const storePhone   = settings.store_phone   || '';
-    const footer       = settings.receipt_footer|| 'Terima kasih telah berbelanja!';
-    const payLabel     = { cash:'Tunai', transfer:'Transfer Bank', qris:'QRIS', card:'Kartu Debit/Kredit' };
-    const items        = (tx.transaction_items || []).map(i => `
-      <tr><td colspan="3" style="padding:2px 0;">${i.product_name}</td></tr>
+    const storeName  = settings.store_name    || 'KASIRKU';
+    const storeAddr  = settings.store_address || '';
+    const storePhone = settings.store_phone   || '';
+    const footer     = settings.receipt_footer|| 'Terima kasih telah berbelanja!';
+    const payLabel   = { cash:'Tunai', transfer:'Transfer Bank', qris:'QRIS', card:'Kartu Debit/Kredit' };
+    const items      = (tx.transaction_items || []).map(i => `
+      <tr><td colspan="3" style="padding:2px 0;">${i.product_name||'-'}</td></tr>
       <tr>
-        <td style="padding:0 0 4px;">${formatNumber(i.quantity)} ${i.unit}</td>
+        <td style="padding:0 0 4px;">${formatNumber(i.quantity)} ${i.unit||''}</td>
         <td style="text-align:center;">x ${formatRupiah(i.selling_price)}</td>
         <td style="text-align:right;">${formatRupiah(i.subtotal)}</td>
       </tr>
@@ -856,41 +857,59 @@ const Printer = {
       <title>Struk ${tx.invoice_number}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;}
+        body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff;}
         .center{text-align:center;} .bold{font-weight:bold;}
         .line{border-top:1px dashed #333;margin:6px 0;}
+        .double-line{border-top:2px solid #333;margin:6px 0;}
         table{width:100%;border-collapse:collapse;}
         td{vertical-align:top;}
-        td:last-child{text-align:right;}
-        @media print{body{width:80mm;}}
+        .store-name{font-size:18px;font-weight:bold;margin:4px 0;}
+        .section-label{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 2px;}
+        .total-row td{font-size:14px;font-weight:bold;}
+        .footer{margin-top:8px;font-size:10px;text-align:center;}
+        @media print{body{width:80mm;}@page{margin:2mm;size:80mm auto;}}
       </style>
     </head><body>
-      <div class="center bold" style="font-size:14px;margin-bottom:2px;">${storeName}</div>
-      ${storeAddr ? `<div class="center">${storeAddr}</div>` : ''}
-      ${storePhone ? `<div class="center">Telp: ${storePhone}</div>` : ''}
+      <div class="center">
+        <div class="store-name">${storeName}</div>
+        ${storeAddr ? `<div>${storeAddr}</div>` : ''}
+        ${storePhone ? `<div>Telp: ${storePhone}</div>` : ''}
+      </div>
+      <div class="double-line"></div>
+      <table>
+        <tr><td>No. Faktur</td><td style="text-align:right;">${tx.invoice_number}</td></tr>
+        <tr><td>Tanggal</td><td style="text-align:right;">${formatDate(tx.created_at,'datetime')}</td></tr>
+        <tr><td>Kasir</td><td style="text-align:right;">${tx.profiles?.full_name || '-'}</td></tr>
+        <tr><td>Pelanggan</td><td style="text-align:right;">${tx.customers ? tx.customers.name : 'Pelanggan Umum'}</td></tr>
+      </table>
       <div class="line"></div>
-      <div>No: <strong>${tx.invoice_number}</strong></div>
-      <div>Tanggal: ${formatDate(tx.created_at,'datetime')}</div>
-      <div>Kasir: ${tx.profiles?.full_name || '-'}</div>
-      ${tx.customers ? `<div>Pelanggan: ${tx.customers.name}</div>` : ''}
-      <div class="line"></div>
+      <div class="section-label">Daftar Belanjaan</div>
       <table>${items}</table>
       <div class="line"></div>
       <table>
-        <tr><td>Subtotal</td><td>${formatRupiah(tx.subtotal)}</td></tr>
-        ${tx.discount_amount > 0 ? `<tr><td>Diskon</td><td>-${formatRupiah(tx.discount_amount)}</td></tr>` : ''}
-        ${tx.tax_amount > 0 ? `<tr><td>Pajak</td><td>${formatRupiah(tx.tax_amount)}</td></tr>` : ''}
-        <tr class="bold"><td>TOTAL</td><td>${formatRupiah(tx.total_amount)}</td></tr>
-        <tr><td>Pembayaran (${payLabel[tx.payment_method]||tx.payment_method})</td><td>${formatRupiah(tx.paid_amount)}</td></tr>
-        ${tx.change_amount > 0 ? `<tr><td>Kembalian</td><td>${formatRupiah(tx.change_amount)}</td></tr>` : ''}
+        <tr><td>Subtotal</td><td style="text-align:right;">${formatRupiah(tx.subtotal)}</td></tr>
+        ${tx.discount_amount > 0 ? `<tr><td>Diskon</td><td style="text-align:right;color:#e53e3e;">-${formatRupiah(tx.discount_amount)}</td></tr>` : ''}
+        ${tx.tax_amount > 0 ? `<tr><td>Pajak</td><td style="text-align:right;">${formatRupiah(tx.tax_amount)}</td></tr>` : ''}
       </table>
+      <div class="double-line"></div>
+      <table>
+        <tr class="total-row"><td><strong>TOTAL</strong></td><td style="text-align:right;"><strong>${formatRupiah(tx.total_amount)}</strong></td></tr>
+        <tr><td>Bayar (${payLabel[tx.payment_method]||tx.payment_method})</td><td style="text-align:right;">${formatRupiah(tx.paid_amount||tx.total_amount)}</td></tr>
+        ${tx.change_amount > 0 ? `<tr><td><strong>Kembalian</strong></td><td style="text-align:right;"><strong>${formatRupiah(tx.change_amount)}</strong></td></tr>` : ''}
+      </table>
+      <div class="line"></div>
+      <div class="footer">
+        <p>${footer}</p>
+        <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
+        <p>kecuali ada kesepakatan bersama.</p>
+        <br><p>===== Powered by KASIRKU =====</p>
+      </div>
     </body></html>`;
 
-    const w = window.open('','_blank','width=400,height=600');
+    const w = window.open('','_blank','width=420,height=650');
     if (!w) { Toast.error('Pop-up diblokir browser. Izinkan pop-up untuk mencetak struk.'); return; }
-    w.document.write(html);
-    w.document.close();
-    w.onload = () => { w.focus(); w.print(); setTimeout(() => w.close(), 1500); };
+    w.document.open(); w.document.write(html); w.document.close(); w.focus();
+    setTimeout(() => { w.print(); }, 600);
   }
 };
 </script>

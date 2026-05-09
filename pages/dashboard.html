@@ -184,16 +184,17 @@
           </div>
         </div>
 
-        <!-- Payment Methods Chart -->
+        <!-- Stock Report Chart -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Metode Pembayaran</h3>
+            <h3 class="card-title">Grafik Stok Produk</h3>
+            <a href="stok.html" class="btn btn-ghost btn-sm">Monitor Stok</a>
           </div>
           <div class="card-body">
             <div style="position:relative; height:200px;">
-              <canvas id="payment-chart"></canvas>
+              <canvas id="stock-chart"></canvas>
             </div>
-            <div id="payment-legend" style="margin-top:14px; display:flex; flex-direction:column; gap:6px;"></div>
+            <div id="stock-chart-legend" style="margin-top:10px; font-size:0.72rem; color:var(--text-muted); text-align:center;"></div>
           </div>
         </div>
       </div>
@@ -239,7 +240,7 @@
 <script src="_sidebar.js?v=14"></script>
 <script src="../js/app.js?v=14"></script>
 <script>
-let salesChart = null, paymentChart = null;
+let salesChart = null;
 
 async function initDashboard() {
   const ok = await requireAuth('dashboard');
@@ -444,55 +445,86 @@ async function loadChart(period, btn) {
       }
     });
 
-    // Payment methods donut
-    loadPaymentChart();
+    // Stock chart
+    loadStockChart();
 
   } catch (e) { console.error(e); }
 }
 
-async function loadPaymentChart() {
+let stockChart = null;
+async function loadStockChart() {
   try {
-    const endDate = getToday();
-    const startDate = new Date(); startDate.setDate(startDate.getDate() - 30);
-    const txs = await KasirkuDB.Transactions.getAll({ startDate: startDate.toISOString(), endDate: new Date().toISOString() });
+    const products = await KasirkuDB.Products.getAll();
+    const ctx = document.getElementById('stock-chart').getContext('2d');
+    if (stockChart) stockChart.destroy();
 
-    const methods = {};
-    txs.filter(t => t.status === 'completed').forEach(t => {
-      methods[t.payment_method] = (methods[t.payment_method] || 0) + 1;
-    });
-
-    const labels = Object.keys(methods).map(m => m.toUpperCase());
-    const values = Object.values(methods);
-    const total = values.reduce((a, b) => a + b, 0);
-    const colors = ['#f97316','#22c55e','#06b6d4','#8b5cf6','#f59e0b'];
-
-    const ctx2 = document.getElementById('payment-chart').getContext('2d');
-    if (paymentChart) paymentChart.destroy();
-
-    if (total === 0) {
-      document.getElementById('payment-legend').innerHTML = `<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;">Belum ada data transaksi</p>`;
+    if (!products.length) {
+      document.getElementById('stock-chart-legend').textContent = 'Belum ada data produk';
       return;
     }
 
-    paymentChart = new Chart(ctx2, {
-      type: 'doughnut',
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#1c1f2a', borderWidth: 3, hoverOffset: 8 }] },
+    // Sort by stock ascending (show low stock prominently), take top 10
+    const sorted = [...products].sort((a, b) => a.stock - b.stock).slice(0, 10);
+    const labels = sorted.map(p => p.name.length > 14 ? p.name.slice(0, 13) + '…' : p.name);
+    const stockValues = sorted.map(p => p.stock);
+    const minValues = sorted.map(p => p.min_stock || 0);
+    const bgColors = sorted.map(p =>
+      p.stock <= 0 ? '#ef4444' :
+      p.stock <= p.min_stock ? '#f97316' :
+      '#22c55e'
+    );
+
+    stockChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Stok Saat Ini',
+            data: stockValues,
+            backgroundColor: bgColors,
+            borderRadius: 4,
+            borderSkipped: false,
+          },
+          {
+            label: 'Min. Stok',
+            data: minValues,
+            type: 'line',
+            borderColor: '#f59e0b',
+            borderWidth: 1.5,
+            borderDash: [4, 3],
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+          }
+        ]
+      },
       options: {
         responsive: true, maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c1f2a', borderColor: 'rgba(255,255,255,0.07)', borderWidth: 1 } }
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'rgba(255,255,255,0.07)', borderWidth: 1,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 }, maxRotation: 35 } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 } }, beginAtZero: true }
+        }
       }
     });
 
-    document.getElementById('payment-legend').innerHTML = labels.map((l, i) => `
-      <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.78rem;">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <div style="width:8px;height:8px;border-radius:2px;background:${colors[i]};flex-shrink:0;"></div>
-          <span style="color:var(--text-secondary);">${l}</span>
-        </div>
-        <span style="font-weight:600; color:var(--text-primary);">${values[i]} <span style="color:var(--text-muted); font-weight:400;">(${Math.round(values[i]/total*100)}%)</span></span>
-      </div>
-    `).join('');
+    const habis = products.filter(p => p.stock <= 0).length;
+    const rendah = products.filter(p => p.stock > 0 && p.stock <= p.min_stock).length;
+    document.getElementById('stock-chart-legend').innerHTML =
+      `<span style="color:#22c55e;">■</span> Aman &nbsp;
+       <span style="color:#f97316;">■</span> Rendah (${rendah}) &nbsp;
+       <span style="color:#ef4444;">■</span> Habis (${habis}) &nbsp;
+       <span style="color:#f59e0b; letter-spacing:2px;">---</span> Min. Stok`;
   } catch (e) { console.error(e); }
 }
 
