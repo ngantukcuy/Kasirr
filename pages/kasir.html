@@ -672,9 +672,6 @@ const Printer = {
         <tr><td>Pembayaran (${payLabel[tx.payment_method]||tx.payment_method})</td><td>${formatRupiah(tx.paid_amount)}</td></tr>
         ${tx.change_amount > 0 ? `<tr><td>Kembalian</td><td>${formatRupiah(tx.change_amount)}</td></tr>` : ''}
       </table>
-      <div class="line"></div>
-      <div class="center">${footer}</div>
-      <div class="center" style="margin-top:8px;font-size:10px;">Powered by KASIRKU</div>
     </body></html>`;
 
     const w = window.open('','_blank','width=400,height=600');

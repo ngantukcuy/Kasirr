@@ -470,6 +470,7 @@
   }
 
   async function saveEditTx() {
+    await _waitReady();
     if (!editTxId) return;
     if (!editItems.length) { Toast.error('Transaksi harus memiliki minimal 1 produk'); return; }
     const subtotal = editItems.reduce((s, it) => s + it.quantity * it.selling_price, 0);
@@ -493,6 +494,7 @@
       'Hapus Transaksi',
       `Yakin ingin menghapus transaksi ${invoice}? Tindakan ini tidak dapat dibatalkan.`,
       async () => {
+        await _waitReady();
         try {
           await KasirkuDB.Transactions.delete(id);
           Toast.success(`Transaksi ${invoice} berhasil dihapus`);

@@ -626,6 +626,7 @@ async function requireAuth(activePage) {
 // Expose globals
 // ============================================================
 window.KasirkuDB      = KasirkuDB;
+window._waitReady     = _waitReady;
 window.Toast          = Toast;
 window.Modal          = Modal;
 window.getCurrentUser = getCurrentUser;
