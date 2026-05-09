@@ -152,6 +152,45 @@
       .cart-panel.pos-active { display: flex !important; }
     }
 
+    /* ── Product Panel Footer (mobile sticky bayar) ── */
+    .product-panel-footer {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .product-panel-footer {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+      }
+      .product-panel-footer.hidden { display: none !important; }
+      .ppf-info { display: flex; flex-direction: column; gap: 1px; }
+      .ppf-count { font-size: 0.72rem; color: var(--text-muted); }
+      .ppf-total { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--accent-light); }
+      .ppf-btn {
+        flex-shrink: 0;
+        padding: 10px 18px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: var(--transition);
+        white-space: nowrap;
+      }
+      .ppf-btn:hover { background: var(--accent-hover, #4f46e5); }
+    }
+
     /* Product card override — konsisten dan tidak kepotong */
     .product-card { padding: 14px 12px 12px; height: 148px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: var(--transition); box-sizing: border-box; }
     .product-card-img { height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; flex-shrink: 0; }
@@ -256,6 +295,17 @@
           <!-- Products Grid -->
           <div class="products-grid" id="products-grid">
             <div class="empty-state"><div class="loader-spinner"></div></div>
+          </div>
+
+          <!-- Product Panel Footer (mobile: sticky summary + bayar btn) -->
+          <div class="product-panel-footer" id="product-panel-footer" style="display:none;">
+            <div class="ppf-info">
+              <span class="ppf-count" id="ppf-count">0 item</span>
+              <span class="ppf-total" id="ppf-total">Rp 0</span>
+            </div>
+            <button class="ppf-btn" onclick="mobileSwitchTab('keranjang')">
+              🛒 Lihat Keranjang
+            </button>
           </div>
         </div>
 
@@ -1132,9 +1182,23 @@ function mobileSwitchTab(tab) {
 function updateMobileCartBadge() {
   const badge = document.getElementById('mob-cart-badge');
   if (!badge) return;
-  const total = Cart.items.reduce((s, i) => s + i.quantity, 0);
-  badge.textContent = total;
-  badge.style.display = total > 0 ? 'inline-block' : 'none';
+  const totalQty = Cart.items.reduce((s, i) => s + i.quantity, 0);
+  badge.textContent = totalQty;
+  badge.style.display = totalQty > 0 ? 'inline-block' : 'none';
+
+  // Update product panel footer
+  const footer = document.getElementById('product-panel-footer');
+  const ppfCount = document.getElementById('ppf-count');
+  const ppfTotal = document.getElementById('ppf-total');
+  if (footer) {
+    if (totalQty > 0) {
+      footer.classList.remove('hidden');
+      if (ppfCount) ppfCount.textContent = totalQty + ' item';
+      if (ppfTotal) ppfTotal.textContent = formatCurrency(Cart.total || 0);
+    } else {
+      footer.classList.add('hidden');
+    }
+  }
 }
 
 // ---- Payment ----

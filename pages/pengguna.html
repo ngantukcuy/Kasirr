@@ -42,6 +42,11 @@
     .mini-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
     .mini-stat-val { font-size: 1.5rem; font-weight: 800; font-family: var(--font-display); }
     .mini-stat-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+  
+    @media (max-width: 768px) {
+      .filter-bar { flex-direction: column; gap: 8px; }
+      .filter-bar > * { width: 100% !important; }
+    }
   </style>
 </head>
 <body>
@@ -211,8 +216,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=11"></script>
-<script src="_sidebar.js?v=11"></script>
 <script src="../js/app.js?v=11"></script>
+<script src="_sidebar.js?v=11"></script>
 <script>
   let _editingUserId = null;
   const currentUser = getCurrentUser();

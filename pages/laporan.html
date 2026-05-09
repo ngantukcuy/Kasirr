@@ -18,6 +18,12 @@
     .rank-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
     .expense-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
     .expense-row:last-child { border-bottom: none; }
+  
+    @media (max-width: 768px) {
+      .laporan-grid { grid-template-columns: 1fr !important; }
+      .filter-bar { flex-direction: column; gap: 8px; }
+      .filter-bar > * { width: 100% !important; }
+    }
   </style>
 </head>
 <body>
@@ -194,8 +200,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=11"></script>
-<script src="_sidebar.js?v=11"></script>
 <script src="../js/app.js?v=11"></script>
+<script src="_sidebar.js?v=11"></script>
 <script>
   let salesChart = null;
   let reportData = [];

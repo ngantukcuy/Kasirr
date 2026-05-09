@@ -35,6 +35,13 @@
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-grid .full { grid-column: 1 / -1; }
     .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  
+    @media (max-width: 768px) {
+      .filter-bar { flex-direction: column; gap: 8px; }
+      .filter-bar > * { width: 100% !important; box-sizing: border-box; }
+      .form-grid { grid-template-columns: 1fr !important; }
+      .product-table-wrap table { min-width: 600px; }
+    }
   </style>
 </head>
 <body>
@@ -212,8 +219,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=11"></script>
-<script src="_sidebar.js?v=11"></script>
 <script src="../js/app.js?v=11"></script>
+<script src="_sidebar.js?v=11"></script>
 <script>
   let allProducts = [];
   let editingProductId = null;

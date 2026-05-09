@@ -1526,3 +1526,155 @@ tbody td {
   .page-content { padding: 0; }
   body { background: white; color: black; }
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE — Riwayat Transaksi, Produk & Stok,
+   Monitor Stok, Laporan Penjualan, Manajemen User, Laporan Stok
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ── General table: horizontal scroll wrapper ── */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-lg);
+    width: 100%;
+  }
+  .table-wrapper table {
+    min-width: 600px;
+  }
+
+  /* ── Filter bars: stack vertically ── */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px;
+  }
+  .filter-bar > * {
+    width: 100% !important;
+    flex: unset !important;
+  }
+  .filter-bar select,
+  .filter-bar input[type="text"],
+  .filter-bar input[type="date"] {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* ── Summary / stats cards: 2 cols on mobile ── */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+
+  /* ── Page header actions: wrap ── */
+  .page-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .page-header .header-actions,
+  .page-header > div:last-child {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Form rows: stack ── */
+  .form-row, .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Riwayat Transaksi table ── */
+  .tx-table { min-width: 700px; }
+
+  /* ── Produk & Stok: hide less important columns on small screens ── */
+  .produk-table th:nth-child(5),
+  .produk-table td:nth-child(5) { display: none; }
+
+  /* ── Monitor Stok ── */
+  .stok-table { min-width: 540px; }
+
+  /* ── Laporan Penjualan: charts stack ── */
+  .laporan-grid,
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Manajemen User table ── */
+  .user-table { min-width: 520px; }
+
+  /* ── Laporan Stok: mv-table ── */
+  .mv-table { min-width: 640px; }
+
+  /* ── Delete bar / action bar ── */
+  .delete-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Pagination: center and smaller ── */
+  .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px 8px;
+  }
+  .page-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  /* ── Modal: full width on mobile ── */
+  .modal-container {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto;
+  }
+  .modal-container.modal-lg,
+  .modal-container.modal-xl {
+    width: 98vw !important;
+    max-width: 98vw !important;
+  }
+
+  /* ── Payment modal: stack the 2-col grid ── */
+  .modal-body > div[style*="grid-template-columns:1fr 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* ── Produk page: product cards grid smaller ── */
+  .products-list-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Laporan: date filter row ── */
+  .laporan-filter {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Small text adjustments ── */
+  .page-title h1, h1 { font-size: 1.3rem; }
+  .card { padding: 14px; }
+
+  /* ── Header actions spacing ── */
+  .top-header {
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .header-actions .btn span,
+  .header-actions .btn-text {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .page-content {
+    padding: 10px;
+  }
+}

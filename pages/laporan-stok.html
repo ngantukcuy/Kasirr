@@ -80,6 +80,13 @@
       font-family:inherit; transition:var(--transition);
     }
     .btn-cancel-sel:hover { border-color:var(--accent-border); color:var(--accent); }
+  
+    @media (max-width: 768px) {
+      .filter-bar { flex-direction: column; gap: 8px; }
+      .filter-bar > * { width: 100% !important; box-sizing: border-box; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .mv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
   </style>
 </head>
 <body>
@@ -255,8 +262,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=10"></script>
-<script src="_sidebar.js?v=10"></script>
 <script src="../js/app.js?v=10"></script>
+<script src="_sidebar.js?v=10"></script>
 <script>
   const PAGE_SIZE = 50;
   let allMovements = [];   // semua data dari Supabase (sudah difilter range tanggal)

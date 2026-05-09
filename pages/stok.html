@@ -19,6 +19,11 @@
     .stock-bar-fill { height: 100%; border-radius: 3px; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 28px; max-width: 440px; width: 100%; }
+  
+    @media (max-width: 768px) {
+      .filter-bar { flex-direction: column; gap: 8px; }
+      .filter-bar > * { width: 100% !important; }
+    }
   </style>
 </head>
 <body>
@@ -154,8 +159,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=11"></script>
-<script src="_sidebar.js?v=11"></script>
 <script src="../js/app.js?v=11"></script>
+<script src="_sidebar.js?v=11"></script>
 <script>
   let allProducts = [];
   let currentFilter = 'all';
