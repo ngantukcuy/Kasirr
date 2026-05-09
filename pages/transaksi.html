@@ -344,8 +344,17 @@
 
   function printCurrentOrderSlip() {
     if (!currentTx) return;
-    const user = getCurrentUser();
-    printOrderSlip(currentTx, { store_name: user?.store_name, store_address: user?.store_address, store_phone: user?.store_phone });
+    try {
+      const user = getCurrentUser();
+      if (typeof printOrderSlip !== 'function') {
+        Toast.error('Fungsi cetak pesanan tidak ditemukan. Coba refresh halaman.');
+        return;
+      }
+      printOrderSlip(currentTx, { store_name: user?.store_name, store_address: user?.store_address, store_phone: user?.store_phone });
+    } catch (e) {
+      console.error('printCurrentOrderSlip error:', e);
+      Toast.error('Gagal mencetak pesanan: ' + (e.message || e));
+    }
   }
 
   function exportCSV() {

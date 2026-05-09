@@ -1093,6 +1093,15 @@ async function processPayment() {
 
     lastTransaction = await KasirkuDB.Transactions.create(txData, items);
 
+    // Enrichkan lastTransaction dengan data lokal (cart + customer) agar cetak pesanan bisa langsung tanpa DB call
+    lastTransaction = {
+      ...lastTransaction,
+      transaction_items: items,
+      customers: Cart.customer ? { name: Cart.customer.name, phone: Cart.customer.phone, address: Cart.customer.address } : null,
+      profiles: { full_name: getCurrentUser()?.full_name || getCurrentUser()?.email || 'Admin' },
+      notes: txData.notes
+    };
+
     // Success!
     Modal.hide('payment-modal');
     showSuccessModal(lastTransaction, txData);
@@ -1126,10 +1135,18 @@ async function printLastReceipt() {
 async function printLastOrderSlip() {
   if (!lastTransaction) return;
   try {
-    const tx = await KasirkuDB.Transactions.getById(lastTransaction.id);
+    // Coba gunakan data yang sudah ada di lastTransaction dulu
+    let tx = lastTransaction;
+    // Kalau transaction_items belum ada, baru fetch dari DB
+    if (!tx.transaction_items || tx.transaction_items.length === 0) {
+      tx = await KasirkuDB.Transactions.getById(lastTransaction.id);
+    }
     const settings = window.storeSettings || {};
     printOrderSlip(tx, settings);
-  } catch (e) { Toast.error('Gagal mencetak pesanan'); }
+  } catch (e) {
+    console.error('printLastOrderSlip error:', e);
+    Toast.error('Gagal mencetak pesanan: ' + (e.message || e));
+  }
 }
 
 function newTransaction() {
