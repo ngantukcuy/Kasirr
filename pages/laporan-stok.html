@@ -82,11 +82,55 @@
     }
     .btn-cancel-sel:hover { border-color:var(--accent-border); color:var(--accent); }
   
+    /* Mobile select toolbar */
+    .mobile-select-bar {
+      display: none;
+    }
     @media (max-width: 768px) {
       .filter-bar { flex-direction: column; gap: 8px; }
       .filter-bar > * { width: 100% !important; box-sizing: border-box; }
       .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .mv-table-wrap { max-height: 60vh; }
+
+      /* Sembunyikan kolom checkbox di tabel (mobile pakai bar sendiri) */
+      .mv-table th:first-child,
+      .mv-table td:first-child { display: none; }
+
+      /* Mobile select bar */
+      .mobile-select-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .mobile-select-bar .ms-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        flex: 1;
+        min-width: 80px;
+      }
+      .mobile-select-bar .ms-label.has-sel {
+        color: #ef4444;
+        font-weight: 700;
+      }
+      .ms-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+        background: var(--bg-elevated); color: var(--text-secondary);
+        font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit;
+        white-space: nowrap;
+      }
+      .ms-btn:active { opacity: 0.7; }
+      .ms-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .ms-btn.danger  { background: #ef4444; border-color: #ef4444; color: #fff; }
+    }
+    @media (min-width: 769px) {
+      .mobile-select-bar { display: none !important; }
     }
   </style>
 </head>
@@ -226,6 +270,23 @@
         </button>
         <button class="btn-delete-sel" onclick="confirmDeleteSelected()">
           <i class='bx bx-trash'></i> Hapus yang Dipilih
+        </button>
+      </div>
+
+      <!-- ── Mobile Select Bar ── -->
+      <div class="mobile-select-bar" id="mobile-select-bar">
+        <span class="ms-label" id="ms-label">Pilih data untuk dihapus</span>
+        <button class="ms-btn" onclick="mobileSelectPage()">
+          <i class='bx bx-select-multiple'></i> Halaman Ini
+        </button>
+        <button class="ms-btn primary" onclick="mobileSelectAll()">
+          <i class='bx bx-check-double'></i> Semua Data
+        </button>
+        <button class="ms-btn" id="ms-clear-btn" onclick="clearSelection()" style="display:none;">
+          <i class='bx bx-x'></i> Batal
+        </button>
+        <button class="ms-btn danger" id="ms-delete-btn" onclick="confirmDeleteSelected()" style="display:none;">
+          <i class='bx bx-trash'></i> Hapus
         </button>
       </div>
 
@@ -553,6 +614,48 @@
     } else {
       bar.classList.remove('visible');
     }
+
+    // Sinkronkan mobile select bar
+    const msLabel     = document.getElementById('ms-label');
+    const msClearBtn  = document.getElementById('ms-clear-btn');
+    const msDeleteBtn = document.getElementById('ms-delete-btn');
+    if (msLabel) {
+      if (count > 0) {
+        msLabel.textContent = `${count} data dipilih`;
+        msLabel.classList.add('has-sel');
+        msClearBtn.style.display  = 'inline-flex';
+        msDeleteBtn.style.display = 'inline-flex';
+      } else {
+        msLabel.textContent = 'Pilih data untuk dihapus';
+        msLabel.classList.remove('has-sel');
+        msClearBtn.style.display  = 'none';
+        msDeleteBtn.style.display = 'none';
+      }
+    }
+  }
+
+  // ── Mobile: pilih semua item di halaman ini ───────────────
+  function mobileSelectPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + PAGE_SIZE);
+    const allOnPageSelected = pageItems.every(m => selectedIds.has(m.id));
+    pageItems.forEach(m => {
+      if (allOnPageSelected) selectedIds.delete(m.id);
+      else selectedIds.add(m.id);
+    });
+    renderTable();
+    updateDeleteBar();
+  }
+
+  // ── Mobile: pilih SEMUA data di semua halaman ─────────────
+  function mobileSelectAll() {
+    const allSelected = filtered.every(m => selectedIds.has(m.id));
+    filtered.forEach(m => {
+      if (allSelected) selectedIds.delete(m.id);
+      else selectedIds.add(m.id);
+    });
+    renderTable();
+    updateDeleteBar();
   }
 
   // ── Batalkan semua seleksi ───────────────────────────────
