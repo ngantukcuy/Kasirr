@@ -1680,207 +1680,168 @@ tbody td {
   }
 }
 
+
 /* ============================================================
-   RESPONSIVE FIX v6 — Semua halaman menyesuaikan layar mobile
+   RESPONSIVE v6 — Mobile-first, NO horizontal scroll/cut-off
    ============================================================ */
 
-/* ── Pastikan app-wrapper tidak overflow horizontal ── */
-.app-wrapper {
-  overflow-x: hidden;
-}
+/* Prevent any horizontal overflow at root level */
+html, body { overflow-x: hidden; max-width: 100vw; }
+.app-wrapper { overflow-x: hidden; }
+.main-content { min-width: 0; overflow-x: hidden; }
+.page-content { min-width: 0; overflow-x: hidden; }
 
-/* ── quick-action-grid: 2 kolom di tablet, 2 kolom di mobile ── */
+/* ── Dashboard quick actions: 2 cols on mobile ── */
 @media (max-width: 768px) {
   .quick-action-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px;
   }
-  .quick-action .qa-icon {
-    width: 38px;
-    height: 38px;
-  }
-  .quick-action span {
-    font-size: 0.72rem;
-  }
 }
 
-/* ── Tabel: semua halaman kolom bisa scroll tapi container pas layar ── */
+/* ── All grids collapse to 1 col on mobile ── */
 @media (max-width: 768px) {
-  /* Wrapper tabel: tidak overflow ke luar layar */
-  .table-wrapper,
-  .mv-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-    width: 100%;
-    border-radius: var(--radius-lg);
-  }
+  .stats-grid        { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .grid-2            { grid-template-columns: 1fr !important; }
+  .grid-3            { grid-template-columns: 1fr !important; }
+  .grid-cols-2-1     { grid-template-columns: 1fr !important; }
+  .grid-cols-1-2     { grid-template-columns: 1fr !important; }
+  .summary-grid      { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .laporan-grid      { grid-template-columns: 1fr !important; }
+  .chart-grid        { grid-template-columns: 1fr !important; }
+  .user-grid         { grid-template-columns: 1fr !important; }
+  .stats-row         { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .form-row, .form-grid { grid-template-columns: 1fr !important; }
+  .products-list-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
 
-  /* Kolom yang kurang penting disembunyikan di mobile */
+@media (max-width: 480px) {
+  .stats-grid   { grid-template-columns: 1fr !important; }
+  .summary-grid { grid-template-columns: 1fr !important; }
+  .stats-row    { grid-template-columns: 1fr !important; }
+  .page-content { padding: 10px !important; }
+  .stat-card    { padding: 14px 12px !important; }
+  .stat-value   { font-size: 1.3rem !important; }
+}
 
-  /* Riwayat Transaksi: sembunyikan kolom kasir & catatan */
-  .tx-table th:nth-child(6),
-  .tx-table td:nth-child(6) { display: none; }
-
-  /* Produk & Stok: sembunyikan kategori & deskripsi */
-  .produk-table th:nth-child(3),
-  .produk-table td:nth-child(3),
-  .produk-table th:nth-child(6),
-  .produk-table td:nth-child(6) { display: none; }
-
-  /* Monitor Stok: sembunyikan kolom min stok */
-  .stok-table th:nth-child(5),
-  .stok-table td:nth-child(5) { display: none; }
-
-  /* Laporan Stok: sembunyikan kolom stok sebelum & oleh */
-  .mv-table th:nth-child(6),
-  .mv-table td:nth-child(6),
-  .mv-table th:nth-child(10),
-  .mv-table td:nth-child(10) { display: none; }
-
-  /* Laporan Penjualan: sembunyikan kolom kasir */
-  .laporan-table th:nth-child(5),
-  .laporan-table td:nth-child(5) { display: none; }
-
-  /* Manajemen User: sembunyikan created_at */
-  .user-table th:nth-child(4),
-  .user-table td:nth-child(4) { display: none; }
-
-  /* Pelanggan: sembunyikan kolom telepon atau email */
-  .pelanggan-table th:nth-child(4),
-  .pelanggan-table td:nth-child(4) { display: none; }
-
-  /* Padding tabel lebih compact */
-  thead th { padding: 8px 10px !important; font-size: 0.68rem !important; }
-  tbody td { padding: 9px 10px !important; font-size: 0.82rem !important; }
-
-  /* Stats cards: 2 kolom */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
-  }
-
-  /* Summary grid laporan stok: 2 kolom */
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
-  }
-
-  /* Grid layouts jadi 1 kolom */
-  .grid-2,
-  .grid-3,
-  .grid-cols-2-1,
-  .grid-cols-1-2 {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-
-  /* Card padding lebih kecil */
-  .card { padding: 12px !important; }
-  .card-body { padding: 12px !important; }
-
-  /* Filter bar stack vertical */
+/* ── Filter bar: stack vertically on mobile ── */
+@media (max-width: 768px) {
   .filter-bar {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 8px;
   }
-  .filter-bar > * {
-    width: 100% !important;
-    flex: unset !important;
-    box-sizing: border-box;
-  }
+  .filter-bar > * { width: 100% !important; box-sizing: border-box; }
   .filter-bar input,
-  .filter-bar select {
-    width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  /* Page header wrap */
-  .page-header {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .page-header h1,
-  .header-title h1 {
-    font-size: 1.1rem !important;
-  }
-
-  /* Delete action bar wrap */
-  .delete-bar {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* Sembunyikan teks tombol di header, simpan ikon saja */
-  .header-actions .btn-text,
-  .header-actions .btn span:not(.nav-badge) {
-    display: none;
-  }
-
-  /* Pagination compact */
-  .pagination {
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 10px 8px;
-    gap: 4px;
-  }
-  .page-btn {
-    padding: 4px 8px;
-    font-size: 0.72rem;
-  }
-
-  /* Top movers di laporan stok: scroll horizontal */
-  #top-movers-list {
-    overflow-x: auto;
-    flex-wrap: nowrap !important;
-    padding-bottom: 6px;
-  }
-  #top-movers-list > div {
-    min-width: 140px;
-    flex: 0 0 auto;
-  }
+  .filter-bar select { width: 100% !important; box-sizing: border-box; }
 }
 
-@media (max-width: 480px) {
-  /* 1 kolom di HP kecil */
-  .stats-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .summary-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .quick-action-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .page-content {
-    padding: 10px !important;
-  }
-  /* Stat card lebih compact */
-  .stat-card { padding: 14px 12px !important; }
-  .stat-value { font-size: 1.3rem !important; }
-}
-
-/* ── Product table & wrap ── */
+/* ── Page header wrap ── */
 @media (max-width: 768px) {
-  .product-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .page-header { flex-wrap: wrap; gap: 8px; }
+  .header-title h1 { font-size: 1.1rem !important; }
+  .delete-bar { flex-wrap: wrap; gap: 8px; }
+  .pagination { justify-content: center; flex-wrap: wrap; padding: 10px 8px; gap: 4px; }
+  .page-btn { padding: 4px 8px; font-size: 0.72rem; }
+  #top-movers-list { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 6px; }
+  #top-movers-list > div { min-width: 140px; flex: 0 0 auto; }
+}
+
+/* ================================================================
+   TABEL MOBILE — Card-style rows, no horizontal scroll
+   Semua tabel di-transform jadi card per baris di layar kecil.
+   Cara kerja: thead disembunyikan, setiap td tampil block dengan
+   label dari data-label attribute.
+   ================================================================ */
+@media (max-width: 768px) {
+
+  /* Wrapper: tidak perlu overflow-x lagi */
+  .table-wrapper,
+  .mv-table-wrap,
+  .product-table-wrap { overflow-x: visible; width: 100%; }
+
+  /* Sembunyikan thead */
+  .table-wrapper thead,
+  .mv-table-wrap thead,
+  .product-table-wrap thead,
+  .table-wrapper table thead { display: none !important; }
+
+  /* Setiap baris jadi card */
+  .table-wrapper tbody tr,
+  .mv-table-wrap tbody tr,
+  .product-table-wrap tbody tr,
+  .table-wrapper table tbody tr {
+    display: block !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    position: relative;
+  }
+  .table-wrapper tbody tr:hover,
+  .mv-table-wrap tbody tr:hover,
+  .product-table-wrap tbody tr:hover { background: var(--bg-hover); }
+
+  /* Setiap cell jadi baris dalam card */
+  .table-wrapper tbody td,
+  .mv-table-wrap tbody td,
+  .product-table-wrap tbody td,
+  .table-wrapper table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0 !important;
+    border: none !important;
+    font-size: 0.82rem;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  /* Label dari data-label attribute */
+  .table-wrapper tbody td[data-label]::before,
+  .mv-table-wrap tbody td[data-label]::before,
+  .product-table-wrap tbody td[data-label]::before,
+  .table-wrapper table tbody td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Cell tanpa label (checkbox, actions) tetap inline */
+  .table-wrapper tbody td[data-label=""],
+  .mv-table-wrap tbody td[data-label=""],
+  .product-table-wrap tbody td[data-label=""] {
+    justify-content: flex-end;
+    padding-top: 8px !important;
+    border-top: 1px solid var(--border) !important;
+    margin-top: 4px;
+  }
+
+  /* Actions cell */
+  .td-actions { justify-content: flex-end !important; gap: 6px; }
+
+  /* Override min-width dari tabel spesifik */
+  .tx-table, .mv-table, .stok-table, .user-table,
+  .product-table, .produk-table, .laporan-table {
+    min-width: 0 !important;
     width: 100%;
   }
-  .product-table th:nth-child(3),
-  .product-table td:nth-child(3) { display: none; }
-  .product-table th:nth-child(6),
-  .product-table td:nth-child(6) { display: none; }
 
-  /* user-grid: 1 kolom di mobile */
-  .user-grid { grid-template-columns: 1fr !important; }
-  .stats-row { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
-
-  /* Pelanggan cards, laporan charts: tetap 1 kolom */
-  .laporan-grid { grid-template-columns: 1fr !important; }
-}
-
-@media (max-width: 480px) {
-  .stats-row { grid-template-columns: 1fr !important; }
+  /* Checkbox row: tampilkan di kanan atas */
+  .table-wrapper tbody td:first-child:has(input[type="checkbox"]),
+  .mv-table-wrap tbody td:first-child:has(input[type="checkbox"]) {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: none !important;
+    padding: 0 !important;
+    display: block !important;
+    width: auto;
+  }
 }

@@ -514,31 +514,46 @@ const KasirkuDB = {
     async updateItems(txId, newItems, subtotal, discountAmount, totalAmount) {
       const user = getCurrentUser();
 
-      // ── Ambil items LAMA sebelum dihapus ──
+      // ── 1. Ambil qty LAMA dari DB sebelum apapun diubah ──
       const { data: oldItems, error: oldErr } = await _sb
         .from('transaction_items')
         .select('product_id, quantity')
         .eq('transaction_id', txId);
       if (oldErr) throw oldErr;
 
-      // Buat map: product_id → qty lama
       const oldQtyMap = {};
       for (const it of (oldItems || [])) {
         if (!it.product_id) continue;
         oldQtyMap[it.product_id] = (oldQtyMap[it.product_id] || 0) + it.quantity;
       }
 
-      // Buat map: product_id → qty baru
+      // ── 2. Buat map qty BARU ──
       const newQtyMap = {};
       for (const it of newItems) {
         if (!it.product_id) continue;
         newQtyMap[it.product_id] = (newQtyMap[it.product_id] || 0) + it.quantity;
       }
 
-      // ── Kumpulkan semua product_id yang terpengaruh ──
       const allProductIds = new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)]);
 
-      // ── Hapus transaction_items lama, insert yang baru ──
+      // ── 3. Hapus stock_movements dari EDIT SEBELUMNYA untuk txId ini ──
+      // (bukan movement asli dari trigger penjualan, hanya yg notes-nya "Edit transaksi")
+      // Ini mencegah double movement kalau transaksi diedit lebih dari sekali.
+      await _sb.from('stock_movements')
+        .delete()
+        .eq('reference_id', txId)
+        .eq('reference_type', 'transaction')
+        .like('notes', 'Edit transaksi%');
+
+      // ── 4. Batalkan efek stok dari edit-edit sebelumnya ──
+      // Ambil total selisih yang sudah pernah diaplikasikan oleh edit sebelumnya
+      // supaya angka stok produk kembali akurat sebelum kita apply selisih baru.
+      // Cara paling aman: hitung selisih antara qty lama (DB saat ini) vs qty asli
+      // dari transaksi (= sebelum edit pertama), lalu kembalikan.
+      // Tapi karena kita sudah hapus movement edit di atas, cukup hitung selisih
+      // qty lama vs qty baru dan apply sekali saja.
+
+      // ── 5. Hapus transaction_items lama, insert yang baru ──
       const { error: delErr } = await _sb
         .from('transaction_items').delete().eq('transaction_id', txId);
       if (delErr) throw delErr;
@@ -561,7 +576,7 @@ const KasirkuDB = {
         if (insErr) throw insErr;
       }
 
-      // ── STEP 4: Update transaction totals ──
+      // ── 6. Update total transaksi ──
       const { error: txErr } = await _sb.from('transactions').update({
         subtotal:        subtotal,
         discount_amount: discountAmount,
@@ -569,13 +584,14 @@ const KasirkuDB = {
       }).eq('id', txId);
       if (txErr) throw txErr;
 
-      // ── Adjust stok hanya berdasarkan SELISIH qty lama vs qty baru ──
-      // Contoh: qty lama=1, qty baru=3 → diff=-2 → stok kurang 2 lagi (out 2)
-      // Di laporan stok: baris asli -1 tetap, ditambah baris edit -2. Total -3. ✅
+      // ── 7. Hitung selisih stok dan catat 1 movement bersih ──
+      // Selisih dihitung dari qty lama (DB sebelum edit ini) vs qty baru.
+      // Movement asli dari penjualan (-3) tetap ada.
+      // Hanya selisih edit yang dicatat (-2 jika qty naik dari 3→5).
       for (const productId of allProductIds) {
         const qtyOld = oldQtyMap[productId] || 0;
         const qtyNew = newQtyMap[productId] || 0;
-        const diff   = qtyOld - qtyNew; // positif=stok balik, negatif=stok berkurang
+        const diff   = qtyOld - qtyNew; // positif = stok balik, negatif = stok berkurang
         if (diff === 0) continue;
 
         const { data: prod } = await _sb.from('products').select('stock, name').eq('id', productId).single();
@@ -758,3 +774,32 @@ window.getStockStatus = getStockStatus;
 window.getTierBadge   = getTierBadge;
 window.calculateLoyaltyPoints = calculateLoyaltyPoints;
 window.requireAuth    = requireAuth;
+// ============================================================
+// Mobile table auto-label — adds data-label to td from thead th
+// Runs after each page renders its table, enabling CSS card view
+// ============================================================
+function applyMobileTableLabels() {
+  document.querySelectorAll(
+    '.table-wrapper table, .mv-table-wrap table, .product-table-wrap table'
+  ).forEach(function(table) {
+    var headers = Array.from(table.querySelectorAll('thead th')).map(function(th) {
+      return th.textContent.trim();
+    });
+    table.querySelectorAll('tbody tr').forEach(function(tr) {
+      tr.querySelectorAll('td').forEach(function(td, i) {
+        td.setAttribute('data-label', headers[i] || '');
+      });
+    });
+  });
+}
+
+// Observe all tbody elements for changes (dynamic tables)
+(function() {
+  var obs = new MutationObserver(function() { applyMobileTableLabels(); });
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('tbody').forEach(function(tb) {
+      obs.observe(tb, { childList: true });
+    });
+    applyMobileTableLabels();
+  });
+})();

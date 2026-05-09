@@ -170,3 +170,4 @@ export function getStockStatus(stock, minStock) {
   if (stock <= minStock * 2) return { label: 'Sedikit', class: 'stock-warning' };
   return { label: 'Tersedia', class: 'stock-ok' };
 }
+
