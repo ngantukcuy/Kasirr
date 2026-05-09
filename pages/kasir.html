@@ -628,6 +628,59 @@ const BarcodeScanner = {
 window.BarcodeScanner = BarcodeScanner;
 </script>
 <script>
+// ── Cetak Pesanan (slip tanpa harga) ──────────────────────────
+function generateOrderSlipHTML(transaction, storeName, storeAddress, storePhone) {
+  storeName    = storeName    || 'KASIRKU';
+  storeAddress = storeAddress || '';
+  storePhone   = storePhone   || '';
+  const { invoice_number, created_at, transaction_items, customers, profiles, notes } = transaction;
+  const fmtDate = v => typeof formatDate==='function' ? formatDate(v,'datetime') : new Date(v).toLocaleString('id-ID');
+  const itemsHTML = (transaction_items||[]).map((item, idx) => `
+    <tr>
+      <td style="padding:4px 0; vertical-align:top;">${idx+1}.</td>
+      <td style="padding:4px 6px; vertical-align:top;"><strong>${item.product_name||item.products?.name||'-'}</strong></td>
+      <td style="padding:4px 0; text-align:right; vertical-align:top; white-space:nowrap;"><strong>${item.quantity} ${item.unit||'pcs'}</strong></td>
+    </tr>
+  `).join('');
+  const customerSection = customers ? `
+    <div style="margin:8px 0; padding:8px; border:1px solid #ccc; border-radius:4px;">
+      <div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase;">DATA PELANGGAN</div>
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <tr><td style="padding:1px 0; width:40%;">Nama</td><td>: <strong>${customers.name}</strong></td></tr>
+        ${customers.phone ? `<tr><td style="padding:1px 0;">No. HP</td><td>: ${customers.phone}</td></tr>` : ''}
+        ${customers.address ? `<tr><td style="padding:1px 0; vertical-align:top;">Alamat</td><td style="vertical-align:top;">: ${customers.address}</td></tr>` : ''}
+      </table>
+    </div>` : `<div style="margin:8px 0; padding:8px; border:1px dashed #ccc; border-radius:4px; text-align:center; font-size:11px; color:#888;">Pelanggan Umum</div>`;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pesanan - ${invoice_number}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;width:80mm;margin:0 auto;padding:4mm;color:#000;background:#fff}.center{text-align:center}.line{border-top:1px dashed #333;margin:6px 0}.double-line{border-top:2px solid #333;margin:6px 0}table{width:100%;border-collapse:collapse}.store-name{font-size:16px;font-weight:bold;margin:4px 0}.order-label{font-size:20px;font-weight:bold;text-align:center;letter-spacing:2px;margin:6px 0;border:2px solid #000;padding:4px;}@media print{body{width:80mm}@page{margin:2mm;size:80mm auto}}</style>
+</head><body>
+<div class="center"><div class="order-label">PESANAN</div><div class="store-name">${storeName}</div>${storeAddress?`<div>${storeAddress}</div>`:''}${storePhone?`<div>Telp: ${storePhone}</div>`:''}</div>
+<div class="double-line"></div>
+<table>
+  <tr><td>No. Pesanan</td><td style="text-align:right;"><strong>${invoice_number}</strong></td></tr>
+  <tr><td>Tanggal</td><td style="text-align:right;">${fmtDate(created_at)}</td></tr>
+  <tr><td>Kasir</td><td style="text-align:right;">${profiles?.full_name||'Admin'}</td></tr>
+</table>
+${customerSection}
+<div class="line"></div>
+<div style="font-size:11px; font-weight:bold; margin-bottom:4px; text-transform:uppercase;">DAFTAR PESANAN</div>
+<table>${itemsHTML}</table>
+<div class="double-line"></div>
+<div style="font-size:11px; font-weight:bold;">Total Item: ${(transaction_items||[]).reduce((s,i)=>s+(i.quantity||0),0)} pcs</div>
+${notes ? `<div class="line"></div><div style="font-size:11px;"><strong>Catatan:</strong> ${notes}</div>` : ''}
+<div class="line"></div>
+<div class="center" style="font-size:10px; margin-top:4px;"><p>Slip Pesanan — Bukan Bukti Pembayaran</p><p>===== KASIRKU =====</p></div>
+</body></html>`;
+}
+function printOrderSlip(transaction, storeInfo) {
+  storeInfo = storeInfo || {};
+  const html = generateOrderSlipHTML(transaction, storeInfo.store_name, storeInfo.store_address, storeInfo.store_phone);
+  const w = window.open('','_blank','width=420,height=650');
+  if (!w) { Toast.error('Pop-up diblokir browser. Izinkan pop-up untuk mencetak.'); return; }
+  w.document.open(); w.document.write(html); w.document.close(); w.focus();
+  setTimeout(() => { w.print(); }, 600);
+}
+
 // ── Printer — cetak struk via browser print window ──────────
 const Printer = {
   printReceipt(tx, settings = {}) {
