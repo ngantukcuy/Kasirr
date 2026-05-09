@@ -402,12 +402,17 @@ const KasirkuDB = {
 
     async getAll(filters = {}) {
       let q = _sb.from('transactions')
-        .select('*, profiles!cashier_id(full_name), customers(name, phone), transaction_items(id, product_id, product_name, quantity, unit, selling_price, buying_price, subtotal)')
+        .select('*, profiles!cashier_id(full_name), customers(name, phone), transaction_items(id, product_id, product_name, quantity, unit, selling_price, purchase_price, subtotal)')
         .order('created_at', { ascending: false });
       const startDate = filters.startDate || filters.date_from;
       const endDate   = filters.endDate   || filters.date_to;
-      if (startDate) q = q.gte('created_at', startDate);
-      if (endDate)   q = q.lte('created_at', endDate);
+      if (startDate && endDate) {
+        q = q.gte('created_at', startDate).lte('created_at', endDate);
+      } else if (startDate) {
+        q = q.gte('created_at', startDate);
+      } else if (endDate) {
+        q = q.lte('created_at', endDate);
+      }
       if (filters.cashier_id)     q = q.eq('cashier_id', filters.cashier_id);
       if (filters.payment_method) q = q.eq('payment_method', filters.payment_method);
       if (filters.limit)          q = q.limit(filters.limit);
@@ -459,16 +464,19 @@ const KasirkuDB = {
       const { error: delErr } = await _sb.from('transaction_items').delete().eq('transaction_id', txId);
       if (delErr) throw delErr;
       // Insert new items
-      const rows = items.map(it => ({
-        transaction_id: txId,
-        product_id: it.product_id || null,
-        product_name: it.product_name,
-        quantity: it.quantity,
-        unit: it.unit || 'pcs',
-        buying_price: it.buying_price || 0,
-        selling_price: it.selling_price,
-        subtotal: it.quantity * it.selling_price
-      }));
+      const rows = items.map(it => {
+        const row = {
+          transaction_id: txId,
+          product_name: it.product_name,
+          quantity: it.quantity,
+          unit: it.unit || 'pcs',
+          purchase_price: it.purchase_price || it.buying_price || 0,
+          selling_price: it.selling_price,
+          subtotal: it.quantity * it.selling_price
+        };
+        if (it.product_id) row.product_id = it.product_id;
+        return row;
+      });
       if (rows.length > 0) {
         const { error: insErr } = await _sb.from('transaction_items').insert(rows);
         if (insErr) throw insErr;

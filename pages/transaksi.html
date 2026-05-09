@@ -226,10 +226,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase.js?v=6"></script>
-<script src="_sidebar.js?v=6"></script>
-<script src="../js/app.js?v=6"></script>
-<script src="../js/receipt.js?v=6"></script>
+<script src="../js/supabase.js?v=8"></script>
+<script src="_sidebar.js?v=8"></script>
+<script src="../js/app.js?v=8"></script>
+<script src="../js/receipt.js?v=8"></script>
 <script>
   let transactions = [];
   let currentTx = null;
@@ -358,7 +358,7 @@
   }
 
   let editTxId = null;
-  let editItems = []; // [{product_id, product_name, quantity, unit, selling_price, buying_price}]
+  let editItems = []; // [{product_id, product_name, quantity, unit, selling_price, purchase_price}]
 
   function closeEditModal() {
     document.getElementById('edit-modal').style.display = 'none';
@@ -379,7 +379,7 @@
         quantity: it.quantity,
         unit: it.unit || 'pcs',
         selling_price: parseFloat(it.selling_price),
-        buying_price: parseFloat(it.buying_price || 0)
+        purchase_price: parseFloat(it.purchase_price || 0)
       }));
     } else {
       // Need to fetch full detail
@@ -391,7 +391,7 @@
           quantity: it.quantity,
           unit: it.unit || 'pcs',
           selling_price: parseFloat(it.selling_price),
-          buying_price: parseFloat(it.buying_price || 0)
+          purchase_price: parseFloat(it.purchase_price || 0)
         }));
         renderEditItems();
         updateEditTotals();
@@ -453,7 +453,7 @@
     const price = parseFloat(document.getElementById('new-item-price').value) || 0;
     if (!name) { Toast.error('Nama produk wajib diisi'); return; }
     if (price <= 0) { Toast.error('Harga harus lebih dari 0'); return; }
-    editItems.push({ product_id: null, product_name: name, quantity: qty, unit: 'pcs', selling_price: price, buying_price: 0 });
+    editItems.push({ product_id: null, product_name: name, quantity: qty, unit: 'pcs', selling_price: price, purchase_price: 0 });
     document.getElementById('new-item-name').value = '';
     document.getElementById('new-item-qty').value = '';
     document.getElementById('new-item-price').value = '';
