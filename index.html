@@ -34,7 +34,7 @@
     .particle {
       position: absolute;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(122,249,87,0.2) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(87, 243, 249, 0.2) 0%, transparent 70%);
       animation: float linear infinite;
     }
     @keyframes float {
@@ -390,16 +390,6 @@
             <i class="bx bx-log-in"></i> Masuk dengan PIN
           </button>
 
-          <div style="margin-top:10px; display:flex; gap:8px;">
-            <button class="btn outline" onclick="switchTab('register')" style="flex:1;">
-              <i class="bx bx-user-plus"></i> Daftar
-            </button>
-            <button class="btn outline" onclick="addAnotherAccount()" style="flex:1;">
-              <i class="bx bx-plus"></i> Akun Lain
-            </button>
-          </div>
-        </div>
-
         <!-- View fallback: Tidak ada akun tersimpan -->
         <div id="no-account-view" style="display:none;">
           <h1>Selamat datang 👋</h1>
@@ -419,8 +409,8 @@
         <p class="subtitle">Daftar untuk mulai kelola toko Anda</p>
 
         <div class="input-box">
-          <label>Nama Lengkap</label>
-          <input type="text" id="reg-name" placeholder="Budi Santoso" autocomplete="name">
+          <label>Nama </label>
+          <input type="text" id="reg-name" placeholder="Nama kamu" autocomplete="name">
           <i class='bx bxs-user'></i>
         </div>
         <div class="input-box">
@@ -438,7 +428,7 @@
         </div>
 
         <div class="input-box" style="margin-bottom:6px;">
-          <label>PIN Kasir (6 digit) <span style="color:#7af957;">*</span></label>
+          <label>PIN Kasir (6 digit) <span style="color:#57d8f9;">*</span></label>
           <div id="reg-pin-grid" style="display:grid; grid-template-columns:repeat(6,minmax(0,38px)); gap:4px; width:100%; margin-bottom:4px; justify-content:center;">
             <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
             <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
