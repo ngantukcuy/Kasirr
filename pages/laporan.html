@@ -34,7 +34,30 @@
     (function() {
       if (localStorage.getItem('kasirku_theme') === 'light') {
         document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
       }
+      // Dengarkan perubahan tema dari tab/halaman lain (pengaturan)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'kasirku_theme') {
+          if (e.newValue === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        }
+      });
+      // BroadcastChannel untuk sinkronisasi tema antar halaman di tab yang sama
+      try {
+        var _themeChannel = new BroadcastChannel('kasirku_theme_channel');
+        _themeChannel.onmessage = function(e) {
+          if (e.data && e.data.theme === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        };
+      } catch(e) {}
     })();
   </script>
 </head>
@@ -216,20 +239,33 @@
       </div>
       <div style="font-family:var(--font-display); font-size:0.85rem; font-weight:700; color:var(--accent-light);">${formatRupiah(p.total_revenue)}</div>
     </div>`).join('');
-  }}</div>
-        <div style="font-size:0.75rem; color:var(--text-muted);">${e.category} · ${formatDate(e.date)}</div>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-weight:700; color:#ef4444;">${formatRupiah(e.amount)}</span>
-        <button data-exp-id="${e.id}" data-action="edit" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">✏️ Edit</button>
-        <button data-exp-id="${e.id}" data-action="delete" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">🗑️</button>
-      </div>
-    </div>`).join('') +
-    `<div style="display:flex; justify-content:space-between; padding-top:12px; font-weight:700; border-top:1px solid var(--border);">
-      <span>Total Pengeluaran</span><span style="color:#ef4444;">${formatRupiah(total)}</span>
-    </div>`;
+  }
 
-    // Attach event listeners via delegation
+  function renderExpenses(expenses) {
+    const el = document.getElementById('expenses-list');
+    if (!el) return;
+    window._expensesCache = expenses;
+    if (!expenses || !expenses.length) {
+      el.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada pengeluaran</div>';
+      return;
+    }
+    const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    el.innerHTML = expenses.map(e => `
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);">
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600; font-size:0.85rem;">${e.description || '-'}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">${e.category} · ${formatDate(e.date)}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; color:#ef4444;">${formatRupiah(e.amount)}</span>
+          <button data-exp-id="${e.id}" data-action="edit" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">✏️ Edit</button>
+          <button data-exp-id="${e.id}" data-action="delete" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:0.72rem; padding:3px 8px; border-radius:6px; cursor:pointer;">🗑️</button>
+        </div>
+      </div>`).join('') +
+      `<div style="display:flex; justify-content:space-between; padding-top:12px; font-weight:700; border-top:1px solid var(--border);">
+        <span>Total Pengeluaran</span><span style="color:#ef4444;">${formatRupiah(total)}</span>
+      </div>`;
+
     el.querySelectorAll('button[data-exp-id]').forEach(btn => {
       btn.addEventListener('click', function() {
         const id = this.getAttribute('data-exp-id');
@@ -244,6 +280,16 @@
   let editExpenseId = null;
 
   function openEditExpense(id) {
+    const expenses = window._expensesCache || [];
+    const exp = expenses.find(e => e.id === id);
+    if (!exp) return;
+    editExpenseId = id;
+    document.getElementById('edit-exp-desc').value = exp.description || '';
+    document.getElementById('edit-exp-amount').value = exp.amount || '';
+    document.getElementById('edit-exp-category').value = exp.category || 'operasional';
+    document.getElementById('edit-exp-date').value = exp.date ? exp.date.split('T')[0] : getToday();
+    Modal.show('modal-edit-expense');
+  }
 
   async function saveEditExpense() {
     if (!editExpenseId) return;
@@ -259,10 +305,22 @@
         description: desc, amount,
         date: document.getElementById('edit-exp-date').value
       });
-      
+      Toast.success('Pengeluaran berhasil diperbarui');
+      Modal.hide('modal-edit-expense');
+      editExpenseId = null;
+      loadReport();
     } finally { btn.disabled = false; btn.textContent = 'Simpan'; }
   }
 
+  async function deleteExpense(id) {
+    Modal.confirm('Hapus Pengeluaran', 'Yakin ingin menghapus pengeluaran ini?', async () => {
+      try {
+        await KasirkuDB.Reports.deleteExpense(id);
+        Toast.success('Pengeluaran dihapus');
+        loadReport();
+      } catch(e) { Toast.error('Gagal menghapus'); }
+    });
+  }
 
   function exportCSV() {
     if (!reportData.length) { Toast.warning('Tidak ada data'); return; }
@@ -280,5 +338,39 @@
 </script>
 
   <div id="sidebar-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:199;" onclick="closeSidebar()"></div>
+
+  <!-- Modal Edit Pengeluaran -->
+  <div id="modal-edit-expense" class="modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px);">
+    <div class="modal-box" style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; width:100%; max-width:420px; margin:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:1.05rem; font-weight:700;">Edit Pengeluaran</h3>
+        <button onclick="Modal.hide('modal-edit-expense')" style="background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Keterangan</label>
+          <input id="edit-exp-desc" class="form-control" type="text" placeholder="Keterangan pengeluaran">
+        </div>
+        <div>
+          <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jumlah</label>
+          <input id="edit-exp-amount" class="form-control" type="number" placeholder="0" min="0">
+        </div>
+        <div>
+          <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Kategori</label>
+          <select id="edit-exp-category" class="form-control">
+            <option value="operasional">Operasional</option>
+            <option value="gaji">Gaji</option>
+            <option value="utilitas">Utilitas</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Tanggal</label>
+          <input id="edit-exp-date" class="form-control" type="date">
+        </div>
+        <button id="btn-edit-exp" class="btn btn-primary" onclick="saveEditExpense()">Simpan</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

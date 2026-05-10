@@ -31,7 +31,30 @@
     (function() {
       if (localStorage.getItem('kasirku_theme') === 'light') {
         document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
       }
+      // Dengarkan perubahan tema dari tab/halaman lain (pengaturan)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'kasirku_theme') {
+          if (e.newValue === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        }
+      });
+      // BroadcastChannel untuk sinkronisasi tema antar halaman di tab yang sama
+      try {
+        var _themeChannel = new BroadcastChannel('kasirku_theme_channel');
+        _themeChannel.onmessage = function(e) {
+          if (e.data && e.data.theme === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        };
+      } catch(e) {}
     })();
   </script>
 </head>
@@ -176,8 +199,8 @@
         ${c.description ? `<div style="font-size:0.78rem; color:var(--text-muted);">${c.description}</div>` : ''}
       </div>
       <div style="display:flex; gap:8px; margin-top:4px;">
-        <button class="btn btn-sm" onclick="openModal('${c.id}')" style="flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.78rem;">Edit</button>
-        <button class="btn btn-sm" onclick="deleteCategory('${c.id}','${c.name.replace(/'/g,"\\'")}') " style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444; font-size:0.78rem; padding:0 10px;">🗑</button>
+        <button class="btn btn-sm" onclick="openModal('${c.id}')" data-action="edit" style="flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.78rem;">Edit</button>
+        <button class="btn btn-sm" onclick="deleteCategory('${c.id}','${c.name.replace(/'/g,"\\'")}') " data-action="delete" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444; font-size:0.78rem; padding:0 10px;">🗑</button>
       </div>
     </div>`).join('');
   }

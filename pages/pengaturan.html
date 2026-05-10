@@ -450,6 +450,12 @@
       localStorage.setItem('kasirku_theme', 'dark');
     }
     updateThemeButtons(isLight);
+    // Broadcast ke semua tab/halaman yang sudah terbuka (BroadcastChannel)
+    try {
+      const bc = new BroadcastChannel('kasirku_theme_channel');
+      bc.postMessage({ theme: isLight ? 'light' : 'dark' });
+      bc.close();
+    } catch(e) {}
   }
 
   function previewTheme(mode) {

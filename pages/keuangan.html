@@ -60,7 +60,30 @@
     (function() {
       if (localStorage.getItem('kasirku_theme') === 'light') {
         document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
       }
+      // Dengarkan perubahan tema dari tab/halaman lain (pengaturan)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'kasirku_theme') {
+          if (e.newValue === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        }
+      });
+      // BroadcastChannel untuk sinkronisasi tema antar halaman di tab yang sama
+      try {
+        var _themeChannel = new BroadcastChannel('kasirku_theme_channel');
+        _themeChannel.onmessage = function(e) {
+          if (e.data && e.data.theme === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        };
+      } catch(e) {}
     })();
   </script>
 </head>
@@ -467,7 +490,7 @@
         <td style="font-size:0.82rem; color:var(--text-muted);">${methodLabel[e.method] || e.method || '—'}</td>
         <td style="font-size:0.8rem; color:var(--text-muted);">${e.created_by_name || '—'}</td>
         <td style="text-align:center;">
-          <button onclick="deleteEntry('${e.id}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:.72rem;padding:3px 8px;border-radius:6px;cursor:pointer;" title="Hapus">🗑️</button>
+          <button onclick="deleteEntry('${e.id}')" data-action="delete" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:.72rem;padding:3px 8px;border-radius:6px;cursor:pointer;" title="Hapus">🗑️</button>
         </td>
       </tr>`;
     }).join('');

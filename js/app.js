@@ -768,81 +768,71 @@ function canEditOrDelete() {
   return role === 'owner' || role === 'manager';
 }
 
-// Sembunyikan semua tombol edit/hapus/tambah untuk kasir
-function applyRoleRestrictions() {
-  if (canEditOrDelete()) return; // owner & manager: akses penuh
-  // Sembunyikan semua tombol aksi berbahaya
-  const style = document.createElement('style');
-  style.id = 'kasirku-role-restrict';
-  style.textContent = `
-    /* Kasir: sembunyikan tombol tambah, edit, hapus di seluruh halaman */
-    .btn-primary[onclick*="Modal"],
-    .btn-primary[onclick*="modal"],
-    .btn-primary[onclick*="openProduct"],
-    .btn-primary[onclick*="openKategori"],
-    .btn-primary[onclick*="openPelanggan"],
-    .btn-primary[onclick*="openPengguna"],
-    .btn-primary[onclick*="openCabang"],
-    .btn-primary[onclick*="openStok"],
-    .btn-primary[onclick*="tambah"],
-    .btn-primary[onclick*="Tambah"],
-    .btn-primary[onclick*="add"],
-    .btn-primary[onclick*="create"],
-    button[onclick*="openProductModal"],
-    button[onclick*="openKategoriModal"],
-    button[onclick*="openPelangganModal"],
-    button[onclick*="openPenggunaModal"],
-    button[onclick*="openCabangModal"],
-    button[onclick*="openStokModal"],
-    button[onclick*="deleteProduct"],
-    button[onclick*="deleteKategori"],
-    button[onclick*="deletePelanggan"],
-    button[onclick*="deletePengguna"],
-    button[onclick*="deleteCabang"],
-    button[onclick*="deleteStok"],
-    button[onclick*="hapus"],
-    button[onclick*="Hapus"],
-    button[onclick*="delete"],
-    button[onclick*="Delete"],
-    .btn-icon-sm.danger,
-    .action-edit,
-    .action-delete,
-    [data-action="edit"],
-    [data-action="delete"],
-    [data-action="hapus"] { display: none !important; }
-  `;
-  document.head.appendChild(style);
+// Kata kunci pada onclick / title / text yang menandai aksi edit/hapus/tambah
+const _EDIT_KEYWORDS = [
+  'edit','hapus','delete','tambah','openmodal','openproductmodal','openadjust',
+  'openinvite','openEditTx','saverole','saveedit','deletecategory','deleteproduct',
+  'deletecustomer','deleteuser','deletebranch','deleteentry','deleteexpense',
+  'deletetransaction','saveeditexpense','editbranch','sendinvite'
+];
 
-  // Juga pasang MutationObserver untuk konten yang di-render dinamis
-  const obs = new MutationObserver(() => _hideActionsForKasir());
-  obs.observe(document.body, { childList: true, subtree: true });
-  _hideActionsForKasir();
+function _isEditBtn(el) {
+  const src = [
+    el.getAttribute('onclick') || '',
+    el.getAttribute('data-action') || '',
+    el.title || '',
+    el.textContent || ''
+  ].join(' ').toLowerCase();
+  return _EDIT_KEYWORDS.some(k => src.includes(k));
 }
 
 function _hideActionsForKasir() {
   if (canEditOrDelete()) return;
-  // Sembunyikan semua btn-icon-sm danger (tombol hapus) dan btn edit di tabel
-  document.querySelectorAll('.btn-icon-sm.danger').forEach(el => { el.style.display = 'none'; });
-  // Sembunyikan tombol Edit (bukan Hapus) di action column
-  document.querySelectorAll('.btn-icon-sm').forEach(el => {
-    const title = (el.title || '').toLowerCase();
-    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
-    if (title.includes('edit') || title.includes('hapus') || title.includes('delete') ||
-        onclick.includes('edit') || onclick.includes('delete') || onclick.includes('hapus') ||
-        onclick.includes('update') || onclick.includes('openproductmodal') ||
-        onclick.includes('openkategori') || onclick.includes('openpelanggan') ||
-        onclick.includes('openpengguna') || onclick.includes('opencabang')) {
-      el.style.display = 'none';
+  document.querySelectorAll(
+    'button, a[onclick], [data-action]'
+  ).forEach(el => {
+    if (el.dataset.roleChecked) return;
+    el.dataset.roleChecked = '1';
+    if (_isEditBtn(el)) {
+      el.style.setProperty('display', 'none', 'important');
+      el.disabled = true;
     }
   });
-  // Sembunyikan header-actions tombol Tambah
-  document.querySelectorAll('.header-actions button, .header-actions a').forEach(el => {
-    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
-    const text = el.textContent.toLowerCase();
-    if (onclick.includes('modal') || onclick.includes('tambah') || text.includes('tambah')) {
-      el.style.display = 'none';
-    }
-  });
+}
+
+// Sembunyikan semua tombol edit/hapus/tambah untuk kasir
+function applyRoleRestrictions() {
+  if (canEditOrDelete()) return; // owner & manager: akses penuh
+
+  // Inject CSS untuk elemen yang akan di-render dinamis (innerHTML)
+  if (!document.getElementById('kasirku-role-css')) {
+    const style = document.createElement('style');
+    style.id = 'kasirku-role-css';
+    style.textContent = `
+      [data-action="edit"], [data-action="delete"], [data-action="hapus"],
+      .btn-icon-sm.danger { display:none!important; }
+      /* Sembunyikan tombol Tambah di header-actions untuk kasir */
+      .header-actions .btn-primary,
+      .header-actions [onclick*="Modal"],
+      .header-actions [onclick*="modal"] { display:none!important; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Scan DOM sekarang
+  _hideActionsForKasir();
+
+  // Pasang MutationObserver — tangkap setiap konten dinamis baru
+  if (!window._kasirkuRoleObs) {
+    window._kasirkuRoleObs = new MutationObserver(function(mutations) {
+      let needsCheck = false;
+      for (const m of mutations) {
+        if (m.addedNodes.length) { needsCheck = true; break; }
+      }
+      if (needsCheck) _hideActionsForKasir();
+    });
+    window._kasirkuRoleObs.observe(document.body, { childList: true, subtree: true });
+  }
 }
 
 // ============================================================

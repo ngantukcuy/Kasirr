@@ -29,7 +29,30 @@
     (function() {
       if (localStorage.getItem('kasirku_theme') === 'light') {
         document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
       }
+      // Dengarkan perubahan tema dari tab/halaman lain (pengaturan)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'kasirku_theme') {
+          if (e.newValue === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        }
+      });
+      // BroadcastChannel untuk sinkronisasi tema antar halaman di tab yang sama
+      try {
+        var _themeChannel = new BroadcastChannel('kasirku_theme_channel');
+        _themeChannel.onmessage = function(e) {
+          if (e.data && e.data.theme === 'light') {
+            document.documentElement.classList.add('light-theme');
+          } else {
+            document.documentElement.classList.remove('light-theme');
+          }
+        };
+      } catch(e) {}
     })();
   </script>
 </head>
@@ -197,7 +220,7 @@
           </div>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-sm" onclick="openModal('${c.id}')" style="flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.78rem;">Edit</button>
+          <button class="btn btn-sm" onclick="openModal('${c.id}')" data-action="edit" style="flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:0.78rem;">Edit</button>
           <button class="btn btn-sm btn-primary" onclick="viewHistory('${c.id}')" style="flex:1; font-size:0.78rem;">Riwayat</button>
         </div>
       </div>`;
