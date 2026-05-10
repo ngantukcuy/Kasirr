@@ -86,4 +86,13 @@
         .catch(err => console.warn('[KASIRKU SW] Register skipped (ok untuk dev):', err.message));
     });
   }
+
+  // ── Export getSupabase() function globally ──
+  window.getSupabase = function() {
+    if (!window.__SB_CLIENT__) {
+      console.error('[KASIRKU] Supabase client belum diinisialisasi!');
+      return null;
+    }
+    return window.__SB_CLIENT__;
+  };
 })();
