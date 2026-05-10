@@ -72,3 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (main) main.classList.add('sidebar-hidden-main');
   }
 });
+
+// ─── Theme Loader (runs on every page) ───
+(function() {
+  const saved = localStorage.getItem('kasirku_theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light-theme');
+  }
+})();

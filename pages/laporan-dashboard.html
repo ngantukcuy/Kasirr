@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KASIRKU">
-  <meta name="theme-color" content="#f97316">
+  <meta name="theme-color" content="#7af957">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -409,7 +409,7 @@
       data: {
         labels,
         datasets: [
-          { label: 'Penjualan', data: sVals, backgroundColor: 'rgba(249,115,22,.5)', borderColor: '#f97316', borderWidth: 1.5, borderRadius: 4 },
+          { label: 'Penjualan', data: sVals, backgroundColor: 'rgba(122,249,87,0.5)', borderColor: '#7af957', borderWidth: 1.5, borderRadius: 4 },
           { label: 'Pengeluaran', data: eVals, backgroundColor: 'rgba(239,68,68,.35)', borderColor: '#ef4444', borderWidth: 1.5, borderRadius: 4 }
         ]
       },
@@ -431,7 +431,7 @@
     });
     const pmLabels = Object.keys(pmMap);
     const pmVals   = pmLabels.map(k => pmMap[k]);
-    const pmColors = ['#f97316','#22c55e','#8b5cf6','#06b6d4','#f59e0b','#ef4444'];
+    const pmColors = ['#7af957','#22c55e','#8b5cf6','#06b6d4','#f59e0b','#ef4444'];
 
     if (chartPayment) chartPayment.destroy();
     if (pmVals.length) {

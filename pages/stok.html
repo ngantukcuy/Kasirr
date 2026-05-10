@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KASIRKU">
-  <meta name="theme-color" content="#f97316">
+  <meta name="theme-color" content="#7af957">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -243,7 +243,7 @@
     }
     const rows = products.map(p => {
       const status = getStockStatus(p.stock, p.min_stock);
-      const colorMap = { 'stock-ok': '#22c55e', 'stock-warning': '#eab308', 'stock-low': '#f97316', 'stock-empty': '#ef4444' };
+      const colorMap = { 'stock-ok': '#22c55e', 'stock-warning': '#eab308', 'stock-low': '#f59e0b', 'stock-empty': '#ef4444' };
       const fillColor = colorMap[status.cls] || '#22c55e';
       const pct = p.min_stock > 0 ? Math.min(100, (p.stock / (p.min_stock * 3)) * 100) : 100;
       const cat = p.categories;

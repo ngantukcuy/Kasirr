@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KASIRKU">
-  <meta name="theme-color" content="#f97316">
+  <meta name="theme-color" content="#7af957">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,13 +21,27 @@
     .settings-section-title { font-family: var(--font-display); font-size: 0.9375rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
     .settings-section-title span { font-size: 1.1rem; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .supabase-config-box { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.2); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+    .supabase-config-box { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
     .supabase-config-box strong { color: var(--accent-light); }
     .preview-receipt { background: #fff; color: #000; font-family: 'Courier New', monospace; font-size: 11px; padding: 16px; border-radius: 8px; max-width: 300px; }
     .preview-receipt .r-center { text-align: center; }
     .preview-receipt .r-line { border-top: 1px dashed #999; margin: 6px 0; }
     .danger-zone { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.03); }
     .danger-zone .settings-section-title { color: #ef4444; }
+    /* Theme toggle switch */
+    .theme-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); }
+    .theme-toggle-row:last-child { border-bottom:none; padding-bottom:0; }
+    .theme-toggle-label { font-size:0.875rem; font-weight:600; color:var(--text-primary); }
+    .theme-toggle-desc { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+    .toggle-switch { position:relative; width:48px; height:26px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:var(--bg-elevated); border-radius:13px; cursor:pointer; transition:0.3s; border:1px solid var(--border-strong); }
+    .toggle-slider::before { content:''; position:absolute; width:20px; height:20px; left:2px; bottom:2px; background:#94a3b8; border-radius:50%; transition:0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background:var(--accent); border-color:var(--accent-border); }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(22px); background:#0a0b0f; }
+    /* Light theme overrides */
+    html.light-theme { --bg-primary:#f1f5f9; --bg-secondary:#e2e8f0; --bg-tertiary:#f8fafc; --bg-card:#ffffff; --bg-elevated:#f1f5f9; --bg-hover:#e2e8f0; --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8; --text-disabled:#cbd5e1; --border:rgba(0,0,0,0.08); --border-strong:rgba(0,0,0,0.14); --shadow-sm:0 1px 3px rgba(0,0,0,0.1); --shadow-md:0 4px 16px rgba(0,0,0,0.12); --shadow-lg:0 8px 32px rgba(0,0,0,0.15); }
+    html.light-theme body { background:var(--bg-primary); color:var(--text-primary); }
     @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -165,6 +179,12 @@
               <div class="r-center" id="prev-footer" style="font-size:10px; margin-top:4px;"></div>
             </div>
           </div>
+          <div class="form-group" style="margin-top:12px;">
+            <button class="btn btn-outline btn-sm" onclick="cetakStrukContoh()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Cetak Struk Contoh
+            </button>
+          </div>
         </div>
 
         <!-- Pengaturan Supabase -->
@@ -218,6 +238,29 @@
           <button class="btn btn-outline btn-sm" onclick="changePassword()">Ganti Password</button>
         </div>
 
+        <!-- Tampilan & Tema -->
+        <div class="settings-section" style="grid-column:1/-1;">
+          <div class="settings-section-title"><span>🎨</span> Tampilan & Tema</div>
+          <div class="theme-toggle-row">
+            <div>
+              <div class="theme-toggle-label">Mode Terang (Light Mode)</div>
+              <div class="theme-toggle-desc">Ubah tampilan seluruh aplikasi ke mode terang atau gelap</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="theme-toggle-switch" onchange="applyTheme(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="previewTheme('dark')" id="btn-theme-dark">
+              <i class='bx bx-moon'></i> Mode Gelap
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="previewTheme('light')" id="btn-theme-light">
+              <i class='bx bx-sun'></i> Mode Terang
+            </button>
+          </div>
+        </div>
+
         <!-- Zona Berbahaya -->
         <div class="settings-section danger-zone" style="grid-column:1/-1;">
           <div class="settings-section-title" style="color:#ef4444;"><span>⚠️</span> Zona Berbahaya</div>
@@ -243,6 +286,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js?v=14"></script>
 <script src="_sidebar.js?v=14"></script>
+<script src="../js/helpers.js?v=14"></script>
+<script src="../js/receipt.js?v=14"></script>
 <script src="../js/app.js?v=14"></script>
 <script>
   let _storeSettings = {};
@@ -394,6 +439,84 @@
   }
 
   init();
+
+  // ─── Tema Gelap / Terang ───
+  function applyTheme(isLight) {
+    if (isLight) {
+      document.documentElement.classList.add('light-theme');
+      localStorage.setItem('kasirku_theme', 'light');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+      localStorage.setItem('kasirku_theme', 'dark');
+    }
+    updateThemeButtons(isLight);
+  }
+
+  function previewTheme(mode) {
+    const isLight = mode === 'light';
+    document.getElementById('theme-toggle-switch').checked = isLight;
+    applyTheme(isLight);
+  }
+
+  function updateThemeButtons(isLight) {
+    const btnDark  = document.getElementById('btn-theme-dark');
+    const btnLight = document.getElementById('btn-theme-light');
+    if (isLight) {
+      btnLight.classList.add('btn-primary');
+      btnLight.classList.remove('btn-outline');
+      btnDark.classList.add('btn-outline');
+      btnDark.classList.remove('btn-primary');
+    } else {
+      btnDark.classList.add('btn-primary');
+      btnDark.classList.remove('btn-outline');
+      btnLight.classList.add('btn-outline');
+      btnLight.classList.remove('btn-primary');
+    }
+  }
+
+  // Load tema tersimpan
+  (function loadSavedTheme() {
+    const saved = localStorage.getItem('kasirku_theme');
+    const isLight = saved === 'light';
+    if (isLight) document.documentElement.classList.add('light-theme');
+    const sw = document.getElementById('theme-toggle-switch');
+    if (sw) sw.checked = isLight;
+    updateThemeButtons(isLight);
+  })();
+
+  // ─── Cetak Struk Contoh via receipt.js ───
+  function cetakStrukContoh() {
+    const storeName    = document.getElementById('store-name').value    || 'Nama Toko';
+    const storeAddress = document.getElementById('store-address').value || '';
+    const storePhone   = document.getElementById('store-phone').value   || '';
+    const footer       = document.getElementById('receipt-footer').value || 'Terima kasih telah berbelanja!';
+
+    // Buat transaksi dummy untuk preview
+    const dummyTransaction = {
+      invoice_number: 'INV-PREVIEW',
+      created_at: new Date().toISOString(),
+      payment_method: 'cash',
+      subtotal: 255000,
+      discount_amount: 0,
+      tax_amount: 0,
+      total_amount: 255000,
+      paid_amount: 300000,
+      change_amount: 45000,
+      transaction_items: [
+        { product_name: 'Semen Portland 50kg', quantity: 2, unit: 'Sak', selling_price: 85000, subtotal: 170000, discount_percent: 0, discount_amount: 0 },
+        { product_name: 'Besi Beton 10mm', quantity: 5, unit: 'Btg', selling_price: 17000, subtotal: 85000, discount_percent: 0, discount_amount: 0 },
+      ],
+      customers: null,
+      profiles: { full_name: 'Admin' }
+    };
+
+    // Cetak menggunakan receipt.js generateReceiptHTML dengan footer dari pengaturan
+    const html = generateReceiptHTML(dummyTransaction, storeName, storeAddress, storePhone, { receiptFooter: footer });
+    const w = window.open('', '_blank', 'width=420,height=650');
+    if (!w) { Toast.error('Pop-up diblokir. Izinkan pop-up untuk mencetak struk.'); return; }
+    w.document.open(); w.document.write(html); w.document.close(); w.focus();
+    setTimeout(() => { w.print(); }, 600);
+  }
 </script>
 
   <div id="sidebar-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:199;" onclick="closeSidebar()"></div>

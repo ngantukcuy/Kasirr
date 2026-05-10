@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KASIRKU">
-  <meta name="theme-color" content="#f97316">
+  <meta name="theme-color" content="#7af957">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -114,7 +114,7 @@
     <div class="form-group">
       <label class="form-label">Warna</label>
       <div class="color-picker-row" id="color-picker"></div>
-      <input type="hidden" id="f-color" value="#f97316">
+      <input type="hidden" id="f-color" value="#06b6d4">
     </div>
     <div class="form-group">
       <label class="form-label">Deskripsi</label>
@@ -139,11 +139,11 @@
     const ok = await requireAuth('kategori');
     if (!ok) return;
     // Render color picker dots
-    const colors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#64748b','#0891b2','#059669','#7c3aed'];
+    const colors = ['#ef4444','#f59e0b','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#64748b','#0891b2','#059669','#7c3aed'];
     document.getElementById('color-picker').innerHTML = colors.map(c =>
       `<div class="color-dot" style="background:${c};" data-color="${c}" onclick="selectColor('${c}')"></div>`
     ).join('');
-    selectColor('#f97316');
+    selectColor('#06b6d4');
     await loadCategories();
   }
 
@@ -188,13 +188,13 @@
         document.getElementById('f-name').value = c.name || '';
         document.getElementById('f-icon').value = c.icon || '';
         document.getElementById('f-description').value = c.description || '';
-        selectColor(c.color || '#f97316');
+        selectColor(c.color || '#06b6d4');
       }
     } else {
       document.getElementById('f-name').value = '';
       document.getElementById('f-icon').value = '';
       document.getElementById('f-description').value = '';
-      selectColor('#f97316');
+      selectColor('#06b6d4');
     }
     document.getElementById('cat-modal').style.display = 'flex';
   }

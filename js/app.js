@@ -89,13 +89,13 @@ const Modal = (() => {
     confirm(title, body, onOk, onCancel) {
       const el = _render(title, body, `
         <button id="modal-cancel" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;font-family:inherit;font-size:0.875rem;">Batal</button>
-        <button id="modal-ok"     style="padding:8px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:600;">Ya, Lanjutkan</button>
+        <button id="modal-ok"     style="padding:8px 18px;border-radius:8px;border:none;background:#7af957;color:#0a0b0f;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:600;">Ya, Lanjutkan</button>
       `);
       el.querySelector('#modal-cancel').onclick = () => { el.remove(); onCancel?.(); };
       el.querySelector('#modal-ok').onclick     = () => { el.remove(); onOk?.(); };
     },
     alert(title, body, onOk) {
-      const el = _render(title, body, `<button id="modal-ok" style="padding:8px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:600;">OK</button>`);
+      const el = _render(title, body, `<button id="modal-ok" style="padding:8px 18px;border-radius:8px;border:none;background:#7af957;color:#0a0b0f;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:600;">OK</button>`);
       el.querySelector('#modal-ok').onclick = () => { el.remove(); onOk?.(); };
     },
     close() { document.getElementById('kasirku-modal')?.remove(); },

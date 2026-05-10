@@ -1,8 +1,10 @@
 // js/receipt.js — Browser global script (no ES modules)
-function generateReceiptHTML(transaction, storeName, storeAddress, storePhone) {
-  storeName    = storeName    || 'Masri Jaya';
-  storeAddress = storeAddress || '';
-  storePhone   = storePhone   || '';
+function generateReceiptHTML(transaction, storeName, storeAddress, storePhone, options) {
+  options      = options || {};
+  storeName    = storeName    || options.storeName    || 'Masri Jaya';
+  storeAddress = storeAddress || options.storeAddress || '';
+  storePhone   = storePhone   || options.storePhone   || '';
+  const receiptFooter = options.receiptFooter || 'Terima kasih telah berbelanja!';
   const {
     invoice_number, created_at, payment_method,
     subtotal, discount_amount, tax_amount, total_amount,
@@ -48,13 +50,19 @@ function generateReceiptHTML(transaction, storeName, storeAddress, storePhone) {
   ${change_amount>0?`<tr><td><strong>Kembalian</strong></td><td style="text-align:right;"><strong>${fmt(change_amount)}</strong></td></tr>`:''}
 </table>
 <div class="line"></div>
-<div class="footer"><p>Terima kasih telah berbelanja!</p><p>Barang yang sudah dibeli tidak dapat dikembalikan</p><p>kecuali ada kesepakatan bersama.</p><br><p>===== Powered by KASIRKU =====</p></div>
+<div class="footer"><p>${receiptFooter}</p><p>Barang yang sudah dibeli tidak dapat dikembalikan</p><p>kecuali ada kesepakatan bersama.</p><br><p>===== Powered by KASIRKU =====</p></div>
 </body></html>`;
 }
 
 function printReceipt(transaction, storeInfo) {
   storeInfo = storeInfo || {};
-  const html = generateReceiptHTML(transaction, storeInfo.store_name, storeInfo.store_address, storeInfo.store_phone);
+  const html = generateReceiptHTML(
+    transaction,
+    storeInfo.store_name,
+    storeInfo.store_address,
+    storeInfo.store_phone,
+    { receiptFooter: storeInfo.receipt_footer }
+  );
   const w = window.open('','_blank','width=420,height=650');
   if (!w) { alert('Pop-up diblokir browser. Izinkan pop-up untuk mencetak struk.'); return; }
   w.document.open(); w.document.write(html); w.document.close(); w.focus();
