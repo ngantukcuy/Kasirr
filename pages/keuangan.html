@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Keuangan — KASIRKU</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KASIRKU">
+  <meta name="theme-color" content="#f97316">
+  <link rel="apple-touch-icon" href="../icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=7">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    .fin-tabs { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+    .fin-tab { padding:8px 18px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.85rem; font-weight:600; cursor:pointer; font-family:inherit; transition:var(--transition); }
+    .fin-tab.active { background:var(--accent-glow); border-color:var(--accent-border); color:var(--accent-light); }
+    .fin-tab:hover:not(.active) { border-color:var(--accent-border); color:var(--accent); }
+
+    .keu-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .keu-table thead { position:sticky; top:0; z-index:10; }
+    .keu-table th { padding:10px 14px; text-align:left; font-size:0.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); border-bottom:1px solid var(--border); background:var(--bg-tertiary); white-space:nowrap; }
+    .keu-table td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .keu-table tr:hover td { background:var(--bg-elevated); }
+
+    .badge-income  { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(34,197,94,0.12); color:#22c55e; }
+    .badge-expense { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(239,68,68,0.12); color:#ef4444; }
+    .badge-transfer { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.12); color:#818cf8; }
+
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:16px; }
+    .summary-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; }
+    .summary-card .s-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:6px; }
+    .summary-card .s-value { font-family:var(--font-display); font-size:1.3rem; font-weight:800; }
+    .summary-card .s-sub   { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .modal-box { background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; }
+
+    .empty-state { text-align:center; padding:56px 20px; color:var(--text-muted); }
+    .empty-state .es-icon { font-size:3rem; margin-bottom:12px; }
+    .empty-state .es-title { font-size:1rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; }
+
+    .skeleton { background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    @media (max-width:768px) {
+      .summary-grid { grid-template-columns:repeat(2,1fr); }
+      .fin-tabs { gap:4px; }
+      .fin-tab { padding:7px 12px; font-size:0.78rem; }
+      .keu-table-wrap { overflow-x:auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <div class="brand-icon"><i class='bx bx-store-alt'></i></div>
+      <div class="brand-name">KASIR<em>KU</em></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Utama</div>
+      <a href="dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Dashboard</a>
+      <a href="kasir.html" class="nav-item"><i class='bx bx-receipt'></i> Kasir POS <span class="nav-badge">HOT</span></a>
+      <a href="transaksi.html" class="nav-item"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a>
+      <div class="nav-section">Inventori</div>
+      <a href="produk.html" class="nav-item"><i class='bx bx-package'></i> Produk & Stok</a>
+      <a href="kategori.html" class="nav-item"><i class='bx bx-folder-open'></i> Kategori</a>
+      <a href="stok.html" class="nav-item"><i class='bx bx-stats'></i> Monitor Stok</a>
+      <a href="laporan-stok.html" class="nav-item"><i class='bx bx-trending-up'></i> Laporan Stok</a>
+      <div class="nav-section">Keuangan</div>
+      <a href="keuangan.html" class="nav-item active"><i class='bx bx-wallet-alt'></i> Manajemen Keuangan</a>
+      <a href="utang-piutang.html" class="nav-item"><i class='bx bx-transfer-alt'></i> Utang & Piutang</a>
+      <div class="nav-section">Pelanggan</div>
+      <a href="pelanggan.html" class="nav-item"><i class='bx bx-group'></i> Pelanggan</a>
+      <div class="nav-section">Laporan</div>
+      <a href="laporan-dashboard.html" class="nav-item"><i class='bx bx-pie-chart-alt-2'></i> Dashboard Laporan</a>
+      <a href="laporan.html" class="nav-item"><i class='bx bx-bar-chart-alt-2'></i> Laporan Penjualan</a>
+      <div class="nav-section">Toko</div>
+      <a href="cabang.html" class="nav-item"><i class='bx bx-buildings'></i> Toko Cabang</a>
+      <div class="nav-section">Pengaturan</div>
+      <a href="pengguna.html" class="nav-item"><i class='bx bx-user-circle'></i> Manajemen User</a>
+      <a href="pengaturan.html" class="nav-item"><i class='bx bx-cog'></i> Pengaturan Toko</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role" id="user-role">-</div>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()" title="Keluar">
+          <i class='bx bx-log-out'></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <i class='bx bx-menu' style="font-size:22px;"></i>
+      </button>
+      <div class="header-title">
+        <h1>Manajemen Keuangan</h1>
+        <p id="fin-subtitle">Catatan keuangan toko</p>
+      </div>
+      <div class="header-actions">
+        <input type="date" id="date-from" class="form-control" style="width:145px;" onchange="loadData()">
+        <span style="color:var(--text-muted);font-size:0.8rem;">s/d</span>
+        <input type="date" id="date-to" class="form-control" style="width:145px;" onchange="loadData()">
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+          <i class='bx bx-plus'></i> Catat
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Period filter shortcut -->
+      <div style="display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="fin-tab active" id="tab-bulan-ini" onclick="setPeriod('bulan-ini')">Bulan Ini</button>
+        <button class="fin-tab" id="tab-bulan-lalu" onclick="setPeriod('bulan-lalu')">Bulan Lalu</button>
+        <button class="fin-tab" id="tab-7hari" onclick="setPeriod('7hari')">7 Hari</button>
+        <button class="fin-tab" id="tab-30hari" onclick="setPeriod('30hari')">30 Hari</button>
+        <button class="fin-tab" id="tab-custom" onclick="setPeriod('custom')">Kustom</button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="s-label">Total Pemasukan</div>
+          <div class="s-value" id="sum-income" style="color:#22c55e;">Rp 0</div>
+          <div class="s-sub" id="sum-income-count">0 catatan</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Total Pengeluaran</div>
+          <div class="s-value" id="sum-expense" style="color:#ef4444;">Rp 0</div>
+          <div class="s-sub" id="sum-expense-count">0 catatan</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Saldo Bersih</div>
+          <div class="s-value" id="sum-balance">Rp 0</div>
+          <div class="s-sub">pemasukan − pengeluaran</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Pembayaran Supplier</div>
+          <div class="s-value" id="sum-supplier" style="color:#f59e0b;">Rp 0</div>
+          <div class="s-sub" id="sum-supplier-count">0 transaksi</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card" style="margin-bottom:16px; padding:20px;">
+        <div style="font-weight:700; margin-bottom:16px;">📊 Arus Kas (Cashflow)</div>
+        <canvas id="cashflow-chart" height="100"></canvas>
+      </div>
+
+      <!-- Tab Filter Tipe -->
+      <div class="fin-tabs" style="margin-bottom:12px;">
+        <button class="fin-tab active" id="type-all" onclick="setTypeFilter('all')">Semua</button>
+        <button class="fin-tab" id="type-income" onclick="setTypeFilter('income')">Pemasukan</button>
+        <button class="fin-tab" id="type-expense" onclick="setTypeFilter('expense')">Pengeluaran</button>
+        <button class="fin-tab" id="type-supplier" onclick="setTypeFilter('supplier')">Supplier</button>
+        <button class="fin-tab" id="type-other" onclick="setTypeFilter('other')">Lainnya</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="padding:0; border-radius:var(--radius-lg); overflow:hidden;">
+        <div class="keu-table-wrap" style="overflow-x:auto; max-height:60vh;">
+          <table class="keu-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Kategori</th>
+                <th>Keterangan</th>
+                <th>Tipe</th>
+                <th style="text-align:right;">Jumlah</th>
+                <th>Metode</th>
+                <th>Dicatat Oleh</th>
+                <th style="text-align:center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="fin-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add Modal -->
+<div id="add-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;" id="modal-title">Catat Keuangan</span>
+      <button class="icon-btn" onclick="closeModal('add-modal')">
+        <i class='bx bx-x' style="font-size:20px;"></i>
+      </button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipe <span class="required">*</span></label>
+      <select id="fin-type" class="form-control" onchange="onTypeChange()">
+        <option value="income">Pemasukan</option>
+        <option value="expense">Pengeluaran</option>
+        <option value="supplier">Pembayaran Supplier</option>
+        <option value="other">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kategori</label>
+      <select id="fin-category" class="form-control">
+        <option>Penjualan</option>
+        <option>Modal</option>
+        <option>Gaji Karyawan</option>
+        <option>Listrik & Air</option>
+        <option>Transportasi</option>
+        <option>Pembelian Barang</option>
+        <option>Pembayaran Supplier</option>
+        <option>Perawatan Toko</option>
+        <option>Pajak</option>
+        <option>Lain-lain</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keterangan <span class="required">*</span></label>
+      <input type="text" id="fin-desc" class="form-control" placeholder="Detail transaksi keuangan...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Jumlah (Rp) <span class="required">*</span></label>
+      <input type="number" id="fin-amount" class="form-control" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Metode Pembayaran</label>
+      <select id="fin-method" class="form-control">
+        <option value="tunai">Tunai</option>
+        <option value="transfer">Transfer Bank</option>
+        <option value="qris">QRIS</option>
+        <option value="kartu">Kartu Debit/Kredit</option>
+        <option value="lain">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal <span class="required">*</span></label>
+      <input type="date" id="fin-date" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <textarea id="fin-notes" class="form-control" rows="2" placeholder="Catatan tambahan (opsional)..." style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('add-modal')" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" id="btn-save" onclick="saveEntry()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase.js?v=14"></script>
+<script src="_sidebar.js?v=14"></script>
+<script src="../js/app.js?v=14"></script>
+<script>
+  // ── State ────────────────────────────────────────────────
+  let allEntries = [];
+  let filtered   = [];
+  let typeFilter = 'all';
+  let cashflowChart = null;
+
+  // ── Init ─────────────────────────────────────────────────
+  async function init() {
+    const ok = await requireAuth('keuangan');
+    if (!ok) return;
+    const today    = new Date().toISOString().split('T')[0];
+    const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    document.getElementById('date-from').value = firstDay;
+    document.getElementById('date-to').value   = today;
+    document.getElementById('fin-date').value  = today;
+    await loadData();
+  }
+
+  // ── Period shortcuts ─────────────────────────────────────
+  function setPeriod(p) {
+    ['bulan-ini','bulan-lalu','7hari','30hari','custom'].forEach(id => {
+      document.getElementById('tab-' + id)?.classList.remove('active');
+    });
+    document.getElementById('tab-' + p)?.classList.add('active');
+
+    const now = new Date();
+    let from, to = now.toISOString().split('T')[0];
+    if (p === 'bulan-ini') {
+      from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    } else if (p === 'bulan-lalu') {
+      from = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      to   = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+    } else if (p === '7hari') {
+      from = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    } else if (p === '30hari') {
+      from = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    } else {
+      return; // custom: let user pick dates
+    }
+    document.getElementById('date-from').value = from;
+    document.getElementById('date-to').value   = to;
+    loadData();
+  }
+
+  // ── Type filter ──────────────────────────────────────────
+  function setTypeFilter(t) {
+    typeFilter = t;
+    ['all','income','expense','supplier','other'].forEach(id => {
+      document.getElementById('type-' + id)?.classList.remove('active');
+    });
+    document.getElementById('type-' + t)?.classList.add('active');
+    applyFilter();
+  }
+
+  // ── Load from localStorage (demo storage) ───────────────
+  async function loadData() {
+    const from = document.getElementById('date-from').value;
+    const to   = document.getElementById('date-to').value;
+    if (!from || !to) return;
+
+    // Load from localStorage as persistent demo storage
+    try {
+      const stored = localStorage.getItem('kasirku_keuangan');
+      allEntries = stored ? JSON.parse(stored) : [];
+    } catch { allEntries = []; }
+
+    // Filter by date range
+    allEntries = allEntries.filter(e => {
+      if (!e.date) return false;
+      return e.date >= from && e.date <= to;
+    });
+
+    // Sort newest first
+    allEntries.sort((a, b) => (b.date + b.id) > (a.date + a.id) ? 1 : -1);
+
+    applyFilter();
+    renderChart();
+  }
+
+  // ── Get all entries from storage ─────────────────────────
+  function getAllStored() {
+    try {
+      return JSON.parse(localStorage.getItem('kasirku_keuangan') || '[]');
+    } catch { return []; }
+  }
+
+  // ── Apply type filter ─────────────────────────────────────
+  function applyFilter() {
+    if (typeFilter === 'all') {
+      filtered = [...allEntries];
+    } else {
+      filtered = allEntries.filter(e => e.type === typeFilter);
+    }
+    updateSummary();
+    renderTable();
+  }
+
+  // ── Summary ───────────────────────────────────────────────
+  function updateSummary() {
+    const income   = allEntries.filter(e => e.type === 'income');
+    const expense  = allEntries.filter(e => e.type === 'expense');
+    const supplier = allEntries.filter(e => e.type === 'supplier');
+
+    const sumIncome   = income.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const sumExpense  = expense.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const sumSupplier = supplier.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const balance     = sumIncome - sumExpense - sumSupplier;
+
+    document.getElementById('sum-income').textContent        = formatRupiah(sumIncome);
+    document.getElementById('sum-income-count').textContent  = `${income.length} catatan`;
+    document.getElementById('sum-expense').textContent       = formatRupiah(sumExpense);
+    document.getElementById('sum-expense-count').textContent = `${expense.length} catatan`;
+    document.getElementById('sum-balance').textContent       = formatRupiah(balance);
+    document.getElementById('sum-balance').style.color       = balance >= 0 ? '#22c55e' : '#ef4444';
+    document.getElementById('sum-supplier').textContent      = formatRupiah(sumSupplier);
+    document.getElementById('sum-supplier-count').textContent= `${supplier.length} transaksi`;
+  }
+
+  // ── Chart ─────────────────────────────────────────────────
+  function renderChart() {
+    const from = document.getElementById('date-from').value;
+    const to   = document.getElementById('date-to').value;
+    if (!from || !to) return;
+
+    const days = [];
+    const cur = new Date(from);
+    const end = new Date(to);
+    while (cur <= end) {
+      days.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    const incomeByDay   = {};
+    const expenseByDay  = {};
+    days.forEach(d => { incomeByDay[d] = 0; expenseByDay[d] = 0; });
+
+    allEntries.forEach(e => {
+      if (e.type === 'income')              incomeByDay[e.date]  = (incomeByDay[e.date]  || 0) + Number(e.amount);
+      else if (e.type === 'expense' || e.type === 'supplier' || e.type === 'other')
+                                            expenseByDay[e.date] = (expenseByDay[e.date] || 0) + Number(e.amount);
+    });
+
+    const labels     = days.map(d => { const p = d.split('-'); return `${p[2]}/${p[1]}`; });
+    const incVals    = days.map(d => incomeByDay[d]);
+    const expVals    = days.map(d => expenseByDay[d]);
+
+    if (cashflowChart) cashflowChart.destroy();
+    cashflowChart = new Chart(document.getElementById('cashflow-chart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Pemasukan', data: incVals, backgroundColor: 'rgba(34,197,94,0.5)', borderColor: '#22c55e', borderWidth: 1.5, borderRadius: 4 },
+          { label: 'Pengeluaran', data: expVals, backgroundColor: 'rgba(239,68,68,0.4)', borderColor: '#ef4444', borderWidth: 1.5, borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+        scales: {
+          y: { ticks: { callback: v => 'Rp' + formatNumber(v / 1000) + 'rb', color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#64748b', maxTicksLimit: 14 }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── Render Table ──────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('fin-tbody');
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+        <div class="es-icon">💳</div>
+        <div class="es-title">Belum ada catatan keuangan</div>
+        <div>Klik tombol "+ Catat" untuk menambahkan</div>
+      </div></td></tr>`;
+      return;
+    }
+
+    const typeLabel = { income: '<span class="badge-income">⬆ Pemasukan</span>', expense: '<span class="badge-expense">⬇ Pengeluaran</span>', supplier: '<span class="badge-transfer">🏪 Supplier</span>', other: '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:700;background:rgba(148,163,184,.12);color:#94a3b8;">• Lainnya</span>' };
+    const methodLabel = { tunai: '💵 Tunai', transfer: '🏦 Transfer', qris: '📱 QRIS', kartu: '💳 Kartu', lain: '🔄 Lainnya' };
+
+    tbody.innerHTML = filtered.map(e => {
+      const isPos = e.type === 'income';
+      return `<tr>
+        <td style="color:var(--text-secondary); white-space:nowrap; font-size:0.82rem;">${formatDate(e.date + 'T00:00:00')}</td>
+        <td style="font-size:0.82rem;">${e.category || '—'}</td>
+        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${e.description || '—'}</td>
+        <td>${typeLabel[e.type] || e.type}</td>
+        <td style="text-align:right; font-family:var(--font-display); font-weight:700; color:${isPos ? '#22c55e' : '#ef4444'};">
+          ${isPos ? '+' : '-'}${formatRupiah(e.amount)}
+        </td>
+        <td style="font-size:0.82rem; color:var(--text-muted);">${methodLabel[e.method] || e.method || '—'}</td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${e.created_by_name || '—'}</td>
+        <td style="text-align:center;">
+          <button onclick="deleteEntry('${e.id}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:.72rem;padding:3px 8px;border-radius:6px;cursor:pointer;" title="Hapus">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Modal ─────────────────────────────────────────────────
+  function openAddModal() {
+    document.getElementById('add-modal').style.display = 'flex';
+    document.getElementById('fin-date').value = new Date().toISOString().split('T')[0];
+  }
+
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  function onTypeChange() {
+    const t = document.getElementById('fin-type').value;
+    const catSel = document.getElementById('fin-category');
+    if (t === 'income') {
+      catSel.innerHTML = '<option>Penjualan</option><option>Modal</option><option>Piutang Terbayar</option><option>Lain-lain</option>';
+    } else if (t === 'supplier') {
+      catSel.innerHTML = '<option>Pembayaran Supplier</option><option>Pembelian Stok</option><option>Pembelian Bahan</option>';
+    } else if (t === 'expense') {
+      catSel.innerHTML = '<option>Gaji Karyawan</option><option>Listrik & Air</option><option>Transportasi</option><option>Perawatan Toko</option><option>Pajak</option><option>Lain-lain</option>';
+    } else {
+      catSel.innerHTML = '<option>Transfer Internal</option><option>Koreksi</option><option>Lain-lain</option>';
+    }
+  }
+
+  // ── Save Entry ────────────────────────────────────────────
+  async function saveEntry() {
+    const desc   = document.getElementById('fin-desc').value.trim();
+    const amount = parseFloat(document.getElementById('fin-amount').value);
+    const date   = document.getElementById('fin-date').value;
+    if (!desc)              { Toast.error('Keterangan wajib diisi'); return; }
+    if (!amount || amount <= 0) { Toast.error('Jumlah harus lebih dari 0'); return; }
+    if (!date)              { Toast.error('Tanggal wajib diisi'); return; }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+    try {
+      const user = getCurrentUser();
+      const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        type: document.getElementById('fin-type').value,
+        category: document.getElementById('fin-category').value,
+        description: desc,
+        amount,
+        method: document.getElementById('fin-method').value,
+        notes: document.getElementById('fin-notes').value.trim(),
+        date,
+        created_by_name: user?.full_name || 'User',
+        created_at: new Date().toISOString()
+      };
+
+      const all = getAllStored();
+      all.push(entry);
+      localStorage.setItem('kasirku_keuangan', JSON.stringify(all));
+
+      Toast.success('Catatan keuangan berhasil disimpan');
+      closeModal('add-modal');
+      // reset form
+      ['fin-desc','fin-amount','fin-notes'].forEach(id => document.getElementById(id).value = '');
+      await loadData();
+    } catch(e) {
+      Toast.error('Gagal menyimpan: ' + (e.message || ''));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Simpan';
+    }
+  }
+
+  // ── Delete Entry ──────────────────────────────────────────
+  function deleteEntry(id) {
+    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan keuangan ini?', () => {
+      const all = getAllStored().filter(e => e.id !== id);
+      localStorage.setItem('kasirku_keuangan', JSON.stringify(all));
+      Toast.success('Catatan berhasil dihapus');
+      loadData();
+    });
+  }
+
+  init();
+</script>
+
+<div id="sidebar-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:199;" onclick="closeSidebar()"></div>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utang & Piutang — KASIRKU</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KASIRKU">
+  <meta name="theme-color" content="#f97316">
+  <link rel="apple-touch-icon" href="../icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=7">
+  <style>
+    .up-tabs { display:flex; gap:6px; margin-bottom:18px; }
+    .up-tab  { padding:9px 22px; border-radius:10px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.875rem; font-weight:700; cursor:pointer; font-family:inherit; transition:var(--transition); flex:1; text-align:center; }
+    .up-tab.utang   { border-color:rgba(239,68,68,.4); color:#ef4444; background:rgba(239,68,68,.07); }
+    .up-tab.piutang { border-color:rgba(34,197,94,.4); color:#22c55e; background:rgba(34,197,94,.07); }
+    .up-tab.active.utang   { background:rgba(239,68,68,.18); }
+    .up-tab.active.piutang { background:rgba(34,197,94,.18); }
+
+    .up-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; display:flex; flex-direction:column; gap:10px; transition:var(--transition); }
+    .up-card:hover { border-color:var(--accent-border); transform:translateY(-2px); }
+    .up-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .up-card-name   { font-weight:700; font-size:0.95rem; }
+    .up-card-amount { font-family:var(--font-display); font-weight:800; font-size:1.1rem; }
+    .up-card-meta   { font-size:0.78rem; color:var(--text-muted); display:flex; gap:12px; flex-wrap:wrap; }
+    .up-card-actions { display:flex; gap:6px; }
+
+    .badge-lunas   { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.7rem; font-weight:700; background:rgba(34,197,94,.12); color:#22c55e; }
+    .badge-belum   { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.7rem; font-weight:700; background:rgba(239,68,68,.12); color:#ef4444; }
+    .badge-sebagian{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.7rem; font-weight:700; background:rgba(245,158,11,.12); color:#f59e0b; }
+
+    .progress-bar { width:100%; height:6px; background:var(--bg-elevated); border-radius:3px; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width .4s ease; }
+
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
+    .summary-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px 16px; }
+    .summary-card .s-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:6px; }
+    .summary-card .s-value { font-family:var(--font-display); font-size:1.2rem; font-weight:800; }
+    .summary-card .s-sub   { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+
+    .up-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px,1fr)); gap:14px; }
+
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .modal-box { background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; }
+
+    .empty-state { text-align:center; padding:56px 20px; color:var(--text-muted); }
+    .empty-state .es-icon { font-size:3rem; margin-bottom:12px; }
+    .empty-state .es-title { font-size:1rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; }
+
+    @media (max-width:768px) {
+      .summary-grid { grid-template-columns:repeat(2,1fr); }
+      .up-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <div class="brand-icon"><i class='bx bx-store-alt'></i></div>
+      <div class="brand-name">KASIR<em>KU</em></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Utama</div>
+      <a href="dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Dashboard</a>
+      <a href="kasir.html" class="nav-item"><i class='bx bx-receipt'></i> Kasir POS <span class="nav-badge">HOT</span></a>
+      <a href="transaksi.html" class="nav-item"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a>
+      <div class="nav-section">Inventori</div>
+      <a href="produk.html" class="nav-item"><i class='bx bx-package'></i> Produk & Stok</a>
+      <a href="kategori.html" class="nav-item"><i class='bx bx-folder-open'></i> Kategori</a>
+      <a href="stok.html" class="nav-item"><i class='bx bx-stats'></i> Monitor Stok</a>
+      <a href="laporan-stok.html" class="nav-item"><i class='bx bx-trending-up'></i> Laporan Stok</a>
+      <div class="nav-section">Keuangan</div>
+      <a href="keuangan.html" class="nav-item"><i class='bx bx-wallet-alt'></i> Manajemen Keuangan</a>
+      <a href="utang-piutang.html" class="nav-item active"><i class='bx bx-transfer-alt'></i> Utang & Piutang</a>
+      <div class="nav-section">Pelanggan</div>
+      <a href="pelanggan.html" class="nav-item"><i class='bx bx-group'></i> Pelanggan</a>
+      <div class="nav-section">Laporan</div>
+      <a href="laporan-dashboard.html" class="nav-item"><i class='bx bx-pie-chart-alt-2'></i> Dashboard Laporan</a>
+      <a href="laporan.html" class="nav-item"><i class='bx bx-bar-chart-alt-2'></i> Laporan Penjualan</a>
+      <div class="nav-section">Toko</div>
+      <a href="cabang.html" class="nav-item"><i class='bx bx-buildings'></i> Toko Cabang</a>
+      <div class="nav-section">Pengaturan</div>
+      <a href="pengguna.html" class="nav-item"><i class='bx bx-user-circle'></i> Manajemen User</a>
+      <a href="pengaturan.html" class="nav-item"><i class='bx bx-cog'></i> Pengaturan Toko</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role" id="user-role">-</div>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()" title="Keluar">
+          <i class='bx bx-log-out'></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <i class='bx bx-menu' style="font-size:22px;"></i>
+      </button>
+      <div class="header-title">
+        <h1>Utang & Piutang</h1>
+        <p id="up-subtitle">Manajemen hutang toko & piutang pelanggan</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+          <i class='bx bx-plus'></i> Tambah
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Summary Cards -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="s-label">Total Utang</div>
+          <div class="s-value" id="sum-utang" style="color:#ef4444;">Rp 0</div>
+          <div class="s-sub" id="sum-utang-count">0 item</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Total Piutang</div>
+          <div class="s-value" id="sum-piutang" style="color:#22c55e;">Rp 0</div>
+          <div class="s-sub" id="sum-piutang-count">0 item</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Sudah Lunas</div>
+          <div class="s-value" id="sum-lunas" style="color:#94a3b8;">0</div>
+          <div class="s-sub">item terlunasi</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Jatuh Tempo (7 hari)</div>
+          <div class="s-value" id="sum-jatuh-tempo" style="color:#f59e0b;">0</div>
+          <div class="s-sub">item segera jatuh tempo</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="up-tabs">
+        <button class="up-tab utang active" id="tab-utang" onclick="switchTab('utang')">
+          💸 Utang Toko
+        </button>
+        <button class="up-tab piutang" id="tab-piutang" onclick="switchTab('piutang')">
+          💰 Piutang Pelanggan
+        </button>
+      </div>
+
+      <!-- Filter Status -->
+      <div style="display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="fin-tab active" id="status-all" onclick="setStatus('all')"
+          style="padding:6px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:var(--transition);">
+          Semua
+        </button>
+        <button class="fin-tab" id="status-belum" onclick="setStatus('belum')"
+          style="padding:6px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:var(--transition);">
+          Belum Lunas
+        </button>
+        <button class="fin-tab" id="status-sebagian" onclick="setStatus('sebagian')"
+          style="padding:6px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:var(--transition);">
+          Sebagian
+        </button>
+        <button class="fin-tab" id="status-lunas" onclick="setStatus('lunas')"
+          style="padding:6px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:var(--transition);">
+          Lunas
+        </button>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="up-grid" id="up-grid">
+        <div class="empty-state">
+          <div class="es-icon">📋</div>
+          <div class="es-title">Memuat data...</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add Modal -->
+<div id="add-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;" id="modal-title">Tambah Catatan</span>
+      <button class="icon-btn" onclick="closeModal('add-modal')"><i class='bx bx-x' style="font-size:20px;"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipe <span class="required">*</span></label>
+      <select id="up-type" class="form-control">
+        <option value="utang">Utang Toko (kami berhutang ke supplier/pihak lain)</option>
+        <option value="piutang">Piutang (pelanggan berhutang ke kami)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Pihak <span class="required">*</span></label>
+      <input type="text" id="up-name" class="form-control" placeholder="Nama supplier / pelanggan...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keterangan</label>
+      <input type="text" id="up-desc" class="form-control" placeholder="Detail transaksi utang/piutang...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Total Jumlah (Rp) <span class="required">*</span></label>
+      <input type="number" id="up-amount" class="form-control" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sudah Dibayar (Rp)</label>
+      <input type="number" id="up-paid" class="form-control" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Jatuh Tempo</label>
+      <input type="date" id="up-due-date" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Mulai <span class="required">*</span></label>
+      <input type="date" id="up-date" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <textarea id="up-notes" class="form-control" rows="2" placeholder="Catatan tambahan..." style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('add-modal')" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" id="btn-save-up" onclick="saveEntry()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bayar Modal -->
+<div id="pay-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-box" style="max-width:360px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-family:var(--font-display); font-size:1.1rem; font-weight:700;">Catat Pembayaran</span>
+      <button class="icon-btn" onclick="closeModal('pay-modal')"><i class='bx bx-x' style="font-size:20px;"></i></button>
+    </div>
+    <div id="pay-info" style="background:var(--bg-tertiary);border-radius:10px;padding:14px;margin-bottom:16px;font-size:0.875rem;"></div>
+    <div class="form-group">
+      <label class="form-label">Jumlah Bayar (Rp) <span class="required">*</span></label>
+      <input type="number" id="pay-amount" class="form-control" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <input type="text" id="pay-notes" class="form-control" placeholder="Opsional...">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('pay-modal')" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);">Batal</button>
+      <button class="btn btn-primary" id="btn-pay" onclick="confirmPay()">Catat Bayar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase.js?v=14"></script>
+<script src="_sidebar.js?v=14"></script>
+<script src="../js/app.js?v=14"></script>
+<script>
+  let allData   = [];
+  let activeTab = 'utang';
+  let statusFilter = 'all';
+  let payTargetId  = null;
+
+  async function init() {
+    const ok = await requireAuth('utang-piutang');
+    if (!ok) return;
+    document.getElementById('up-date').value = new Date().toISOString().split('T')[0];
+    loadData();
+  }
+
+  function getAllStored() {
+    try { return JSON.parse(localStorage.getItem('kasirku_utang_piutang') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveAll(data) {
+    localStorage.setItem('kasirku_utang_piutang', JSON.stringify(data));
+  }
+
+  function loadData() {
+    allData = getAllStored();
+    updateSummary();
+    renderGrid();
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-utang').classList.toggle('active', tab === 'utang');
+    document.getElementById('tab-piutang').classList.toggle('active', tab === 'piutang');
+    renderGrid();
+  }
+
+  function setStatus(s) {
+    statusFilter = s;
+    ['all','belum','sebagian','lunas'].forEach(id => {
+      const el = document.getElementById('status-' + id);
+      if (el) {
+        if (id === s) {
+          el.style.background = 'var(--accent-glow)';
+          el.style.borderColor = 'var(--accent-border)';
+          el.style.color = 'var(--accent-light)';
+        } else {
+          el.style.background = 'var(--bg-elevated)';
+          el.style.borderColor = 'var(--border)';
+          el.style.color = 'var(--text-secondary)';
+        }
+      }
+    });
+    renderGrid();
+  }
+
+  function getStatus(entry) {
+    const paid = Number(entry.paid) || 0;
+    const amt  = Number(entry.amount) || 0;
+    if (paid <= 0)      return 'belum';
+    if (paid >= amt)    return 'lunas';
+    return 'sebagian';
+  }
+
+  function updateSummary() {
+    const today = new Date().toISOString().split('T')[0];
+    const soon  = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
+    const utang   = allData.filter(e => e.type === 'utang' && getStatus(e) !== 'lunas');
+    const piutang = allData.filter(e => e.type === 'piutang' && getStatus(e) !== 'lunas');
+    const lunas   = allData.filter(e => getStatus(e) === 'lunas');
+    const jatuh   = allData.filter(e => {
+      if (!e.due_date || getStatus(e) === 'lunas') return false;
+      return e.due_date >= today && e.due_date <= soon;
+    });
+
+    const sumU = utang.reduce((s, e) => s + (Number(e.amount) - (Number(e.paid) || 0)), 0);
+    const sumP = piutang.reduce((s, e) => s + (Number(e.amount) - (Number(e.paid) || 0)), 0);
+
+    document.getElementById('sum-utang').textContent        = formatRupiah(sumU);
+    document.getElementById('sum-utang-count').textContent  = `${utang.length} item`;
+    document.getElementById('sum-piutang').textContent      = formatRupiah(sumP);
+    document.getElementById('sum-piutang-count').textContent= `${piutang.length} item`;
+    document.getElementById('sum-lunas').textContent        = lunas.length;
+    document.getElementById('sum-jatuh-tempo').textContent  = jatuh.length;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('up-grid');
+    let data = allData.filter(e => e.type === activeTab);
+    if (statusFilter !== 'all') {
+      data = data.filter(e => getStatus(e) === statusFilter);
+    }
+    // Sort: belum lunas first, then by date
+    data.sort((a, b) => {
+      const sa = getStatus(a) === 'lunas' ? 1 : 0;
+      const sb = getStatus(b) === 'lunas' ? 1 : 0;
+      if (sa !== sb) return sa - sb;
+      return b.date > a.date ? 1 : -1;
+    });
+
+    if (!data.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <div class="es-icon">${activeTab === 'utang' ? '💸' : '💰'}</div>
+        <div class="es-title">Belum ada catatan ${activeTab === 'utang' ? 'utang' : 'piutang'}</div>
+        <div>Klik "+ Tambah" untuk menambahkan</div>
+      </div>`;
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    grid.innerHTML = data.map(e => {
+      const amt    = Number(e.amount) || 0;
+      const paid   = Number(e.paid)   || 0;
+      const sisa   = amt - paid;
+      const pct    = amt > 0 ? Math.round((paid / amt) * 100) : 0;
+      const status = getStatus(e);
+      const isOverdue = e.due_date && e.due_date < today && status !== 'lunas';
+
+      let badge = '';
+      if (status === 'lunas')    badge = '<span class="badge-lunas">✓ Lunas</span>';
+      else if (status === 'sebagian') badge = '<span class="badge-sebagian">↑ Sebagian</span>';
+      else badge = '<span class="badge-belum">⚠ Belum Lunas</span>';
+
+      const dueDateHTML = e.due_date
+        ? `<span style="color:${isOverdue ? '#ef4444' : 'var(--text-muted)'};">${isOverdue ? '🚨 ' : '📅 '}Jatuh tempo: ${formatDate(e.due_date + 'T00:00:00')}</span>`
+        : '';
+
+      return `<div class="up-card">
+        <div class="up-card-header">
+          <div>
+            <div class="up-card-name">${e.name}</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">${e.description || ''}</div>
+          </div>
+          ${badge}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">Total</div>
+            <div class="up-card-amount" style="color:${activeTab === 'utang' ? '#ef4444' : '#22c55e'};">${formatRupiah(amt)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.72rem; color:var(--text-muted);">Sisa</div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:0.95rem; color:${status === 'lunas' ? '#22c55e' : 'var(--text-secondary)'};">${formatRupiah(sisa)}</div>
+          </div>
+        </div>
+        <div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${pct}%; background:${status === 'lunas' ? '#22c55e' : status === 'sebagian' ? '#f59e0b' : '#ef4444'};"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:3px;">
+            <span>Dibayar ${pct}%</span>
+            <span>${formatRupiah(paid)} / ${formatRupiah(amt)}</span>
+          </div>
+        </div>
+        <div class="up-card-meta">
+          <span>📅 ${formatDate(e.date + 'T00:00:00')}</span>
+          ${dueDateHTML}
+        </div>
+        <div class="up-card-actions">
+          ${status !== 'lunas' ? `<button onclick="openPayModal('${e.id}')" class="btn btn-sm btn-primary" style="font-size:0.78rem; padding:5px 12px;">💳 Bayar</button>` : ''}
+          <button onclick="deleteEntry('${e.id}')" class="btn btn-sm" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:0.78rem;padding:5px 10px;">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openAddModal() {
+    document.getElementById('add-modal').style.display = 'flex';
+    document.getElementById('up-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('up-type').value = activeTab;
+  }
+
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  async function saveEntry() {
+    const name   = document.getElementById('up-name').value.trim();
+    const amount = parseFloat(document.getElementById('up-amount').value);
+    const date   = document.getElementById('up-date').value;
+    if (!name)              { Toast.error('Nama pihak wajib diisi'); return; }
+    if (!amount || amount <= 0) { Toast.error('Jumlah harus lebih dari 0'); return; }
+    if (!date)              { Toast.error('Tanggal wajib diisi'); return; }
+
+    const btn = document.getElementById('btn-save-up');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      const user = getCurrentUser();
+      const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        type: document.getElementById('up-type').value,
+        name,
+        description: document.getElementById('up-desc').value.trim(),
+        amount,
+        paid: parseFloat(document.getElementById('up-paid').value) || 0,
+        due_date: document.getElementById('up-due-date').value || null,
+        date,
+        notes: document.getElementById('up-notes').value.trim(),
+        created_by_name: user?.full_name || 'User',
+        created_at: new Date().toISOString()
+      };
+      const all = getAllStored();
+      all.push(entry);
+      saveAll(all);
+      Toast.success('Catatan berhasil disimpan');
+      closeModal('add-modal');
+      ['up-name','up-desc','up-amount','up-paid','up-due-date','up-notes'].forEach(id => document.getElementById(id).value = '');
+      loadData();
+    } catch(e) {
+      Toast.error('Gagal menyimpan: ' + (e.message || ''));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Simpan';
+    }
+  }
+
+  function openPayModal(id) {
+    payTargetId = id;
+    const entry = getAllStored().find(e => e.id === id);
+    if (!entry) return;
+    const sisa = Number(entry.amount) - (Number(entry.paid) || 0);
+    document.getElementById('pay-info').innerHTML = `
+      <div style="font-weight:700; margin-bottom:4px;">${entry.name}</div>
+      <div style="font-size:0.82rem; color:var(--text-muted);">${entry.description || ''}</div>
+      <div style="margin-top:8px; display:flex; justify-content:space-between;">
+        <span>Total: <b>${formatRupiah(entry.amount)}</b></span>
+        <span>Sisa: <b style="color:#ef4444;">${formatRupiah(sisa)}</b></span>
+      </div>`;
+    document.getElementById('pay-amount').value = sisa;
+    document.getElementById('pay-notes').value  = '';
+    document.getElementById('pay-modal').style.display = 'flex';
+  }
+
+  function confirmPay() {
+    const payAmt = parseFloat(document.getElementById('pay-amount').value);
+    if (!payAmt || payAmt <= 0) { Toast.error('Jumlah bayar harus lebih dari 0'); return; }
+
+    const btn = document.getElementById('btn-pay');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      const all = getAllStored();
+      const idx = all.findIndex(e => e.id === payTargetId);
+      if (idx === -1) { Toast.error('Data tidak ditemukan'); return; }
+      all[idx].paid = (Number(all[idx].paid) || 0) + payAmt;
+      if (all[idx].paid > Number(all[idx].amount)) all[idx].paid = Number(all[idx].amount);
+      saveAll(all);
+      Toast.success('Pembayaran berhasil dicatat');
+      closeModal('pay-modal');
+      loadData();
+    } finally {
+      btn.disabled = false; btn.textContent = 'Catat Bayar';
+    }
+  }
+
+  function deleteEntry(id) {
+    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan ini?', () => {
+      const all = getAllStored().filter(e => e.id !== id);
+      saveAll(all);
+      Toast.success('Catatan berhasil dihapus');
+      loadData();
+    });
+  }
+
+  init();
+</script>
+<div id="sidebar-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:199;" onclick="closeSidebar()"></div>
+</body>
+</html>
