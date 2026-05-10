@@ -13,344 +13,764 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <style>
-    .role-select-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 6px; }
-    .role-option { position: relative; }
-    .role-option input { position: absolute; opacity: 0; }
-    .role-label {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 10px; border-radius: var(--radius-md);
-      border: 1.5px solid var(--border);
-      background: var(--bg-tertiary);
-      cursor: pointer; transition: var(--transition);
-      font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      overflow: hidden;
+    }
+
+    /* ─── Animated background particles ─── */
+    .bg-particles {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,0.3) 0%, transparent 70%);
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* ─── Main Container ─── */
+    .container {
+      position: relative;
+      width: 850px;
+      max-width: calc(100vw - 32px);
+      height: 580px;
+      background: #1e293b;
+      border-radius: 24px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* ─── Form Boxes ─── */
+    .form-box {
+      position: absolute;
+      right: 0;
+      width: 50%;
+      height: 100%;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      color: #e2e8f0;
+      padding: 40px;
+      z-index: 1;
+      transition: 0.6s ease-in-out 1.2s, visibility 0s 1s;
+    }
+    .container.active .form-box { right: 50%; }
+    .form-box.register { visibility: hidden; }
+    .container.active .form-box.register { visibility: visible; }
+
+    .form-box form { width: 100%; }
+
+    .form-box h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #f1f5f9;
+    }
+    .form-box .subtitle {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+
+    /* ─── Input Box ─── */
+    .input-box {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .input-box input {
+      width: 100%;
+      padding: 12px 44px 12px 16px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      color: #e2e8f0;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-box input:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    }
+    .input-box input::placeholder { color: #475569; }
+    .input-box i {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #475569;
+    }
+    .input-box label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    /* ─── PIN Input ─── */
+    .pin-grid {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .pin-dot {
+      width: 42px;
+      height: 52px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      text-align: center;
+      color: #f97316;
+      font-weight: 800;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+      caret-color: #f97316;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .pin-dot:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    }
+
+    /* ─── Forgot ─── */
+    .forgot-link { text-align: right; margin-bottom: 18px; }
+    .forgot-link a { font-size: 0.78rem; color: #f97316; text-decoration: none; }
+
+    /* ─── Btn ─── */
+    .btn {
+      width: 100%;
+      height: 46px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #fff;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(249,115,22,0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.5);
+      color: #fff;
+    }
+    .btn.outline:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+
+    .switch-text {
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: #64748b;
       text-align: center;
     }
-    .role-label span.icon { font-size: 20px; }
-    .role-option input:checked + .role-label {
-      border-color: var(--accent); color: var(--accent-light); background: var(--accent-glow);
+    .switch-text a { color: #f97316; font-weight: 600; text-decoration: none; cursor: pointer; }
+
+    /* ─── Account Select (Login Screen 2) ─── */
+    #account-select-view { display: none; }
+    .account-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 220px; overflow-y: auto; }
+    .account-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .role-label:hover { border-color: var(--border-strong); color: var(--text-primary); }
-    .tab-auth { display: flex; gap: 0; margin-bottom: 24px; background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 3px; }
-    .tab-auth button {
-      flex: 1; padding: 9px; border: none; background: none;
-      border-radius: calc(var(--radius-md) - 2px);
-      font-size: 0.875rem; font-weight: 600; font-family: inherit;
-      color: var(--text-muted); cursor: pointer; transition: var(--transition);
+    .account-item:hover, .account-item.selected { border-color: #f97316; background: rgba(249,115,22,0.05); }
+    .account-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; color: #fff; font-family: 'Sora', sans-serif;
+      flex-shrink: 0;
     }
-    .tab-auth button.active { background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); }
-    .eye-btn {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;
+    .account-info .acc-name { font-weight: 600; font-size: 0.875rem; color: #e2e8f0; }
+    .account-info .acc-email { font-size: 0.72rem; color: #64748b; }
+
+    /* ─── Toggle Panel ─── */
+    .toggle-box { position: absolute; width: 100%; height: 100%; }
+    .toggle-box::before {
+      content: '';
+      position: absolute;
+      left: -250%;
+      width: 300%;
+      height: 100%;
+      background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+      border-radius: 150px;
+      z-index: 2;
+      transition: 1.8s ease-in-out;
     }
-    .eye-btn:hover { color: var(--text-secondary); }
-    .eye-btn svg { width: 16px; height: 16px; }
-    .password-wrapper { position: relative; }
-    .password-wrapper .form-control { padding-right: 44px; }
-    .feature-list { list-style: none; margin-bottom: 0; }
-    .feature-list li { font-size: 0.8rem; color: var(--text-muted); padding: 4px 0; display: flex; align-items: center; gap: 8px; }
-    .feature-list li::before { content: '✓'; color: var(--success); font-weight: 700; }
+    .container.active .toggle-box::before { left: 50%; }
+
+    .toggle-panel {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px;
+      z-index: 2;
+      transition: 0.6s ease-in-out;
+    }
+    .toggle-panel .logo-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .toggle-panel h1 { font-family: 'Sora', sans-serif; font-size: 1.7rem; font-weight: 800; margin-bottom: 10px; }
+    .toggle-panel p { font-size: 0.82rem; color: rgba(255,255,255,0.8); margin-bottom: 28px; line-height: 1.6; }
+    .toggle-panel.toggle-left { left: 0; transition-delay: 1.2s; }
+    .container.active .toggle-panel.toggle-left { left: -50%; transition-delay: 0.6s; }
+    .toggle-panel.toggle-right { right: -50%; transition-delay: 0.6s; }
+    .container.active .toggle-panel.toggle-right { right: 0; transition-delay: 1.2s; }
+
+    /* ─── Role Selector ─── */
+    .role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+    .role-card { position: relative; }
+    .role-card input { position: absolute; opacity: 0; }
+    .role-label {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 8px; border-radius: 10px; border: 1.5px solid #334155;
+      background: #0f172a; cursor: pointer;
+      font-size: 0.72rem; font-weight: 600; color: #64748b;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .role-label .icon { font-size: 18px; }
+    .role-card input:checked + .role-label { border-color: #f97316; color: #f97316; background: rgba(249,115,22,0.08); }
+    .role-label:hover { border-color: #475569; color: #94a3b8; }
+
+    /* ─── Password strength ─── */
+    .strength-bar { display: flex; gap: 3px; margin-top: 6px; }
+    .strength-bar div { flex: 1; height: 3px; border-radius: 2px; background: #334155; transition: background 0.3s; }
+
+    /* ─── Toast ─── */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      color: #fff; backdrop-filter: blur(10px); animation: toastIn 0.3s ease;
+      max-width: 320px; display: flex; align-items: center; gap: 8px;
+    }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .toast.success { background: rgba(34,197,94,0.9); }
+    .toast.error   { background: rgba(239,68,68,0.9); }
+    .toast.info    { background: rgba(249,115,22,0.9); }
+
+    /* ─── Loader ─── */
+    .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Mobile ─── */
+    @media (max-width: 650px) {
+      .container { height: calc(100dvh - 32px); border-radius: 20px; }
+      .form-box { bottom: 0; width: 100%; height: 72%; padding: 28px 24px; }
+      .container.active .form-box { right: 0; bottom: 30%; }
+      .toggle-box::before { left: 0; top: -270%; width: 100%; height: 300%; border-radius: 20vw; }
+      .container.active .toggle-box::before { left: 0; top: 70%; }
+      .toggle-panel { width: 100%; height: 30%; padding: 20px; }
+      .toggle-panel.toggle-left { top: 0; }
+      .toggle-panel.toggle-right { right: 0; bottom: -30%; }
+      .container.active .toggle-panel.toggle-left { left: 0; top: -30%; }
+      .container.active .toggle-panel.toggle-right { bottom: 0; }
+      .toggle-panel h1 { font-size: 1.3rem; margin-bottom: 6px; }
+      .toggle-panel p { display: none; }
+      .toggle-panel .logo-icon { width: 44px; height: 44px; font-size: 22px; margin-bottom: 10px; }
+      .form-box h1 { font-size: 1.3rem; }
+    }
+    @media (max-width: 400px) {
+      .form-box { padding: 20px 16px; }
+    }
   </style>
 </head>
 <body>
-  <div class="auth-page">
-    <!-- Background effects -->
-    <div class="auth-bg-effects">
-      <div class="auth-bg-circle auth-bg-circle-1"></div>
-      <div class="auth-bg-circle auth-bg-circle-2"></div>
+  <!-- Background particles -->
+  <div class="bg-particles" id="particles"></div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="container" id="main-container">
+
+    <!-- ══ LOGIN FORM (Email + Password) ══ -->
+    <div class="form-box login" id="form-login-box">
+      <form onsubmit="return false;" style="width:100%;">
+        <!-- View 1: Masuk dengan email & password -->
+        <div id="email-login-view">
+          <h1>Selamat datang 👋</h1>
+          <p class="subtitle">Masuk ke akun KASIRKU Anda</p>
+
+          <div class="input-box">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="nama@email.com" autocomplete="email">
+            <i class='bx bxs-envelope'></i>
+          </div>
+          <div class="input-box">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            <i class='bx bxs-lock-alt'></i>
+          </div>
+          <div class="forgot-link">
+            <a href="#" onclick="showForgot()">Lupa password?</a>
+          </div>
+          <button class="btn" id="btn-login" onclick="handleEmailLogin()">
+            <i class='bx bx-log-in'></i> Masuk
+          </button>
+          <p class="switch-text">Belum punya akun? <a onclick="switchTab('register')">Daftar</a></p>
+        </div>
+
+        <!-- View 2: Pilih akun & masukkan PIN -->
+        <div id="account-select-view">
+          <h1>Pilih Akun 🔐</h1>
+          <p class="subtitle">Pilih akun lalu masukkan PIN 6 digit</p>
+
+          <div class="account-list" id="account-list">
+            <!-- Diisi JS -->
+          </div>
+
+          <div id="pin-section" style="display:none;">
+            <div class="input-box" style="margin-bottom:8px;">
+              <label style="text-align:center; display:block;">PIN untuk: <strong id="pin-target-name" style="color:#f97316;"></strong></label>
+            </div>
+            <div class="pin-grid" id="pin-grid">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <p style="font-size:0.72rem; color:#64748b; text-align:center; margin-bottom:12px;">Ketik 6 digit PIN Anda</p>
+          </div>
+
+          <button class="btn" id="btn-pin-login" onclick="handlePinLogin()" style="display:none;">
+            <i class='bx bx-log-in'></i> Masuk dengan PIN
+          </button>
+
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn outline" onclick="switchToEmailLogin()" style="flex:1;">
+              <i class='bx bx-arrow-back'></i> Kembali
+            </button>
+            <button class="btn outline" onclick="addAnotherAccount()" style="flex:1;">
+              <i class='bx bx-plus'></i> Akun Lain
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 420px; gap:0; min-height:100vh; width:100%; max-width:1100px; margin:0 auto; align-items:center; padding:40px 24px;" class="auth-grid">
-      
-      <!-- Left: Branding -->
-      <div class="auth-branding" style="padding:40px; display:flex; flex-direction:column; gap:32px;">
-        <div>
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
-            <div class="logo-icon" style="width:56px; height:56px; font-size:28px; border-radius:14px; background:linear-gradient(135deg,#f97316,#f59e0b);">🏪</div>
-            <div>
-              <div style="font-family:var(--font-display); font-size:1.8rem; font-weight:800; letter-spacing:-0.04em;">KASIRKU</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em;">Sistem POS Toko Bangunan</div>
-            </div>
-          </div>
-          <h2 style="font-family:var(--font-display); font-size:2.2rem; font-weight:800; letter-spacing:-0.04em; line-height:1.15; margin-bottom:16px;">
-            Kelola toko bangunan<br>
-            <span style="background:linear-gradient(135deg,var(--accent),#f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">lebih cerdas & cepat.</span>
-          </h2>
-          <p style="color:var(--text-secondary); font-size:0.95rem; line-height:1.7; max-width:380px;">
-            Aplikasi kasir modern untuk toko bangunan Anda. Kelola stok, transaksi, dan laporan dalam satu platform terpadu.
-          </p>
+    <!-- ══ REGISTER FORM ══ -->
+    <div class="form-box register" id="form-register-box">
+      <form onsubmit="return false;" style="width:100%;">
+        <h1>Buat Akun 🚀</h1>
+        <p class="subtitle">Daftar untuk mulai kelola toko Anda</p>
+
+        <div class="input-box">
+          <label>Nama Lengkap</label>
+          <input type="text" id="reg-name" placeholder="Budi Santoso" autocomplete="name">
+          <i class='bx bxs-user'></i>
         </div>
-        
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
-            <div style="font-size:1.6rem; font-weight:800; font-family:var(--font-display); color:var(--accent-light);">10rb+</div>
-            <div style="font-size:0.78rem; color:var(--text-muted);">Produk dapat dikelola</div>
-          </div>
-          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
-            <div style="font-size:1.6rem; font-weight:800; font-family:var(--font-display); color:var(--success);">Real-time</div>
-            <div style="font-size:0.78rem; color:var(--text-muted);">Sinkronisasi stok otomatis</div>
+        <div class="input-box">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="nama@email.com" autocomplete="email">
+          <i class='bx bxs-envelope'></i>
+        </div>
+        <div class="input-box">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="Min. 8 karakter" oninput="checkStrength(this.value)">
+          <i class='bx bxs-lock-alt'></i>
+          <div class="strength-bar" id="strength-bar">
+            <div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div>
           </div>
         </div>
 
-        <ul class="feature-list">
-          <li>Barcode scanner untuk input produk cepat</li>
-          <li>Laporan penjualan harian, mingguan & bulanan</li>
-          <li>Program loyalitas & manajemen pelanggan</li>
-          <li>Multi-user dengan kontrol akses berbasis peran</li>
-          <li>Dukungan pembayaran QRIS & digital</li>
-        </ul>
+        <div class="input-box" style="margin-bottom:6px;">
+          <label>PIN Kasir (6 digit) <span style="color:#f97316;">*</span></label>
+          <div class="pin-grid" id="reg-pin-grid">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+          </div>
+          <p style="font-size:0.7rem; color:#64748b; margin-top:4px; text-align:center;">PIN digunakan untuk login cepat berikutnya</p>
+        </div>
+
+        <div class="role-grid" style="margin-bottom:14px;">
+          <label class="role-card">
+            <input type="radio" name="reg-role" value="owner">
+            <div class="role-label"><span class="icon">👑</span>Pemilik</div>
+          </label>
+          <label class="role-card">
+            <input type="radio" name="reg-role" value="manager">
+            <div class="role-label"><span class="icon">📊</span>Manajer</div>
+          </label>
+          <label class="role-card">
+            <input type="radio" name="reg-role" value="kasir" checked>
+            <div class="role-label"><span class="icon">🧾</span>Kasir</div>
+          </label>
+        </div>
+
+        <button class="btn" id="btn-register" onclick="handleRegister()">
+          <i class='bx bx-user-plus'></i> Buat Akun
+        </button>
+        <p class="switch-text">Sudah punya akun? <a onclick="switchTab('login')">Masuk</a></p>
+      </form>
+    </div>
+
+    <!-- ══ TOGGLE PANEL ══ -->
+    <div class="toggle-box">
+      <div class="toggle-panel toggle-left">
+        <div class="logo-icon">🏪</div>
+        <h1>KASIRKU</h1>
+        <p>Sistem POS modern untuk toko bangunan Anda. Kelola transaksi, stok & laporan.</p>
+        <button class="btn outline" onclick="switchTab('register')">Daftar Sekarang</button>
       </div>
-
-      <!-- Right: Auth Card -->
-      <div class="auth-card">
-        <!-- Tabs -->
-        <div class="tab-auth">
-          <button class="active" id="tab-login" onclick="switchTab('login')">Masuk</button>
-          <button id="tab-register" onclick="switchTab('register')">Daftar</button>
-        </div>
-
-        <!-- LOGIN FORM -->
-        <div id="form-login">
-          <h2 class="auth-title" style="font-size:1.3rem; text-align:left; margin-bottom:4px;">Selamat datang kembali 👋</h2>
-          <p class="auth-subtitle" style="text-align:left; margin-bottom:20px;">Masukkan kredensial Anda untuk melanjutkan</p>
-
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <div class="input-with-icon">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-              <input type="email" id="login-email" class="form-control" placeholder="nama@email.com" autocomplete="email">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="login-password" class="form-control" placeholder="••••••••" autocomplete="current-password">
-              <button class="eye-btn" type="button" onclick="togglePassword('login-password', this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
-            <a href="#" onclick="showForgotPassword()" style="font-size:0.8rem; color:var(--accent);">Lupa password?</a>
-          </div>
-
-          <button class="btn btn-primary btn-block btn-lg" onclick="handleLogin()" id="btn-login">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Masuk ke KASIRKU
-          </button>
-
-          <div style="margin-top:16px; text-align:center; font-size:0.8rem; color:var(--text-muted);">
-            Belum punya akun? <a href="#" onclick="switchTab('register')" style="color:var(--accent); font-weight:600;">Daftar sekarang</a>
-          </div>
-        </div>
-
-        <!-- REGISTER FORM -->
-        <div id="form-register" style="display:none;">
-          <h2 class="auth-title" style="font-size:1.3rem; text-align:left; margin-bottom:4px;">Buat akun baru 🚀</h2>
-          <p class="auth-subtitle" style="text-align:left; margin-bottom:20px;">Mulai kelola toko bangunan Anda</p>
-
-          <div class="form-group">
-            <label class="form-label">Nama Lengkap <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input type="text" id="reg-name" class="form-control" placeholder="Budi Santoso" autocomplete="name">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Email <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-              <input type="email" id="reg-email" class="form-control" placeholder="nama@email.com" autocomplete="email">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Password <span class="required">*</span></label>
-            <div class="password-wrapper">
-              <input type="password" id="reg-password" class="form-control" placeholder="Min. 8 karakter">
-              <button class="eye-btn" type="button" onclick="togglePassword('reg-password', this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-            <div id="password-strength" style="margin-top:6px;"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Role / Jabatan</label>
-            <div class="role-select-group">
-              <label class="role-option">
-                <input type="radio" name="reg-role" value="owner" id="role-owner">
-                <div class="role-label">
-                  <span class="icon">👑</span>
-                  <span>Pemilik</span>
-                </div>
-              </label>
-              <label class="role-option">
-                <input type="radio" name="reg-role" value="manager" id="role-manager">
-                <div class="role-label">
-                  <span class="icon">📊</span>
-                  <span>Manajer</span>
-                </div>
-              </label>
-              <label class="role-option">
-                <input type="radio" name="reg-role" value="kasir" id="role-kasir" checked>
-                <div class="role-label">
-                  <span class="icon">🧾</span>
-                  <span>Kasir</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <button class="btn btn-primary btn-block btn-lg" onclick="handleRegister()" id="btn-register">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            Buat Akun
-          </button>
-
-          <div style="margin-top:16px; text-align:center; font-size:0.8rem; color:var(--text-muted);">
-            Sudah punya akun? <a href="#" onclick="switchTab('login')" style="color:var(--accent); font-weight:600;">Masuk</a>
-          </div>
-        </div>
+      <div class="toggle-panel toggle-right">
+        <div class="logo-icon">👋</div>
+        <h1>Selamat Datang!</h1>
+        <p>Sudah punya akun? Masuk dan mulai kelola toko Anda hari ini.</p>
+        <button class="btn outline" onclick="switchTab('login')">Masuk</button>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabase.js?v=14"></script>
   <script src="js/app.js?v=14"></script>
   <script>
-    // Cek jika sudah login atau callback dari email verifikasi
-    (async () => {
-      // Kalau ada hash dari Supabase (email confirmation callback), tunggu sebentar
-      if (window.location.hash && window.location.hash.includes('access_token')) {
-        await new Promise(r => setTimeout(r, 800));
-      }
-      try {
-        const isAuth = await KasirkuDB.Auth.isAuthenticated();
-        if (isAuth) window.location.href = 'pages/dashboard.html';
-      } catch(e) {
-        console.warn('[KASIRKU] Auth check gagal:', e.message);
-      }
-    })();
+    // ─── Background Particles ───
+    const particleContainer = document.getElementById('particles');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      const size = Math.random() * 120 + 40;
+      p.className = 'particle';
+      p.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        left: ${Math.random() * 100}%;
+        animation-duration: ${Math.random() * 15 + 12}s;
+        animation-delay: ${Math.random() * 12}s;
+        opacity: 0;
+      `;
+      particleContainer.appendChild(p);
+    }
 
+    // ─── Tab Switch ───
+    const container = document.getElementById('main-container');
     function switchTab(tab) {
-      document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-      document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      if (tab === 'register') container.classList.add('active');
+      else container.classList.remove('active');
     }
 
-    function togglePassword(inputId, btn) {
-      const input = document.getElementById(inputId);
-      const isPassword = input.type === 'password';
-      input.type = isPassword ? 'text' : 'password';
-      btn.innerHTML = isPassword
-        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    // ─── Toast ───
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      t.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`;
+      document.getElementById('toast-container').appendChild(t);
+      setTimeout(() => t.remove(), 3500);
     }
 
-    // Password strength indicator
-    document.getElementById('reg-password').addEventListener('input', function() {
-      const val = this.value;
-      const strength = document.getElementById('password-strength');
+    // ─── PIN Grid Behavior ───
+    function initPinGrid(gridId) {
+      const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
+      inputs.forEach((inp, idx) => {
+        inp.addEventListener('input', (e) => {
+          const val = e.target.value.replace(/[^0-9]/g, '');
+          e.target.value = val.slice(-1);
+          if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
+        });
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
+        });
+        inp.addEventListener('paste', (e) => {
+          const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+          e.preventDefault();
+          inputs.forEach((d, i) => { if (text[i]) { d.value = text[i]; } });
+          const last = Math.min(text.length, inputs.length) - 1;
+          if (last >= 0) inputs[last].focus();
+        });
+      });
+    }
+
+    function getPinValue(gridId) {
+      return [...document.querySelectorAll(`#${gridId} .pin-dot`)].map(i => i.value).join('');
+    }
+
+    function clearPin(gridId) {
+      document.querySelectorAll(`#${gridId} .pin-dot`).forEach(i => i.value = '');
+      document.querySelector(`#${gridId} .pin-dot`)?.focus();
+    }
+
+    initPinGrid('pin-grid');
+    initPinGrid('reg-pin-grid');
+
+    // ─── Password Strength ───
+    function checkStrength(val) {
       let score = 0;
       if (val.length >= 8) score++;
       if (/[A-Z]/.test(val)) score++;
       if (/[0-9]/.test(val)) score++;
       if (/[^A-Za-z0-9]/.test(val)) score++;
-      
-      const labels = ['', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
-      const colors = ['', 'var(--danger)', 'var(--warning)', 'var(--success)', 'var(--info)'];
-      
-      strength.innerHTML = val ? `
-        <div style="display:flex; gap:4px; align-items:center;">
-          ${[1,2,3,4].map(i => `<div style="flex:1; height:3px; border-radius:2px; background:${i <= score ? colors[score] : 'var(--border)'};"></div>`).join('')}
-          <span style="font-size:0.72rem; color:${colors[score]}; margin-left:4px; white-space:nowrap;">${labels[score]}</span>
-        </div>` : '';
-    });
+      const colors = ['#334155','#ef4444','#f59e0b','#22c55e','#06b6d4'];
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('s'+i).style.background = i <= score ? colors[score] : '#334155';
+      }
+    }
 
-    async function handleLogin() {
+    // ─── Saved Accounts ───
+    function getSavedAccounts() {
+      try { return JSON.parse(localStorage.getItem('kasirku_saved_accounts') || '[]'); }
+      catch { return []; }
+    }
+
+    function saveAccount(name, email, pinHash) {
+      const accounts = getSavedAccounts().filter(a => a.email !== email);
+      accounts.unshift({ name, email, pinHash, addedAt: Date.now() });
+      localStorage.setItem('kasirku_saved_accounts', JSON.stringify(accounts.slice(0, 5)));
+    }
+
+    // Simple PIN hash (not cryptographic, just obfuscation for localStorage)
+    function hashPin(pin, email) {
+      let h = 0;
+      const str = pin + email + 'kasirku_salt_2024';
+      for (let i = 0; i < str.length; i++) { h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
+      return h.toString(36);
+    }
+
+    // ─── Login Views ───
+    let selectedAccountEmail = null;
+
+    function showAccountSelector() {
+      const accounts = getSavedAccounts();
+      if (accounts.length === 0) {
+        showEmailLoginView();
+        return;
+      }
+      document.getElementById('email-login-view').style.display = 'none';
+      document.getElementById('account-select-view').style.display = 'block';
+
+      const list = document.getElementById('account-list');
+      list.innerHTML = accounts.map(a => `
+        <div class="account-item" onclick="selectAccount('${a.email}', '${a.name}', this)" data-email="${a.email}">
+          <div class="account-avatar">${a.name.charAt(0).toUpperCase()}</div>
+          <div class="account-info">
+            <div class="acc-name">${a.name}</div>
+            <div class="acc-email">${a.email}</div>
+          </div>
+          <i class='bx bx-chevron-right' style="color:#475569; margin-left:auto;"></i>
+        </div>
+      `).join('');
+    }
+
+    function selectAccount(email, name, el) {
+      document.querySelectorAll('.account-item').forEach(a => a.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedAccountEmail = email;
+      document.getElementById('pin-target-name').textContent = name;
+      document.getElementById('pin-section').style.display = 'block';
+      document.getElementById('btn-pin-login').style.display = 'flex';
+      clearPin('pin-grid');
+      setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100);
+    }
+
+    function showEmailLoginView() {
+      document.getElementById('email-login-view').style.display = 'block';
+      document.getElementById('account-select-view').style.display = 'none';
+      selectedAccountEmail = null;
+    }
+
+    function switchToEmailLogin() {
+      showEmailLoginView();
+    }
+
+    function addAnotherAccount() {
+      showEmailLoginView();
+    }
+
+    // ─── Handle Email Login ───
+    async function handleEmailLogin() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-      
-      if (!email || !password) { Toast.error('Email dan password wajib diisi.'); return; }
+      if (!email || !password) { showToast('Email dan password wajib diisi.', 'error'); return; }
 
       const btn = document.getElementById('btn-login');
       btn.disabled = true;
-      btn.innerHTML = '<div class="loader-spinner" style="width:18px;height:18px;border-width:2px;"></div> Memproses...';
+      btn.innerHTML = '<div class="spin"></div> Memproses...';
 
       try {
         await KasirkuDB.Auth.login(email, password);
-        Toast.success('Berhasil masuk! Mengarahkan...');
+        const user = getCurrentUser();
+        const name = user?.full_name || email.split('@')[0];
+        showToast('Berhasil masuk! Mengarahkan...', 'success');
         setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 800);
       } catch (error) {
         const msg = error.message || '';
         if (msg.toLowerCase().includes('email not confirmed')) {
-          Toast.error('Email belum dikonfirmasi. Cek inbox/spam email Anda dan klik link verifikasi.');
+          showToast('Email belum dikonfirmasi. Cek inbox/spam Anda.', 'error');
         } else if (msg.toLowerCase().includes('invalid login')) {
-          Toast.error('Email atau password salah. Silakan coba lagi.');
+          showToast('Email atau password salah.', 'error');
         } else {
-          Toast.error('Login gagal: ' + (msg || 'Silakan coba lagi.'));
+          showToast('Login gagal: ' + (msg || 'Silakan coba lagi.'), 'error');
         }
         btn.disabled = false;
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Masuk ke KASIRKU`;
+        btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk';
       }
     }
 
+    // ─── Handle PIN Login ───
+    async function handlePinLogin() {
+      if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
+      const pin = getPinValue('pin-grid');
+      if (pin.length !== 6) { showToast('Masukkan 6 digit PIN.', 'error'); return; }
+
+      const accounts = getSavedAccounts();
+      const acc = accounts.find(a => a.email === selectedAccountEmail);
+      if (!acc) { showToast('Akun tidak ditemukan.', 'error'); return; }
+
+      const expected = hashPin(pin, selectedAccountEmail);
+      if (expected !== acc.pinHash) {
+        showToast('PIN salah. Coba lagi.', 'error');
+        clearPin('pin-grid');
+        return;
+      }
+
+      // PIN cocok → login via stored session or fallback
+      const btn = document.getElementById('btn-pin-login');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spin"></div> Memverifikasi...';
+
+      try {
+        const isAuth = await KasirkuDB.Auth.isAuthenticated();
+        const user = getCurrentUser();
+        if (isAuth && user?.email === selectedAccountEmail) {
+          showToast('Berhasil masuk!', 'success');
+          setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
+        } else {
+          // Session expired, need full login
+          showToast('Sesi habis. Gunakan password untuk masuk.', 'info');
+          const acc2 = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+          document.getElementById('email-login-view').style.display = 'block';
+          document.getElementById('account-select-view').style.display = 'none';
+          document.getElementById('login-email').value = selectedAccountEmail;
+          document.getElementById('login-password').focus();
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
+        }
+      } catch (e) {
+        showToast('Gagal masuk: ' + (e.message || 'Silakan coba lagi.'), 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
+      }
+    }
+
+    // ─── Register ───
     async function handleRegister() {
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
+      const pin = getPinValue('reg-pin-grid');
       const role = document.querySelector('input[name="reg-role"]:checked')?.value || 'kasir';
 
-      if (!name || !email || !password) { Toast.error('Semua field wajib diisi.'); return; }
-      if (password.length < 8) { Toast.error('Password minimal 8 karakter.'); return; }
+      if (!name || !email || !password) { showToast('Semua field wajib diisi.', 'error'); return; }
+      if (password.length < 8) { showToast('Password minimal 8 karakter.', 'error'); return; }
+      if (pin.length !== 6) { showToast('PIN harus 6 digit.', 'error'); return; }
 
       const btn = document.getElementById('btn-register');
       btn.disabled = true;
-      btn.innerHTML = '<div class="loader-spinner" style="width:18px;height:18px;border-width:2px;"></div> Mendaftarkan...';
+      btn.innerHTML = '<div class="spin"></div> Mendaftarkan...';
 
       try {
         await KasirkuDB.Auth.register(email, password, name, role);
-        Toast.success('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
+        // Simpan akun + PIN hash ke localStorage
+        saveAccount(name, email, hashPin(pin, email));
+        showToast('Registrasi berhasil! Cek email untuk verifikasi.', 'success');
         setTimeout(() => switchTab('login'), 2000);
       } catch (error) {
-        Toast.error(error.message || 'Registrasi gagal. Silakan coba lagi.');
+        showToast(error.message || 'Registrasi gagal.', 'error');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Buat Akun`;
+        btn.innerHTML = '<i class="bx bx-user-plus"></i> Buat Akun';
       }
     }
 
-    function showForgotPassword() {
+    function showForgot() {
       const email = prompt('Masukkan email Anda untuk reset password:');
       if (email) {
         KasirkuDB.Auth.resetPassword(email)
-          .then(() => Toast.success('Email reset password telah dikirim!'))
-          .catch(() => Toast.error('Email tidak ditemukan.'));
+          .then(() => showToast('Email reset password telah dikirim!', 'success'))
+          .catch(() => showToast('Email tidak ditemukan.', 'error'));
       }
     }
 
-    // Enter key support
+    // ─── Enter Key ───
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        const activeTab = document.getElementById('form-login').style.display !== 'none' ? 'login' : 'register';
-        if (activeTab === 'login') handleLogin();
-        else handleRegister();
+        const isRegister = container.classList.contains('active');
+        if (isRegister) handleRegister();
+        else {
+          const accountView = document.getElementById('account-select-view');
+          if (accountView.style.display !== 'none') handlePinLogin();
+          else handleEmailLogin();
+        }
       }
     });
 
-    // Responsive: sembunyikan branding di mobile
-    if (window.innerWidth < 768) {
-      const branding = document.querySelector('.auth-branding');
-      if (branding) branding.style.display = 'none';
-      document.querySelector('.auth-grid').style.gridTemplateColumns = '1fr';
-    }
+    // ─── Init: cek login & akun tersimpan ───
+    (async () => {
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        await new Promise(r => setTimeout(r, 800));
+      }
+      try {
+        const isAuth = await KasirkuDB.Auth.isAuthenticated();
+        if (isAuth) { window.location.href = 'pages/dashboard.html'; return; }
+      } catch (e) {}
+
+      // Cek apakah ada akun tersimpan
+      const saved = getSavedAccounts();
+      if (saved.length > 0) {
+        showAccountSelector();
+      }
+    })();
   </script>
 </body>
 </html>

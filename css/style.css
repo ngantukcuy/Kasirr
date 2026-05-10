@@ -1845,3 +1845,17 @@ html, body { overflow-x: hidden; max-width: 100vw; }
     width: auto;
   }
 }
+
+/* ─── Landscape Mobile: Sidebar harus tersembunyi sepenuhnya ─── */
+@media (max-width: 900px) and (orientation: landscape) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+    width: 260px !important;
+    transition: transform 0.3s ease !important;
+  }
+  .sidebar .brand-name, .sidebar .nav-item span, .sidebar .nav-section,
+  .sidebar .user-info, .sidebar .btn-logout { display: block !important; }
+  .sidebar .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+  .sidebar.mobile-open { transform: translateX(0) !important; }
+  .main-content { margin-left: 0 !important; }
+}
