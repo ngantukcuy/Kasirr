@@ -329,7 +329,7 @@
     if (!from || !to) return;
 
     try {
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { data, error } = await sb
         .from('expenses')
         .select('*')
@@ -512,7 +512,7 @@
         created_by: user?.id || null
       };
 
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { error } = await sb.from('expenses').insert([entry]);
       if (error) throw error;
 
@@ -532,7 +532,7 @@
   function deleteEntry(id) {
     Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan keuangan ini?', async () => {
       try {
-        const sb = getSupabase();
+        const sb = window.__SB_CLIENT__;
         const { error } = await sb.from('expenses').delete().eq('id', id);
         if (error) throw error;
         Toast.success('Catatan berhasil dihapus');

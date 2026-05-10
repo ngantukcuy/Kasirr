@@ -279,7 +279,7 @@
 
   async function loadData() {
     try {
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { data, error } = await sb
         .from('debts')
         .select('*')
@@ -465,7 +465,7 @@
         notes: document.getElementById('up-notes').value.trim(),
         created_by: user?.id || null
       };
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { error } = await sb.from('debts').insert([entry]);
       if (error) throw error;
       Toast.success('Catatan berhasil disimpan');
@@ -507,7 +507,7 @@
       if (!entry) { Toast.error('Data tidak ditemukan'); return; }
       let newPaid = (Number(entry.paid) || 0) + payAmt;
       if (newPaid > Number(entry.amount)) newPaid = Number(entry.amount);
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { error } = await sb.from('debts').update({ paid: newPaid }).eq('id', payTargetId);
       if (error) throw error;
       Toast.success('Pembayaran berhasil dicatat');
@@ -523,7 +523,7 @@
   function deleteEntry(id) {
     Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan ini?', async () => {
       try {
-        const sb = getSupabase();
+        const sb = window.__SB_CLIENT__;
         const { error } = await sb.from('debts').delete().eq('id', id);
         if (error) throw error;
         Toast.success('Catatan berhasil dihapus');

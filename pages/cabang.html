@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ── Load from Supabase ────────────────────────────────────
 async function loadBranches() {
   try {
-    const sb = getSupabase();
+    const sb = window.__SB_CLIENT__;
     const { data, error } = await sb
       .from('branches')
       .select('*')
@@ -326,7 +326,7 @@ async function loadBranches() {
 async function seedMainBranch() {
   try {
     const user = getCurrentUser?.() || {};
-    const sb = getSupabase();
+    const sb = window.__SB_CLIENT__;
     const { data } = await sb
       .from('branches')
       .insert([{
@@ -478,7 +478,7 @@ async function saveBranch() {
 
   try {
     const user = getCurrentUser?.() || {};
-    const sb = getSupabase();
+    const sb = window.__SB_CLIENT__;
     if (editId) {
       const { error } = await sb.from('branches').update({
         name: data.name, code: data.code, type: data.type,
@@ -511,7 +511,7 @@ async function toggleActive(id) {
   if (!b) return;
   const newActive = !b.is_active;
   try {
-    const sb = getSupabase();
+    const sb = window.__SB_CLIENT__;
     const { error } = await sb.from('branches').update({ is_active: newActive }).eq('id', id);
     if (error) throw error;
     Toast.success(`Cabang ${newActive ? 'diaktifkan' : 'dinonaktifkan'}`);
@@ -530,7 +530,7 @@ function confirmDelete(id) {
   document.getElementById('confirm-backdrop').style.display = 'flex';
   document.getElementById('confirm-yes-btn').onclick = async () => {
     try {
-      const sb = getSupabase();
+      const sb = window.__SB_CLIENT__;
       const { error } = await sb.from('branches').delete().eq('id', deleteId);
       if (error) throw error;
       document.getElementById('confirm-backdrop').style.display = 'none';
