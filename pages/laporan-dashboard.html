@@ -60,6 +60,14 @@
       .report-tab  { padding:8px 12px; font-size:0.78rem; }
     }
   </style>
+  <script>
+    // Init theme sebelum render untuk hindari flash
+    (function() {
+      if (localStorage.getItem('kasirku_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
 </head>
 <body>
 <div class="app-wrapper">

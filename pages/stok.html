@@ -51,6 +51,14 @@
     .stok-card-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .stok-card-val { font-size: 0.875rem; color: var(--text-primary); font-weight: 500; }
   </style>
+  <script>
+    // Init theme sebelum render untuk hindari flash
+    (function() {
+      if (localStorage.getItem('kasirku_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
 </head>
 <body>
 <div class="app-wrapper">

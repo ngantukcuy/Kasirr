@@ -741,9 +741,117 @@ const KasirkuDB = {
 };
 
 // ============================================================
+// Theme — inisialisasi dark/light mode di SEMUA halaman
+// ============================================================
+function initTheme() {
+  const saved = localStorage.getItem('kasirku_theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+}
+
+// Jalankan segera saat script dimuat (sebelum DOM paint) agar tidak flicker
+initTheme();
+
+// ============================================================
+// Role-Based Access Control
+// ============================================================
+function getUserRole() {
+  const user = getCurrentUser();
+  return user?.role || 'kasir';
+}
+
+function canEditOrDelete() {
+  const role = getUserRole();
+  return role === 'owner' || role === 'manager';
+}
+
+// Sembunyikan semua tombol edit/hapus/tambah untuk kasir
+function applyRoleRestrictions() {
+  if (canEditOrDelete()) return; // owner & manager: akses penuh
+  // Sembunyikan semua tombol aksi berbahaya
+  const style = document.createElement('style');
+  style.id = 'kasirku-role-restrict';
+  style.textContent = `
+    /* Kasir: sembunyikan tombol tambah, edit, hapus di seluruh halaman */
+    .btn-primary[onclick*="Modal"],
+    .btn-primary[onclick*="modal"],
+    .btn-primary[onclick*="openProduct"],
+    .btn-primary[onclick*="openKategori"],
+    .btn-primary[onclick*="openPelanggan"],
+    .btn-primary[onclick*="openPengguna"],
+    .btn-primary[onclick*="openCabang"],
+    .btn-primary[onclick*="openStok"],
+    .btn-primary[onclick*="tambah"],
+    .btn-primary[onclick*="Tambah"],
+    .btn-primary[onclick*="add"],
+    .btn-primary[onclick*="create"],
+    button[onclick*="openProductModal"],
+    button[onclick*="openKategoriModal"],
+    button[onclick*="openPelangganModal"],
+    button[onclick*="openPenggunaModal"],
+    button[onclick*="openCabangModal"],
+    button[onclick*="openStokModal"],
+    button[onclick*="deleteProduct"],
+    button[onclick*="deleteKategori"],
+    button[onclick*="deletePelanggan"],
+    button[onclick*="deletePengguna"],
+    button[onclick*="deleteCabang"],
+    button[onclick*="deleteStok"],
+    button[onclick*="hapus"],
+    button[onclick*="Hapus"],
+    button[onclick*="delete"],
+    button[onclick*="Delete"],
+    .btn-icon-sm.danger,
+    .action-edit,
+    .action-delete,
+    [data-action="edit"],
+    [data-action="delete"],
+    [data-action="hapus"] { display: none !important; }
+  `;
+  document.head.appendChild(style);
+
+  // Juga pasang MutationObserver untuk konten yang di-render dinamis
+  const obs = new MutationObserver(() => _hideActionsForKasir());
+  obs.observe(document.body, { childList: true, subtree: true });
+  _hideActionsForKasir();
+}
+
+function _hideActionsForKasir() {
+  if (canEditOrDelete()) return;
+  // Sembunyikan semua btn-icon-sm danger (tombol hapus) dan btn edit di tabel
+  document.querySelectorAll('.btn-icon-sm.danger').forEach(el => { el.style.display = 'none'; });
+  // Sembunyikan tombol Edit (bukan Hapus) di action column
+  document.querySelectorAll('.btn-icon-sm').forEach(el => {
+    const title = (el.title || '').toLowerCase();
+    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
+    if (title.includes('edit') || title.includes('hapus') || title.includes('delete') ||
+        onclick.includes('edit') || onclick.includes('delete') || onclick.includes('hapus') ||
+        onclick.includes('update') || onclick.includes('openproductmodal') ||
+        onclick.includes('openkategori') || onclick.includes('openpelanggan') ||
+        onclick.includes('openpengguna') || onclick.includes('opencabang')) {
+      el.style.display = 'none';
+    }
+  });
+  // Sembunyikan header-actions tombol Tambah
+  document.querySelectorAll('.header-actions button, .header-actions a').forEach(el => {
+    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
+    const text = el.textContent.toLowerCase();
+    if (onclick.includes('modal') || onclick.includes('tambah') || text.includes('tambah')) {
+      el.style.display = 'none';
+    }
+  });
+}
+
+// ============================================================
 // Auth Guard — dipanggil di setiap halaman dalam /pages/
 // ============================================================
 async function requireAuth(activePage) {
+  // Terapkan tema segera
+  initTheme();
+
   const auth = await KasirkuDB.Auth.isAuthenticated();
   if (!auth) {
     window.location.href = '../index.html';
@@ -751,6 +859,12 @@ async function requireAuth(activePage) {
   }
   // Update user info di sidebar (sidebar sudah langsung ada di HTML)
   if (typeof updateSidebarUser === 'function') updateSidebarUser();
+  // Terapkan pembatasan role setelah DOM siap
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyRoleRestrictions);
+  } else {
+    applyRoleRestrictions();
+  }
   return true;
 }
 
@@ -774,6 +888,10 @@ window.getStockStatus = getStockStatus;
 window.getTierBadge   = getTierBadge;
 window.calculateLoyaltyPoints = calculateLoyaltyPoints;
 window.requireAuth    = requireAuth;
+window.initTheme      = initTheme;
+window.getUserRole    = getUserRole;
+window.canEditOrDelete = canEditOrDelete;
+window.applyRoleRestrictions = applyRoleRestrictions;
 // ============================================================
 // Mobile table auto-label — adds data-label to td from thead th
 // Runs after each page renders its table, enabling CSS card view

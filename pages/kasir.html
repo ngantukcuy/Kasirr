@@ -230,6 +230,14 @@
     .product-card-price { font-size: 0.85rem; font-weight: 800; color: var(--accent-light); flex-shrink: 0; }
     .product-card-stock { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; }
   </style>
+  <script>
+    // Init theme sebelum render untuk hindari flash
+    (function() {
+      if (localStorage.getItem('kasirku_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
 </head>
 <body>
 <div class="app-wrapper">

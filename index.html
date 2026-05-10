@@ -116,7 +116,7 @@
       box-sizing: border-box;
     }
     .input-box input:focus {
-      border-color: #7af957;
+      border-color: #57f1f9;
       box-shadow: 0 0 0 3px rgba(122,249,87,0.15);
     }
     .input-box input::placeholder { color: #475569; }
@@ -136,7 +136,7 @@
       cursor: pointer;
       transition: color 0.2s;
     }
-    .input-box i.toggle-pwd:hover { color: #7af957; }
+    .input-box i.toggle-pwd:hover { color: #57c6f9; }
       font-weight: 600;
       color: #94a3b8;
       margin-bottom: 6px;
@@ -160,7 +160,7 @@
       border-radius: 8px;
       font-size: 1.2rem;
       text-align: center;
-      color: #7af957;
+      color: #c057f9;
       font-weight: 800;
       font-family: 'Sora', sans-serif;
       outline: none;
@@ -353,32 +353,8 @@
     <!-- ══ LOGIN FORM (Email + Password) ══ -->
     <div class="form-box login" id="form-login-box">
       <form onsubmit="return false;" style="width:100%;">
-        <!-- View 1: Masuk dengan email & password -->
-        <div id="email-login-view">
-          <h1>Selamat datang 👋</h1>
-          <p class="subtitle">Masuk ke akun KASIRKU Anda</p>
-
-          <div class="input-box">
-            <label>Email</label>
-            <input type="email" id="login-email" placeholder="nama@email.com" autocomplete="email">
-            <i class='bx bxs-envelope'></i>
-          </div>
-          <div class="input-box">
-            <label>Password</label>
-            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
-            <i class='bx bxs-hide toggle-pwd' id="login-pwd-toggle" onclick="togglePwdVisibility('login-password','login-pwd-toggle')"></i>
-          </div>
-          <div class="forgot-link">
-            <a href="#" onclick="showForgot()">Lupa password?</a>
-          </div>
-          <button class="btn" id="btn-login" onclick="handleEmailLogin()">
-            <i class='bx bx-log-in'></i> Masuk
-          </button>
-          <p class="switch-text">Belum punya akun? <a onclick="switchTab('register')">Daftar</a></p>
-        </div>
-
-        <!-- View 2: Pilih akun & masukkan PIN -->
-        <div id="account-select-view">
+        <!-- View: Pilih Akun & PIN Login -->
+        <div id="account-select-view" style="display:none;">
           <h1>Pilih Akun 🔐</h1>
           <p class="subtitle">Pilih akun lalu masukkan PIN 6 digit</p>
 
@@ -389,15 +365,15 @@
           <div id="pin-section" style="display:none;">
             <div style="text-align:center; margin-bottom:10px;">
               <span style="font-size:0.8rem; color:#94a3b8;">PIN untuk: </span>
-              <strong id="pin-target-name" style="color:#7af957; font-size:0.8rem;"></strong>
+              <strong id="pin-target-name" style="color:#57f1f9; font-size:0.8rem;"></strong>
             </div>
-            <div class="pin-grid" id="pin-grid">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
-              <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <div id="pin-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px; width:100%; margin-bottom:6px;">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
             </div>
             <p style="font-size:0.72rem; color:#64748b; text-align:center; margin-bottom:12px;">Ketik 6 digit PIN Anda</p>
           </div>
@@ -405,24 +381,34 @@
           <!-- Tampil kalau akun belum punya PIN -->
           <div id="no-pin-notice" style="display:none; margin-bottom:12px; padding:12px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.25); border-radius:10px; text-align:center;">
             <p style="font-size:0.8rem; color:#06b6d4; margin:0 0 8px;">Akun ini belum punya PIN.</p>
-            <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 10px;">Masuk dengan sesi aktif atau daftarkan PIN di Pengaturan.</p>
+            <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 10px;">Daftarkan PIN di halaman Pengaturan setelah masuk.</p>
             <button class="btn" onclick="handleDirectSessionLogin()" style="height:38px; font-size:0.82rem;">
-              <i class='bx bx-log-in'></i> Masuk Langsung
+              <i class="bx bx-log-in"></i> Masuk Langsung
             </button>
           </div>
 
           <button class="btn" id="btn-pin-login" onclick="handlePinLogin()" style="display:none;">
-            <i class='bx bx-log-in'></i> Masuk dengan PIN
+            <i class="bx bx-log-in"></i> Masuk dengan PIN
           </button>
 
           <div style="margin-top:10px; display:flex; gap:8px;">
-            <button class="btn outline" onclick="switchToEmailLogin()" style="flex:1;">
-              <i class='bx bx-arrow-back'></i> Kembali
+            <button class="btn outline" onclick="switchTab('register')" style="flex:1;">
+              <i class="bx bx-user-plus"></i> Daftar
             </button>
             <button class="btn outline" onclick="addAnotherAccount()" style="flex:1;">
-              <i class='bx bx-plus'></i> Akun Lain
+              <i class="bx bx-plus"></i> Akun Lain
             </button>
           </div>
+        </div>
+
+        <!-- View fallback: Tidak ada akun tersimpan -->
+        <div id="no-account-view" style="display:none;">
+          <h1>Selamat datang 👋</h1>
+          <p class="subtitle">Belum ada akun tersimpan</p>
+          <p style="font-size:0.82rem; color:#94a3b8; text-align:center; margin:16px 0 24px; line-height:1.6;">Daftar akun baru untuk mulai menggunakan KASIRKU.</p>
+          <button class="btn" onclick="switchTab('register')">
+            <i class="bx bx-user-plus"></i> Daftar Sekarang
+          </button>
         </div>
       </form>
     </div>
@@ -454,13 +440,13 @@
 
         <div class="input-box" style="margin-bottom:6px;">
           <label>PIN Kasir (6 digit) <span style="color:#7af957;">*</span></label>
-          <div class="pin-grid" id="reg-pin-grid">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
-            <input class="pin-dot" maxlength="1" inputmode="numeric">
+          <div id="reg-pin-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px; width:100%; margin-bottom:4px;">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
           </div>
           <p style="font-size:0.7rem; color:#64748b; margin-top:4px; text-align:center;">PIN digunakan untuk login cepat berikutnya</p>
         </div>
@@ -545,8 +531,7 @@
     function initPinGrid(gridId) {
       const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
       inputs.forEach((inp, idx) => {
-        // type=password shows dots natively and triggers numeric keyboard on mobile
-        inp.type = 'password';
+        // type=password sudah di-set di HTML, jangan override agar dots tampil
         inp.inputMode = 'numeric';
         inp.autocomplete = 'off';
         inp.addEventListener('input', (e) => {
@@ -661,10 +646,11 @@
     function showAccountSelector() {
       const accounts = getSavedAccounts();
       if (accounts.length === 0) {
-        showEmailLoginView();
+        document.getElementById('account-select-view').style.display = 'none';
+        document.getElementById('no-account-view').style.display = 'block';
         return;
       }
-      document.getElementById('email-login-view').style.display = 'none';
+      document.getElementById('no-account-view').style.display = 'none';
       document.getElementById('account-select-view').style.display = 'block';
 
       const list = document.getElementById('account-list');
@@ -702,32 +688,9 @@
       }
     }
 
-    function showEmailLoginView() {
-      document.getElementById('email-login-view').style.display = 'block';
-      document.getElementById('account-select-view').style.display = 'none';
-      selectedAccountEmail = null;
-    }
-
-    function switchToEmailLogin() {
-      showEmailLoginView();
-    }
-
     function addAnotherAccount() {
-      showEmailLoginView();
-    }
-
-    // ─── Toggle password visibility ───
-    function togglePwdVisibility(inputId, iconId) {
-      const inp  = document.getElementById(inputId);
-      const icon = document.getElementById(iconId);
-      if (!inp || !icon) return;
-      if (inp.type === 'password') {
-        inp.type = 'text';
-        icon.className = 'bx bxs-show toggle-pwd';
-      } else {
-        inp.type = 'password';
-        icon.className = 'bx bxs-hide toggle-pwd';
-      }
+      // Hapus semua akun tersimpan sementara dan arahkan ke register
+      switchTab('register');
     }
 
     // ─── Login langsung via sesi aktif (akun tanpa PIN) ───
@@ -752,50 +715,9 @@
             return;
           }
         }
-        // Fallback manual
-        showToast('Sesi habis. Masukkan password.', 'info');
-        document.getElementById('email-login-view').style.display = 'block';
-        document.getElementById('account-select-view').style.display = 'none';
-        document.getElementById('login-email').value = selectedAccountEmail;
-        document.getElementById('login-password').focus();
+        showToast('Sesi habis. Silakan daftar ulang atau hubungi admin.', 'error');
       } catch(e) {
         showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error');
-      }
-    }
-
-    // ─── Handle Email Login ───
-    async function handleEmailLogin() {
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      if (!email || !password) { showToast('Email dan password wajib diisi.', 'error'); return; }
-
-      const btn = document.getElementById('btn-login');
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spin"></div> Memproses...';
-
-      try {
-        await KasirkuDB.Auth.login(email, password);
-        const user = getCurrentUser();
-        const name = user?.full_name || email.split('@')[0];
-        // Simpan akun + password terenkripsi agar PIN login tersedia berikutnya
-        const existingAccounts = getSavedAccounts();
-        const existing = existingAccounts.find(a => a.email === email);
-        // Selalu simpan: pertama kali login tanpa PIN → pinHash kosong dulu
-        // Kalau sudah punya PIN sebelumnya, pertahankan pinHash lama
-        saveAccount(name, email, existing?.pinHash || '', encodePassword(password, email));
-        showToast('Berhasil masuk! Mengarahkan...', 'success');
-        setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 800);
-      } catch (error) {
-        const msg = error.message || '';
-        if (msg.toLowerCase().includes('email not confirmed')) {
-          showToast('Email belum dikonfirmasi. Cek inbox/spam Anda.', 'error');
-        } else if (msg.toLowerCase().includes('invalid login')) {
-          showToast('Email atau password salah.', 'error');
-        } else {
-          showToast('Login gagal: ' + (msg || 'Silakan coba lagi.'), 'error');
-        }
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk';
       }
     }
 
@@ -838,17 +760,10 @@
                 showToast('Berhasil masuk!', 'success');
                 setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
                 return;
-              } catch (reAuthErr) {
-                // Password mungkin sudah berubah, minta login ulang
-              }
+              } catch (reAuthErr) { /* Password berubah */ }
             }
           }
-          // Fallback: minta password manual
-          showToast('Sesi habis. Masukkan password untuk melanjutkan.', 'info');
-          document.getElementById('email-login-view').style.display = 'block';
-          document.getElementById('account-select-view').style.display = 'none';
-          document.getElementById('login-email').value = selectedAccountEmail;
-          document.getElementById('login-password').focus();
+          showToast('Sesi habis. Hubungi admin untuk reset akun.', 'error');
           btn.disabled = false;
           btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
         }
@@ -905,8 +820,7 @@
         if (isRegister) handleRegister();
         else {
           const accountView = document.getElementById('account-select-view');
-          if (accountView.style.display !== 'none') handlePinLogin();
-          else handleEmailLogin();
+          if (accountView && accountView.style.display !== 'none') handlePinLogin();
         }
       }
     });
@@ -921,11 +835,8 @@
         if (isAuth) { window.location.href = 'pages/dashboard.html'; return; }
       } catch (e) {}
 
-      // Cek apakah ada akun tersimpan
-      const saved = getSavedAccounts();
-      if (saved.length > 0) {
-        showAccountSelector();
-      }
+      // Selalu tampilkan account selector (dengan atau tanpa akun tersimpan)
+      showAccountSelector();
     })();
   </script>
 </body>

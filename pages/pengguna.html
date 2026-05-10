@@ -54,6 +54,14 @@
       .filter-bar > * { width: 100% !important; }
     }
   </style>
+  <script>
+    // Init theme sebelum render untuk hindari flash
+    (function() {
+      if (localStorage.getItem('kasirku_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
 </head>
 <body>
 <div class="app-wrapper">

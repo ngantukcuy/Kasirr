@@ -26,6 +26,14 @@
     .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: var(--transition); }
     .color-dot.selected { border-color: #fff; transform: scale(1.15); }
   </style>
+  <script>
+    // Init theme sebelum render untuk hindari flash
+    (function() {
+      if (localStorage.getItem('kasirku_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
 </head>
 <body>
 <div class="app-wrapper">
