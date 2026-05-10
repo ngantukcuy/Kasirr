@@ -801,21 +801,52 @@ window.BarcodeScanner = BarcodeScanner;
 let allProducts = [], currentPaymentMethod = 'cash', numpadValue = '', lastTransaction = null;
 window.storeSettings = {};
 
-// ---- Modal Harian (Uang Laci / Modal Awal) ----
-function checkAndShowModalHarian() {
-  const today = new Date().toDateString();
-  const lastModal = localStorage.getItem('kasirku_modal_harian_date');
-  const savedModal = localStorage.getItem('kasirku_modal_harian_amount');
-  if (lastModal !== today) {
-    // Reset modal harian tiap hari baru
-    localStorage.removeItem('kasirku_modal_harian_amount');
-    localStorage.removeItem('kasirku_modal_harian_date');
+// ---- Timezone-safe date helper (WIB/WITA/WIT aware) ----
+function getTodayLocal() {
+  // Gunakan tanggal lokal (bukan UTC) agar reset tepat jam 00:00 waktu setempat
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const dd   = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`; // format YYYY-MM-DD
+}
+
+// ---- Modal Harian (Uang Laci / Modal Awal) — simpan ke DB ----
+async function checkAndShowModalHarian() {
+  const today = getTodayLocal();
+  const localKey = `kasirku_modal_session_${today}`;
+
+  // Cek localStorage dulu (cepat), kalau sudah ada sesi hari ini langsung tampil
+  const localCache = localStorage.getItem(localKey);
+  if (localCache) {
+    const cached = JSON.parse(localCache);
+    updateModalHarianDisplay(cached.opening_cash);
+    return;
   }
-  if (!localStorage.getItem('kasirku_modal_harian_amount')) {
+
+  // Cek di database apakah sudah ada sesi kasir hari ini
+  try {
+    const user = getCurrentUser();
+    if (!user) { openModalHarian(); return; }
+
+    const { data, error } = await _sb
+      .from('kasir_sessions')
+      .select('*')
+      .eq('cashier_id', user.id)
+      .eq('session_date', today)
+      .maybeSingle();
+
+    if (data) {
+      // Sesi sudah ada di DB, simpan cache lokal
+      localStorage.setItem(localKey, JSON.stringify(data));
+      updateModalHarianDisplay(data.opening_cash);
+    } else {
+      // Belum ada sesi hari ini → tampilkan form modal harian
+      openModalHarian();
+    }
+  } catch (e) {
+    // Fallback ke localStorage jika DB error
     openModalHarian();
-  } else {
-    const amount = parseInt(localStorage.getItem('kasirku_modal_harian_amount') || '0');
-    updateModalHarianDisplay(amount);
   }
 }
 
@@ -824,32 +855,61 @@ function openModalHarian() {
   setTimeout(() => document.getElementById('modal-harian-input').focus(), 100);
 }
 
-function saveModalHarian() {
+async function saveModalHarian() {
   const raw = document.getElementById('modal-harian-input').value.replace(/\D/g,'');
   const amount = parseInt(raw) || 0;
   if (amount < 0) { Toast.warning('Jumlah harus lebih dari 0'); return; }
-  const today = new Date().toDateString();
-  localStorage.setItem('kasirku_modal_harian_amount', String(amount));
-  localStorage.setItem('kasirku_modal_harian_date', today);
+
+  const today = getTodayLocal();
+  const user  = getCurrentUser();
+
+  try {
+    if (user) {
+      // Simpan ke database (upsert jika sudah ada)
+      const { data, error } = await _sb
+        .from('kasir_sessions')
+        .upsert({
+          cashier_id:    user.id,
+          session_date:  today,
+          opening_cash:  amount,
+          opened_at:     new Date().toISOString()
+        }, { onConflict: 'cashier_id,session_date', ignoreDuplicates: false });
+
+      if (error) throw error;
+
+      // Cache lokal
+      localStorage.setItem(`kasirku_modal_session_${today}`, JSON.stringify({
+        cashier_id: user.id, session_date: today, opening_cash: amount
+      }));
+    }
+  } catch (e) {
+    // Tetap lanjut meski DB error, simpan ke localStorage saja
+    localStorage.setItem(`kasirku_modal_session_${today}`, JSON.stringify({
+      session_date: today, opening_cash: amount
+    }));
+    Toast.warning('Modal tersimpan lokal (DB tidak terhubung)');
+  }
+
   document.getElementById('modal-harian').style.display = 'none';
   updateModalHarianDisplay(amount);
-  Toast.success(`Modal harian dicatat: ${formatCurrency(amount)}`);
+  Toast.success(`Modal awal laci dicatat: ${formatCurrency(amount)}`);
 }
 
-function skipModalHarian() {
-  const today = new Date().toDateString();
-  localStorage.setItem('kasirku_modal_harian_amount', '0');
-  localStorage.setItem('kasirku_modal_harian_date', today);
-  document.getElementById('modal-harian').style.display = 'none';
-  updateModalHarianDisplay(0);
+async function skipModalHarian() {
+  // Skip = modal 0, tetap catat ke DB
+  const raw = document.getElementById('modal-harian-input').value.replace(/\D/g,'');
+  document.getElementById('modal-harian-input').value = '0';
+  await saveModalHarian();
 }
 
 function updateModalHarianDisplay(amount) {
   const el = document.getElementById('modal-harian-display');
+  const elAlt = document.getElementById('modal-harian-display-alt');
   if (el) {
     el.textContent = `Laci: ${formatCurrency(amount)}`;
-    el.style.display = amount > 0 ? 'block' : 'none';
+    el.style.display = 'block';
   }
+  if (elAlt) elAlt.style.display = 'none';
 }
 
 // Format currency input with thousand separator

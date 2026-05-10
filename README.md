@@ -4,6 +4,32 @@ Aplikasi Point of Sale modern berbasis web untuk toko bangunan. Dibangun dengan 
 
 ---
 
+## 🆕 Pembaruan v12 (Patch Terbaru)
+
+### ✅ Perbaikan yang dilakukan:
+
+**1. Login PIN — Pilih Akun, Masukkan PIN, Langsung Masuk**
+- Saat sesi habis, sistem otomatis re-auth di background menggunakan kredensial tersimpan (terenkripsi di localStorage)
+- Pengguna **tidak perlu mengetik email & password lagi** — cukup pilih akun → masukkan PIN 6 digit
+- Password disimpan dengan obfuskasi XOR+Base64 di localStorage (tidak plain text)
+
+**2. Modal Awal Laci — Tersimpan ke Database**
+- Modal harian yang diisi saat masuk kasir kini disimpan ke tabel `kasir_sessions` di Supabase
+- Muncul di **Dashboard Laporan** → card KPI "💵 Modal Awal Laci" dan tab "💵 Sesi & Modal"
+- Tab Sesi & Modal menampilkan: tanggal, kasir, jumlah modal awal, jam buka, dan status sesi
+- Bisa di-export ke CSV
+
+**3. Reset Harian — Timezone Lokal yang Benar**
+- Sebelumnya: pakai `new Date().toDateString()` yang bisa berbeda format antar browser
+- Sekarang: pakai format `YYYY-MM-DD` dari tanggal lokal → reset tepat jam **00:00 waktu perangkat** (WIB/WITA/WIT)
+- Tidak ada lagi reset di tengah hari atau jam aneh
+
+### 🔧 Yang perlu dilakukan setelah update:
+1. Jalankan **`patch_v12.sql`** di Supabase SQL Editor (buat tabel `kasir_sessions`)
+2. Deploy ulang file yang berubah: `index.html`, `pages/kasir.html`, `pages/laporan-dashboard.html`
+
+---
+
 ## 🚀 Cara Menjalankan
 
 ### 1. Buka Langsung di Browser (Tanpa Build)

@@ -735,5 +735,59 @@ FROM public.debts
 GROUP BY type;
 
 -- ============================================================
--- SELESAI PATCH v11
+-- PATCH v12: PIN login di database + sesi kasir harian
+-- ============================================================
+
+-- Tambah kolom pin_hash di profiles (untuk login PIN via database)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS pin_hash TEXT;
+
+-- ============================================================
+-- TABEL: kasir_sessions (sesi harian kasir + modal awal laci)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.kasir_sessions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  cashier_id UUID REFERENCES public.profiles(id) NOT NULL,
+  session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  opening_cash DECIMAL(15,2) NOT NULL DEFAULT 0,  -- Modal awal / uang laci
+  closing_cash DECIMAL(15,2),                      -- Uang akhir (saat tutup kasir)
+  total_sales DECIMAL(15,2) DEFAULT 0,             -- Total penjualan sesi ini
+  total_transactions INTEGER DEFAULT 0,            -- Jumlah transaksi
+  notes TEXT,
+  opened_at TIMESTAMPTZ DEFAULT NOW(),
+  closed_at TIMESTAMPTZ,
+  UNIQUE(cashier_id, session_date)                 -- 1 sesi per kasir per hari
+);
+
+-- Enable RLS
+ALTER TABLE public.kasir_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Kasir bisa lihat & buat sesi miliknya; owner/manager bisa lihat semua
+CREATE POLICY "kasir_sessions_select" ON public.kasir_sessions
+  FOR SELECT TO authenticated
+  USING (cashier_id = auth.uid() OR get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "kasir_sessions_insert" ON public.kasir_sessions
+  FOR INSERT TO authenticated
+  WITH CHECK (cashier_id = auth.uid());
+
+CREATE POLICY "kasir_sessions_update" ON public.kasir_sessions
+  FOR UPDATE TO authenticated
+  USING (cashier_id = auth.uid() OR get_user_role() IN ('owner', 'manager'));
+
+-- Index untuk query laporan per tanggal
+CREATE INDEX IF NOT EXISTS idx_kasir_sessions_date ON public.kasir_sessions(session_date);
+CREATE INDEX IF NOT EXISTS idx_kasir_sessions_cashier ON public.kasir_sessions(cashier_id);
+
+-- ============================================================
+-- FUNCTION: upsert pin_hash (update PIN kasir)
+-- ============================================================
+CREATE OR REPLACE FUNCTION update_pin_hash(p_user_id UUID, p_pin_hash TEXT)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.profiles SET pin_hash = p_pin_hash WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+-- SELESAI PATCH v12
 -- ============================================================

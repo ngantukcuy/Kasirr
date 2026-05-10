@@ -170,6 +170,11 @@
           <div class="rpt-kpi-value" id="kpi-utang" style="color:#f59e0b;">Rp 0</div>
           <div class="rpt-kpi-sub" id="kpi-utang-count">belum lunas</div>
         </div>
+        <div class="rpt-kpi-card">
+          <div class="rpt-kpi-label">💵 Modal Awal Laci</div>
+          <div class="rpt-kpi-value" id="kpi-modal-awal" style="color:#10b981;">Rp 0</div>
+          <div class="rpt-kpi-sub" id="kpi-modal-awal-sub">total semua kasir</div>
+        </div>
       </div>
 
       <!-- Charts -->
@@ -213,6 +218,7 @@
           <div class="report-tabs">
             <button class="report-tab active" id="rtab-penjualan"  onclick="switchRTab('penjualan')">Penjualan</button>
             <button class="report-tab" id="rtab-kasir"      onclick="switchRTab('kasir')">Laporan Kasir</button>
+            <button class="report-tab" id="rtab-sesi"       onclick="switchRTab('sesi')">💵 Sesi & Modal</button>
             <button class="report-tab" id="rtab-stok"       onclick="switchRTab('stok')">Laporan Stok</button>
             <button class="report-tab" id="rtab-pembelian"  onclick="switchRTab('pembelian')">Pembelian Stok</button>
             <button class="report-tab" id="rtab-keuangan"   onclick="switchRTab('keuangan')">Pembayaran</button>
@@ -245,6 +251,7 @@
   let stockData   = [];
   let expData     = [];
   let upData      = [];
+  let sesiData    = [];  // kasir_sessions data
   let chartPenjualan = null;
   let chartPayment   = null;
   let activeRTab     = 'penjualan';
@@ -320,9 +327,17 @@
       // Load debts/utang-piutang dari Supabase
       const debtRes = await _sb.from('debts').select('*').order('date', { ascending: false });
       upData = debtRes.data || [];
+
+      // Load kasir_sessions (modal awal harian)
+      const sesiRes = await _sb.from('kasir_sessions')
+        .select('*, profiles!cashier_id(full_name)')
+        .gte('session_date', from)
+        .lte('session_date', to)
+        .order('session_date', { ascending: false });
+      sesiData = sesiRes.data || [];
     } catch(e) {
       console.warn('Supabase load error:', e.message);
-      salesData = []; stockData = []; expData = []; upData = [];
+      salesData = []; stockData = []; expData = []; upData = []; sesiData = [];
     }
 
     updateKPIs();
@@ -359,6 +374,12 @@
     document.getElementById('kpi-stok-masuk-count').textContent  = 'unit masuk';
     document.getElementById('kpi-utang').textContent             = formatRupiah(utangAktif);
     document.getElementById('kpi-utang-count').textContent       = `${upData.filter(e => e.type === 'utang' && (Number(e.paid)||0) < Number(e.amount)).length} item`;
+
+    // Modal awal laci (dari kasir_sessions)
+    const totalModalAwal = sesiData.reduce((s, s2) => s + parseFloat(s2.opening_cash || 0), 0);
+    const sesiCount      = sesiData.length;
+    document.getElementById('kpi-modal-awal').textContent    = formatRupiah(totalModalAwal);
+    document.getElementById('kpi-modal-awal-sub').textContent = `${sesiCount} sesi kasir`;
   }
 
   // ── Charts ─────────────────────────────────────────────────
@@ -598,6 +619,24 @@
           <td style="font-size:.8rem;color:var(--text-muted);">${e.due_date ? formatDate(e.due_date+'T00:00:00') : '—'}</td>
         </tr>`;
       }).join('');
+
+    } else if (activeRTab === 'sesi') {
+      thead.innerHTML = '<tr><th>Tanggal</th><th>Kasir</th><th style="text-align:right;">💵 Modal Awal Laci</th><th style="text-align:right;">Buka Sesi</th><th>Status</th></tr>';
+      if (!sesiData.length) { tbody.innerHTML = emptyRow(5); return; }
+      tbody.innerHTML = sesiData.map(s => {
+        const isTutup = !!s.closed_at;
+        const status = isTutup
+          ? '<span style="background:rgba(100,116,139,.12);color:#94a3b8;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700;">🔒 Tutup</span>'
+          : '<span style="background:rgba(34,197,94,.12);color:#22c55e;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700;">🟢 Buka</span>';
+        const sesiBukaStr = s.opened_at ? new Date(s.opened_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '—';
+        return `<tr>
+          <td style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">${formatDate(s.session_date+'T00:00:00')}</td>
+          <td style="font-weight:600;">${s.profiles?.full_name || '—'}</td>
+          <td style="text-align:right;font-family:var(--font-display);font-weight:700;color:#10b981;">${formatRupiah(s.opening_cash)}</td>
+          <td style="text-align:right;font-size:.82rem;color:var(--text-muted);">${sesiBukaStr}</td>
+          <td>${status}</td>
+        </tr>`;
+      }).join('');
     }
   }
 
@@ -623,6 +662,9 @@
     } else if (activeRTab === 'up') {
       rows = upData.map(e => ({ Nama: e.name, Tipe: e.type, Keterangan: e.description, Total: e.amount, Dibayar: e.paid, JatuhTempo: e.due_date }));
       filename = 'laporan-utang-piutang';
+    } else if (activeRTab === 'sesi') {
+      rows = sesiData.map(s => ({ Tanggal: s.session_date, Kasir: s.profiles?.full_name || '', ModalAwal: s.opening_cash, BukaSesi: s.opened_at, Status: s.closed_at ? 'Tutup' : 'Buka' }));
+      filename = 'laporan-sesi-kasir';
     }
     if (!rows.length) { Toast.warning('Tidak ada data untuk diexport'); return; }
     const headers = Object.keys(rows[0]).join(',');

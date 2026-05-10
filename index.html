@@ -563,10 +563,31 @@
       catch { return []; }
     }
 
-    function saveAccount(name, email, pinHash) {
+    function saveAccount(name, email, pinHash, encPwd) {
       const accounts = getSavedAccounts().filter(a => a.email !== email);
-      accounts.unshift({ name, email, pinHash, addedAt: Date.now() });
+      accounts.unshift({ name, email, pinHash, encPwd: encPwd || null, addedAt: Date.now() });
       localStorage.setItem('kasirku_saved_accounts', JSON.stringify(accounts.slice(0, 5)));
+    }
+
+    // Obfuscate password for localStorage (XOR + base64)
+    function encodePassword(password, email) {
+      const key = email + 'kasirku_pwd_2024';
+      let result = '';
+      for (let i = 0; i < password.length; i++) {
+        result += String.fromCharCode(password.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      return btoa(result);
+    }
+    function decodePassword(enc, email) {
+      try {
+        const key = email + 'kasirku_pwd_2024';
+        const raw = atob(enc);
+        let result = '';
+        for (let i = 0; i < raw.length; i++) {
+          result += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+      } catch { return null; }
     }
 
     // Simple PIN hash (not cryptographic, just obfuscation for localStorage)
@@ -641,6 +662,13 @@
         await KasirkuDB.Auth.login(email, password);
         const user = getCurrentUser();
         const name = user?.full_name || email.split('@')[0];
+        // Simpan akun + password terenkripsi agar PIN login bisa re-auth saat sesi habis
+        const existingAccounts = getSavedAccounts();
+        const existing = existingAccounts.find(a => a.email === email);
+        if (existing) {
+          // Update encPwd tapi jaga pinHash yang sudah ada
+          saveAccount(name, email, existing.pinHash || '', encodePassword(password, email));
+        }
         showToast('Berhasil masuk! Mengarahkan...', 'success');
         setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 800);
       } catch (error) {
@@ -674,7 +702,7 @@
         return;
       }
 
-      // PIN cocok → login via stored session or fallback
+      // PIN cocok → login via stored session or re-auth via stored password
       const btn = document.getElementById('btn-pin-login');
       btn.disabled = true;
       btn.innerHTML = '<div class="spin"></div> Memverifikasi...';
@@ -686,9 +714,23 @@
           showToast('Berhasil masuk!', 'success');
           setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
         } else {
-          // Session expired, need full login
-          showToast('Sesi habis. Gunakan password untuk masuk.', 'info');
+          // Sesi habis → coba re-auth otomatis dengan password tersimpan
           const acc2 = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+          if (acc2?.encPwd) {
+            const pwd = decodePassword(acc2.encPwd, selectedAccountEmail);
+            if (pwd) {
+              try {
+                await KasirkuDB.Auth.login(selectedAccountEmail, pwd);
+                showToast('Berhasil masuk!', 'success');
+                setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
+                return;
+              } catch (reAuthErr) {
+                // Password mungkin sudah berubah, minta login ulang
+              }
+            }
+          }
+          // Fallback: minta password manual
+          showToast('Sesi habis. Masukkan password untuk melanjutkan.', 'info');
           document.getElementById('email-login-view').style.display = 'block';
           document.getElementById('account-select-view').style.display = 'none';
           document.getElementById('login-email').value = selectedAccountEmail;
@@ -722,7 +764,7 @@
       try {
         await KasirkuDB.Auth.register(email, password, name, role);
         // Simpan akun + PIN hash ke localStorage
-        saveAccount(name, email, hashPin(pin, email));
+        saveAccount(name, email, hashPin(pin, email), encodePassword(password, email));
         showToast('Registrasi berhasil! Cek email untuk verifikasi.', 'success');
         setTimeout(() => switchTab('login'), 2000);
       } catch (error) {
