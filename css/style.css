@@ -17,11 +17,11 @@
   --bg-hover:       #2a2f40;
 
   /* Brand / Accent */
-  --accent:         #7af957;
-  --accent-light:   #9bfa16;
-  --accent-dark:    #84ff00;
-  --accent-glow:    rgba(109, 249, 22, 0.15);
-  --accent-border:  rgba(132, 249, 22, 0.3);
+  --accent:         #d057f9;
+  --accent-light:   #16dcfa;
+  --accent-dark:    #067db9;
+  --accent-glow:    rgba(234, 22, 249, 0.15);
+  --accent-border:  rgba(22, 211, 249, 0.3);
 
   /* Status Colors */
   --success:        #22c55e;
@@ -42,13 +42,13 @@
   /* Borders */
   --border:         rgba(255, 255, 255, 0.07);
   --border-strong:  rgba(255, 255, 255, 0.12);
-  --border-accent:  rgba(105, 249, 22, 0.4);
+  --border-accent:  rgba(215, 22, 249, 0.4);
 
   /* Shadows */
   --shadow-sm:      0 1px 3px rgba(0,0,0,0.4);
   --shadow-md:      0 4px 16px rgba(0,0,0,0.5);
   --shadow-lg:      0 8px 32px rgba(0,0,0,0.6);
-  --shadow-accent:  0 4px 24px rgba(249, 115, 22, 0.2);
+  --shadow-accent:  0 4px 24px rgba(22, 215, 249, 0.2);
 
   /* Radius */
   --radius-sm:      6px;
