@@ -28,3 +28,34 @@ CREATE POLICY "stock_movements_delete" ON public.stock_movements
 CREATE POLICY "stock_movements_update" ON public.stock_movements
   FOR UPDATE TO authenticated
   USING (get_user_role() IN ('owner', 'manager'));
+
+-- ============================================================
+-- DEBTS (Utang & Piutang): semua user bisa lihat & input
+-- ============================================================
+
+-- Hapus policy lama yang terlalu ketat
+DROP POLICY IF EXISTS "debts_select" ON public.debts;
+DROP POLICY IF EXISTS "debts_insert" ON public.debts;
+DROP POLICY IF EXISTS "debts_update" ON public.debts;
+DROP POLICY IF EXISTS "debts_delete" ON public.debts;
+
+-- SELECT: semua authenticated user bisa lihat
+CREATE POLICY "debts_select" ON public.debts
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- INSERT: semua authenticated user bisa tambah
+CREATE POLICY "debts_insert" ON public.debts
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+-- UPDATE: semua authenticated user bisa update (untuk bayar cicilan)
+CREATE POLICY "debts_update" ON public.debts
+  FOR UPDATE TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- DELETE: hanya owner & manager
+CREATE POLICY "debts_delete" ON public.debts
+  FOR DELETE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
