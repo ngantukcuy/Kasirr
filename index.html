@@ -95,6 +95,13 @@
       position: relative;
       margin-bottom: 14px;
     }
+    .input-box label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
     .input-box input {
       width: 100%;
       padding: 12px 44px 12px 16px;
@@ -106,23 +113,30 @@
       font-family: inherit;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
     }
     .input-box input:focus {
       border-color: #f97316;
       box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
     }
     .input-box input::placeholder { color: #475569; }
+    /* Ikon sejajar dengan INPUT (bukan label+input) */
     .input-box i {
       position: absolute;
       right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
+      bottom: 12px;
       font-size: 18px;
       color: #475569;
+      pointer-events: none;
+      line-height: 1;
     }
-    .input-box label {
-      display: block;
-      font-size: 0.75rem;
+    /* Ikon mata bisa diklik */
+    .input-box i.toggle-pwd {
+      pointer-events: all;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .input-box i.toggle-pwd:hover { color: #f97316; }
       font-weight: 600;
       color: #94a3b8;
       margin-bottom: 6px;
@@ -130,25 +144,31 @@
 
     /* ─── PIN Input ─── */
     .pin-grid {
-      display: flex;
-      gap: 8px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
       justify-content: center;
       margin-bottom: 6px;
+      width: 100%;
     }
     .pin-dot {
-      width: 42px;
-      height: 52px;
+      width: 100%;
+      aspect-ratio: 1;
+      max-width: 52px;
       background: #0f172a;
       border: 1.5px solid #334155;
       border-radius: 10px;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       text-align: center;
       color: #f97316;
       font-weight: 800;
       font-family: 'Sora', sans-serif;
       outline: none;
-      caret-color: #f97316;
+      caret-color: transparent;
       transition: border-color 0.2s, box-shadow 0.2s;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-text-security: disc;
     }
     .pin-dot:focus {
       border-color: #f97316;
@@ -366,18 +386,28 @@
           </div>
 
           <div id="pin-section" style="display:none;">
-            <div class="input-box" style="margin-bottom:8px;">
-              <label style="text-align:center; display:block;">PIN untuk: <strong id="pin-target-name" style="color:#f97316;"></strong></label>
+            <div style="text-align:center; margin-bottom:10px;">
+              <span style="font-size:0.8rem; color:#94a3b8;">PIN untuk: </span>
+              <strong id="pin-target-name" style="color:#f97316; font-size:0.8rem;"></strong>
             </div>
             <div class="pin-grid" id="pin-grid">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-              <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
+              <input class="pin-dot" maxlength="1" inputmode="numeric">
             </div>
             <p style="font-size:0.72rem; color:#64748b; text-align:center; margin-bottom:12px;">Ketik 6 digit PIN Anda</p>
+          </div>
+
+          <!-- Tampil kalau akun belum punya PIN -->
+          <div id="no-pin-notice" style="display:none; margin-bottom:12px; padding:12px; background:rgba(249,115,22,0.08); border:1px solid rgba(249,115,22,0.25); border-radius:10px; text-align:center;">
+            <p style="font-size:0.8rem; color:#f97316; margin:0 0 8px;">Akun ini belum punya PIN.</p>
+            <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 10px;">Masuk dengan sesi aktif atau daftarkan PIN di Pengaturan.</p>
+            <button class="btn" onclick="handleDirectSessionLogin()" style="height:38px; font-size:0.82rem;">
+              <i class='bx bx-log-in'></i> Masuk Langsung
+            </button>
           </div>
 
           <button class="btn" id="btn-pin-login" onclick="handlePinLogin()" style="display:none;">
@@ -414,8 +444,8 @@
         </div>
         <div class="input-box">
           <label>Password</label>
-          <input type="password" id="reg-password" placeholder="Min. 8 karakter" oninput="checkStrength(this.value)">
-          <i class='bx bxs-lock-alt'></i>
+          <input type="password" id="reg-password" placeholder="Min. 8 karakter" oninput="checkStrength(this.value)" autocomplete="new-password">
+          <i class='bx bxs-hide toggle-pwd' id="reg-pwd-toggle" onclick="togglePwdVisibility('reg-password','reg-pwd-toggle')"></i>
           <div class="strength-bar" id="strength-bar">
             <div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div>
           </div>
@@ -424,12 +454,12 @@
         <div class="input-box" style="margin-bottom:6px;">
           <label>PIN Kasir (6 digit) <span style="color:#f97316;">*</span></label>
           <div class="pin-grid" id="reg-pin-grid">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
-            <input class="pin-dot" maxlength="1" type="password" inputmode="numeric" pattern="[0-9]">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
+            <input class="pin-dot" maxlength="1" inputmode="numeric">
           </div>
           <p style="font-size:0.7rem; color:#64748b; margin-top:4px; text-align:center;">PIN digunakan untuk login cepat berikutnya</p>
         </div>
@@ -514,21 +544,50 @@
     function initPinGrid(gridId) {
       const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
       inputs.forEach((inp, idx) => {
+        // Gunakan type=tel agar keyboard angka muncul di mobile
+        inp.type = 'tel';
         inp.addEventListener('input', (e) => {
-          const val = e.target.value.replace(/[^0-9]/g, '');
-          e.target.value = val.slice(-1);
-          if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
+          // Ambil hanya angka terakhir
+          const raw = e.target.value.replace(/\D/g, '');
+          e.target.value = raw ? raw.slice(-1) : '';
+          // Render dot visual
+          if (e.target.value) {
+            e.target.style.webkitTextSecurity = 'disc';
+            e.target.style.color = '#f97316';
+            if (idx < inputs.length - 1) inputs[idx + 1].focus();
+          } else {
+            e.target.style.webkitTextSecurity = 'disc';
+          }
+          // Auto-trigger login jika PIN sudah lengkap di login screen
+          if (gridId === 'pin-grid') {
+            const full = [...inputs].every(i => i.value.length === 1);
+            if (full) {
+              const btnPin = document.getElementById('btn-pin-login');
+              if (btnPin && btnPin.style.display !== 'none') {
+                setTimeout(() => handlePinLogin(), 200);
+              }
+            }
+          }
         });
         inp.addEventListener('keydown', (e) => {
-          if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
+          if (e.key === 'Backspace') {
+            if (inp.value) { inp.value = ''; }
+            else if (idx > 0) { inputs[idx - 1].value = ''; inputs[idx - 1].focus(); }
+            e.preventDefault();
+          }
+          // Blokir huruf, hanya izinkan angka dan control keys
+          if (!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+          }
         });
         inp.addEventListener('paste', (e) => {
           const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
           e.preventDefault();
-          inputs.forEach((d, i) => { if (text[i]) { d.value = text[i]; } });
+          inputs.forEach((d, i) => { d.value = text[i] || ''; });
           const last = Math.min(text.length, inputs.length) - 1;
           if (last >= 0) inputs[last].focus();
         });
+        inp.addEventListener('click', () => { inp.select(); });
       });
     }
 
@@ -628,10 +687,21 @@
       el.classList.add('selected');
       selectedAccountEmail = email;
       document.getElementById('pin-target-name').textContent = name;
-      document.getElementById('pin-section').style.display = 'block';
-      document.getElementById('btn-pin-login').style.display = 'flex';
-      clearPin('pin-grid');
-      setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100);
+
+      const acc = getSavedAccounts().find(a => a.email === email);
+      const hasPin = acc?.pinHash && acc.pinHash !== '';
+
+      if (hasPin) {
+        document.getElementById('pin-section').style.display = 'block';
+        document.getElementById('btn-pin-login').style.display = 'flex';
+        document.getElementById('no-pin-notice').style.display = 'none';
+        clearPin('pin-grid');
+        setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100);
+      } else {
+        document.getElementById('pin-section').style.display = 'none';
+        document.getElementById('btn-pin-login').style.display = 'none';
+        document.getElementById('no-pin-notice').style.display = 'block';
+      }
     }
 
     function showEmailLoginView() {
@@ -648,6 +718,53 @@
       showEmailLoginView();
     }
 
+    // ─── Toggle password visibility ───
+    function togglePwdVisibility(inputId, iconId) {
+      const inp  = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!inp || !icon) return;
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.className = 'bx bxs-show toggle-pwd';
+      } else {
+        inp.type = 'password';
+        icon.className = 'bx bxs-hide toggle-pwd';
+      }
+    }
+
+    // ─── Login langsung via sesi aktif (akun tanpa PIN) ───
+    async function handleDirectSessionLogin() {
+      if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
+      try {
+        const isAuth = await KasirkuDB.Auth.isAuthenticated();
+        const user   = getCurrentUser();
+        if (isAuth && user?.email === selectedAccountEmail) {
+          showToast('Berhasil masuk!', 'success');
+          setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
+          return;
+        }
+        // Coba re-auth via stored password
+        const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+        if (acc?.encPwd) {
+          const pwd = decodePassword(acc.encPwd, selectedAccountEmail);
+          if (pwd) {
+            await KasirkuDB.Auth.login(selectedAccountEmail, pwd);
+            showToast('Berhasil masuk!', 'success');
+            setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
+            return;
+          }
+        }
+        // Fallback manual
+        showToast('Sesi habis. Masukkan password.', 'info');
+        document.getElementById('email-login-view').style.display = 'block';
+        document.getElementById('account-select-view').style.display = 'none';
+        document.getElementById('login-email').value = selectedAccountEmail;
+        document.getElementById('login-password').focus();
+      } catch(e) {
+        showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error');
+      }
+    }
+
     // ─── Handle Email Login ───
     async function handleEmailLogin() {
       const email = document.getElementById('login-email').value.trim();
@@ -662,13 +779,12 @@
         await KasirkuDB.Auth.login(email, password);
         const user = getCurrentUser();
         const name = user?.full_name || email.split('@')[0];
-        // Simpan akun + password terenkripsi agar PIN login bisa re-auth saat sesi habis
+        // Simpan akun + password terenkripsi agar PIN login tersedia berikutnya
         const existingAccounts = getSavedAccounts();
         const existing = existingAccounts.find(a => a.email === email);
-        if (existing) {
-          // Update encPwd tapi jaga pinHash yang sudah ada
-          saveAccount(name, email, existing.pinHash || '', encodePassword(password, email));
-        }
+        // Selalu simpan: pertama kali login tanpa PIN → pinHash kosong dulu
+        // Kalau sudah punya PIN sebelumnya, pertahankan pinHash lama
+        saveAccount(name, email, existing?.pinHash || '', encodePassword(password, email));
         showToast('Berhasil masuk! Mengarahkan...', 'success');
         setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 800);
       } catch (error) {
