@@ -322,36 +322,32 @@
     applyFilter();
   }
 
-  // ── Load from localStorage (demo storage) ───────────────
+  // ── Load from Supabase ───────────────────────────────────
   async function loadData() {
     const from = document.getElementById('date-from').value;
     const to   = document.getElementById('date-to').value;
     if (!from || !to) return;
 
-    // Load from localStorage as persistent demo storage
     try {
-      const stored = localStorage.getItem('kasirku_keuangan');
-      allEntries = stored ? JSON.parse(stored) : [];
-    } catch { allEntries = []; }
+      const sb = getSupabase();
+      const { data, error } = await sb
+        .from('expenses')
+        .select('*')
+        .gte('date', from)
+        .lte('date', to)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
 
-    // Filter by date range
-    allEntries = allEntries.filter(e => {
-      if (!e.date) return false;
-      return e.date >= from && e.date <= to;
-    });
-
-    // Sort newest first
-    allEntries.sort((a, b) => (b.date + b.id) > (a.date + a.id) ? 1 : -1);
+      if (error) throw error;
+      allEntries = data || [];
+    } catch(err) {
+      console.error('loadData error:', err);
+      Toast.error('Gagal memuat data keuangan');
+      allEntries = [];
+    }
 
     applyFilter();
     renderChart();
-  }
-
-  // ── Get all entries from storage ─────────────────────────
-  function getAllStored() {
-    try {
-      return JSON.parse(localStorage.getItem('kasirku_keuangan') || '[]');
-    } catch { return []; }
   }
 
   // ── Apply type filter ─────────────────────────────────────
@@ -506,7 +502,6 @@
     try {
       const user = getCurrentUser();
       const entry = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
         type: document.getElementById('fin-type').value,
         category: document.getElementById('fin-category').value,
         description: desc,
@@ -514,13 +509,12 @@
         method: document.getElementById('fin-method').value,
         notes: document.getElementById('fin-notes').value.trim(),
         date,
-        created_by_name: user?.full_name || 'User',
-        created_at: new Date().toISOString()
+        created_by: user?.id || null
       };
 
-      const all = getAllStored();
-      all.push(entry);
-      localStorage.setItem('kasirku_keuangan', JSON.stringify(all));
+      const sb = getSupabase();
+      const { error } = await sb.from('expenses').insert([entry]);
+      if (error) throw error;
 
       Toast.success('Catatan keuangan berhasil disimpan');
       closeModal('add-modal');
@@ -536,11 +530,16 @@
 
   // ── Delete Entry ──────────────────────────────────────────
   function deleteEntry(id) {
-    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan keuangan ini?', () => {
-      const all = getAllStored().filter(e => e.id !== id);
-      localStorage.setItem('kasirku_keuangan', JSON.stringify(all));
-      Toast.success('Catatan berhasil dihapus');
-      loadData();
+    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan keuangan ini?', async () => {
+      try {
+        const sb = getSupabase();
+        const { error } = await sb.from('expenses').delete().eq('id', id);
+        if (error) throw error;
+        Toast.success('Catatan berhasil dihapus');
+        await loadData();
+      } catch(err) {
+        Toast.error('Gagal menghapus: ' + (err.message || ''));
+      }
     });
   }
 

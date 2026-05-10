@@ -585,3 +585,155 @@ $$ LANGUAGE SQL SECURITY DEFINER STABLE;
 -- ============================================================
 -- SELESAI PATCH v10
 -- ============================================================
+
+-- ============================================================
+-- PATCH v11: Tabel branches, debts, & kolom baru expenses
+-- Jalankan di Supabase SQL Editor
+-- ============================================================
+
+-- ============================================================
+-- TABEL: branches (toko cabang)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.branches (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name        TEXT NOT NULL,
+  code        TEXT,
+  type        TEXT DEFAULT 'cabang' CHECK (type IN ('utama', 'cabang', 'gudang', 'kios')),
+  address     TEXT,
+  city        TEXT,
+  phone       TEXT,
+  pic         TEXT,              -- Penanggung jawab / kepala toko
+  hours       TEXT,              -- Jam operasional
+  notes       TEXT,
+  is_active   BOOLEAN DEFAULT true,
+  is_main     BOOLEAN DEFAULT false,
+  created_by  UUID REFERENCES public.profiles(id),
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER trigger_branches_updated_at
+  BEFORE UPDATE ON public.branches
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_branches_active ON public.branches(is_active);
+
+-- ============================================================
+-- TABEL: debts (utang & piutang)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.debts (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  type        TEXT NOT NULL CHECK (type IN ('utang', 'piutang')),
+  name        TEXT NOT NULL,          -- Nama supplier / pelanggan
+  description TEXT,
+  amount      DECIMAL(15,2) NOT NULL, -- Total jumlah
+  paid        DECIMAL(15,2) DEFAULT 0,-- Sudah dibayar
+  due_date    DATE,                   -- Tanggal jatuh tempo
+  date        DATE NOT NULL DEFAULT CURRENT_DATE, -- Tanggal mulai
+  notes       TEXT,
+  created_by  UUID REFERENCES public.profiles(id),
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER trigger_debts_updated_at
+  BEFORE UPDATE ON public.debts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_debts_type     ON public.debts(type);
+CREATE INDEX IF NOT EXISTS idx_debts_date     ON public.debts(date DESC);
+CREATE INDEX IF NOT EXISTS idx_debts_due_date ON public.debts(due_date);
+
+-- ============================================================
+-- PATCH tabel expenses: tambah kolom type & method
+-- (jika sudah ada tabel expenses dari inisialisasi sebelumnya)
+-- ============================================================
+ALTER TABLE public.expenses
+  ADD COLUMN IF NOT EXISTS type   TEXT DEFAULT 'expense'
+    CHECK (type IN ('income','expense','supplier','other')),
+  ADD COLUMN IF NOT EXISTS method TEXT DEFAULT 'tunai'
+    CHECK (method IN ('tunai','transfer','qris','kartu','lain')),
+  ADD COLUMN IF NOT EXISTS notes  TEXT;
+
+-- ============================================================
+-- RLS: branches
+-- ============================================================
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "branches_select" ON public.branches
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "branches_insert" ON public.branches
+  FOR INSERT TO authenticated
+  WITH CHECK (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "branches_update" ON public.branches
+  FOR UPDATE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "branches_delete" ON public.branches
+  FOR DELETE TO authenticated
+  USING (get_user_role() = 'owner');
+
+-- ============================================================
+-- RLS: debts
+-- ============================================================
+ALTER TABLE public.debts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "debts_select" ON public.debts
+  FOR SELECT TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "debts_insert" ON public.debts
+  FOR INSERT TO authenticated
+  WITH CHECK (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "debts_update" ON public.debts
+  FOR UPDATE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "debts_delete" ON public.debts
+  FOR DELETE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+-- ============================================================
+-- RLS: expenses (update policy — tambah akses update & delete)
+-- ============================================================
+DROP POLICY IF EXISTS "expenses_select" ON public.expenses;
+DROP POLICY IF EXISTS "expenses_insert" ON public.expenses;
+
+CREATE POLICY "expenses_select" ON public.expenses
+  FOR SELECT TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "expenses_insert" ON public.expenses
+  FOR INSERT TO authenticated
+  WITH CHECK (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "expenses_update" ON public.expenses
+  FOR UPDATE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+CREATE POLICY "expenses_delete" ON public.expenses
+  FOR DELETE TO authenticated
+  USING (get_user_role() IN ('owner', 'manager'));
+
+-- ============================================================
+-- VIEW: ringkasan utang & piutang aktif
+-- ============================================================
+CREATE OR REPLACE VIEW debt_summary AS
+SELECT
+  type,
+  COUNT(*)                                            AS total_items,
+  SUM(amount)                                         AS total_amount,
+  SUM(paid)                                           AS total_paid,
+  SUM(amount - paid)                                  AS total_remaining,
+  COUNT(*) FILTER (WHERE paid >= amount)              AS count_lunas,
+  COUNT(*) FILTER (WHERE paid > 0 AND paid < amount)  AS count_sebagian,
+  COUNT(*) FILTER (WHERE paid <= 0)                   AS count_belum
+FROM public.debts
+GROUP BY type;
+
+-- ============================================================
+-- SELESAI PATCH v11
+-- ============================================================

@@ -275,24 +275,13 @@
 <script src="../js/app.js?v=14"></script>
 <script>
 // ── Data & State ──────────────────────────────────────────
-const STORAGE_KEY = 'kasirku_branches';
 let branches = [];
 let editId = null;
 
-// ── Local Storage Helpers ─────────────────────────────────
-function loadBranches() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveBranches() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(branches));
-}
-
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  const ok = await requireAuth('cabang');
+  if (!ok) return;
   updateSidebarUser();
 
   // Guard: only owner/manager
@@ -303,44 +292,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  branches = loadBranches();
+  await loadBranches();
 
-  // If no branches yet, pre-populate with current store as main branch
-  if (branches.length === 0) {
-    const storeName = user.store_name || 'Toko Utama';
-    const storeAddress = user.store_address || '';
-    const storePhone = user.store_phone || '';
-    branches = [{
-      id: 'main-' + Date.now(),
-      name: storeName,
-      code: 'CBG-00',
-      type: 'utama',
-      address: storeAddress,
-      city: '',
-      phone: storePhone,
-      pic: user.full_name || '',
-      hours: '',
-      notes: 'Toko utama (otomatis)',
-      active: true,
-      isMain: true,
-      createdAt: new Date().toISOString()
-    }];
-    saveBranches();
-  }
-
-  renderAll();
-  setTimeout(() => {
-    document.getElementById('branch-skeleton').style.display = 'none';
-    document.getElementById('branch-grid').style.display = '';
-    renderBranchGrid();
-  }, 600);
+  document.getElementById('branch-skeleton').style.display = 'none';
+  document.getElementById('branch-grid').style.display = '';
+  renderBranchGrid();
 });
+
+// ── Load from Supabase ────────────────────────────────────
+async function loadBranches() {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('branches')
+      .select('*')
+      .order('is_main', { ascending: false })
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    branches = data || [];
+
+    // Jika belum ada cabang sama sekali, seed cabang utama dari profil toko
+    if (branches.length === 0) {
+      await seedMainBranch();
+    }
+  } catch(err) {
+    console.error('loadBranches error:', err);
+    Toast.error('Gagal memuat data cabang');
+    branches = [];
+  }
+  renderAll();
+}
+
+async function seedMainBranch() {
+  try {
+    const user = getCurrentUser?.() || {};
+    const sb = getSupabase();
+    const { data } = await sb
+      .from('branches')
+      .insert([{
+        name: user.store_name || 'Toko Utama',
+        code: 'CBG-00',
+        type: 'utama',
+        address: user.store_address || '',
+        city: '',
+        phone: user.store_phone || '',
+        pic: user.full_name || '',
+        hours: '',
+        notes: 'Cabang utama',
+        is_active: true,
+        is_main: true,
+        created_by: user.id || null
+      }])
+      .select()
+      .single();
+    if (data) branches = [data];
+  } catch(err) {
+    console.error('seedMainBranch error:', err);
+  }
+}
 
 // ── Render ─────────────────────────────────────────────────
 function renderAll() {
   // Stats
   document.getElementById('stat-total').textContent = branches.length;
-  document.getElementById('stat-aktif').textContent = branches.filter(b => b.active).length;
+  document.getElementById('stat-aktif').textContent = branches.filter(b => b.is_active).length;
   const cities = new Set(branches.map(b => b.city).filter(Boolean));
   document.getElementById('stat-kota').textContent = cities.size;
   // staff: approximate from branch count
@@ -372,8 +387,8 @@ function renderBranchGrid() {
           <div class="branch-code">${escHtml(b.code || '—')}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          ${b.isMain ? '<span class="branch-badge badge-main">✦ Utama</span>' : ''}
-          <span class="branch-badge ${b.active ? 'badge-active' : 'badge-inactive'}">${b.active ? '● Aktif' : '○ Nonaktif'}</span>
+          ${b.is_main ? '<span class="branch-badge badge-main">✦ Utama</span>' : ''}
+          <span class="branch-badge ${b.is_active ? 'badge-active' : 'badge-inactive'}">${b.is_active ? '● Aktif' : '○ Nonaktif'}</span>
         </div>
       </div>
 
@@ -400,9 +415,9 @@ function renderBranchGrid() {
           <i class='bx bx-edit-alt'></i> Edit
         </button>
         <button class="btn btn-sm" style="flex:1;background:${b.active?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)'};color:${b.active?'#ef4444':'#22c55e'};" onclick="toggleActive('${b.id}')">
-          <i class='bx bx-${b.active ? 'pause' : 'play'}'></i> ${b.active ? 'Nonaktifkan' : 'Aktifkan'}
+          <i class='bx bx-${b.is_active ? 'pause' : 'play'}'></i> ${b.is_active ? 'Nonaktifkan' : 'Aktifkan'}
         </button>
-        ${!b.isMain ? `<button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#ef4444;width:36px;padding:0;" onclick="confirmDelete('${b.id}')">
+        ${!b.is_main ? `<button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#ef4444;width:36px;padding:0;" onclick="confirmDelete('${b.id}')">
           <i class='bx bx-trash'></i>
         </button>` : ''}
       </div>
@@ -444,7 +459,7 @@ function closeModal() { document.getElementById('modal-backdrop').style.display 
 
 function closeModalBackdrop(e) { if (e.target === e.currentTarget) closeModal(); }
 
-function saveBranch() {
+async function saveBranch() {
   const name = document.getElementById('f-name').value.trim();
   if (!name) { Toast.warning('Nama cabang wajib diisi'); return; }
 
@@ -461,29 +476,50 @@ function saveBranch() {
     active: document.getElementById('f-active').checked,
   };
 
-  if (editId) {
-    const idx = branches.findIndex(x => x.id === editId);
-    if (idx !== -1) branches[idx] = { ...branches[idx], ...data };
-    Toast.success('Cabang berhasil diperbarui');
-  } else {
-    branches.push({ ...data, id: 'cbg-' + Date.now(), isMain: false, createdAt: new Date().toISOString() });
-    Toast.success('Cabang baru berhasil ditambahkan');
+  try {
+    const user = getCurrentUser?.() || {};
+    const sb = getSupabase();
+    if (editId) {
+      const { error } = await sb.from('branches').update({
+        name: data.name, code: data.code, type: data.type,
+        address: data.address, city: data.city, phone: data.phone,
+        pic: data.pic, hours: data.hours, notes: data.notes, is_active: data.active
+      }).eq('id', editId);
+      if (error) throw error;
+      Toast.success('Cabang berhasil diperbarui');
+    } else {
+      const { error } = await sb.from('branches').insert([{
+        name: data.name, code: data.code, type: data.type,
+        address: data.address, city: data.city, phone: data.phone,
+        pic: data.pic, hours: data.hours, notes: data.notes,
+        is_active: data.active, is_main: false,
+        created_by: user.id || null
+      }]);
+      if (error) throw error;
+      Toast.success('Cabang baru berhasil ditambahkan');
+    }
+    closeModal();
+    await loadBranches();
+    renderBranchGrid();
+  } catch(err) {
+    Toast.error('Gagal menyimpan: ' + (err.message || ''));
   }
-
-  saveBranches();
-  closeModal();
-  renderAll();
-  renderBranchGrid();
 }
 
-function toggleActive(id) {
+async function toggleActive(id) {
   const b = branches.find(x => x.id === id);
   if (!b) return;
-  b.active = !b.active;
-  saveBranches();
-  renderAll();
-  renderBranchGrid();
-  Toast.success(`Cabang ${b.active ? 'diaktifkan' : 'dinonaktifkan'}`);
+  const newActive = !b.is_active;
+  try {
+    const sb = getSupabase();
+    const { error } = await sb.from('branches').update({ is_active: newActive }).eq('id', id);
+    if (error) throw error;
+    Toast.success(`Cabang ${newActive ? 'diaktifkan' : 'dinonaktifkan'}`);
+    await loadBranches();
+    renderBranchGrid();
+  } catch(err) {
+    Toast.error('Gagal mengubah status: ' + (err.message || ''));
+  }
 }
 
 let deleteId = null;
@@ -492,13 +528,18 @@ function confirmDelete(id) {
   const b = branches.find(x => x.id === id);
   document.getElementById('confirm-msg').textContent = `Hapus cabang "${b?.name}"? Tindakan ini tidak bisa dibatalkan.`;
   document.getElementById('confirm-backdrop').style.display = 'flex';
-  document.getElementById('confirm-yes-btn').onclick = () => {
-    branches = branches.filter(x => x.id !== deleteId);
-    saveBranches();
-    document.getElementById('confirm-backdrop').style.display = 'none';
-    renderAll();
-    renderBranchGrid();
-    Toast.success('Cabang berhasil dihapus');
+  document.getElementById('confirm-yes-btn').onclick = async () => {
+    try {
+      const sb = getSupabase();
+      const { error } = await sb.from('branches').delete().eq('id', deleteId);
+      if (error) throw error;
+      document.getElementById('confirm-backdrop').style.display = 'none';
+      Toast.success('Cabang berhasil dihapus');
+      await loadBranches();
+      renderBranchGrid();
+    } catch(err) {
+      Toast.error('Gagal menghapus: ' + (err.message || ''));
+    }
   };
 }
 function closeConfirm(e) { if (e.target === e.currentTarget) document.getElementById('confirm-backdrop').style.display = 'none'; }

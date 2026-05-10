@@ -274,20 +274,24 @@
     const ok = await requireAuth('utang-piutang');
     if (!ok) return;
     document.getElementById('up-date').value = new Date().toISOString().split('T')[0];
-    loadData();
+    await loadData();
   }
 
-  function getAllStored() {
-    try { return JSON.parse(localStorage.getItem('kasirku_utang_piutang') || '[]'); }
-    catch { return []; }
-  }
-
-  function saveAll(data) {
-    localStorage.setItem('kasirku_utang_piutang', JSON.stringify(data));
-  }
-
-  function loadData() {
-    allData = getAllStored();
+  async function loadData() {
+    try {
+      const sb = getSupabase();
+      const { data, error } = await sb
+        .from('debts')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      allData = data || [];
+    } catch(err) {
+      console.error('loadData error:', err);
+      Toast.error('Gagal memuat data utang/piutang');
+      allData = [];
+    }
     updateSummary();
     renderGrid();
   }
@@ -451,7 +455,6 @@
     try {
       const user = getCurrentUser();
       const entry = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
         type: document.getElementById('up-type').value,
         name,
         description: document.getElementById('up-desc').value.trim(),
@@ -460,12 +463,11 @@
         due_date: document.getElementById('up-due-date').value || null,
         date,
         notes: document.getElementById('up-notes').value.trim(),
-        created_by_name: user?.full_name || 'User',
-        created_at: new Date().toISOString()
+        created_by: user?.id || null
       };
-      const all = getAllStored();
-      all.push(entry);
-      saveAll(all);
+      const sb = getSupabase();
+      const { error } = await sb.from('debts').insert([entry]);
+      if (error) throw error;
       Toast.success('Catatan berhasil disimpan');
       closeModal('add-modal');
       ['up-name','up-desc','up-amount','up-paid','up-due-date','up-notes'].forEach(id => document.getElementById(id).value = '');
@@ -479,7 +481,7 @@
 
   function openPayModal(id) {
     payTargetId = id;
-    const entry = getAllStored().find(e => e.id === id);
+    const entry = allData.find(e => e.id === id);
     if (!entry) return;
     const sisa = Number(entry.amount) - (Number(entry.paid) || 0);
     document.getElementById('pay-info').innerHTML = `
@@ -494,33 +496,41 @@
     document.getElementById('pay-modal').style.display = 'flex';
   }
 
-  function confirmPay() {
+  async function confirmPay() {
     const payAmt = parseFloat(document.getElementById('pay-amount').value);
     if (!payAmt || payAmt <= 0) { Toast.error('Jumlah bayar harus lebih dari 0'); return; }
 
     const btn = document.getElementById('btn-pay');
     btn.disabled = true; btn.textContent = 'Menyimpan...';
     try {
-      const all = getAllStored();
-      const idx = all.findIndex(e => e.id === payTargetId);
-      if (idx === -1) { Toast.error('Data tidak ditemukan'); return; }
-      all[idx].paid = (Number(all[idx].paid) || 0) + payAmt;
-      if (all[idx].paid > Number(all[idx].amount)) all[idx].paid = Number(all[idx].amount);
-      saveAll(all);
+      const entry = allData.find(e => e.id === payTargetId);
+      if (!entry) { Toast.error('Data tidak ditemukan'); return; }
+      let newPaid = (Number(entry.paid) || 0) + payAmt;
+      if (newPaid > Number(entry.amount)) newPaid = Number(entry.amount);
+      const sb = getSupabase();
+      const { error } = await sb.from('debts').update({ paid: newPaid }).eq('id', payTargetId);
+      if (error) throw error;
       Toast.success('Pembayaran berhasil dicatat');
       closeModal('pay-modal');
-      loadData();
+      await loadData();
+    } catch(err) {
+      Toast.error('Gagal menyimpan: ' + (err.message || ''));
     } finally {
       btn.disabled = false; btn.textContent = 'Catat Bayar';
     }
   }
 
   function deleteEntry(id) {
-    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan ini?', () => {
-      const all = getAllStored().filter(e => e.id !== id);
-      saveAll(all);
-      Toast.success('Catatan berhasil dihapus');
-      loadData();
+    Modal.confirm('Hapus Catatan', 'Yakin ingin menghapus catatan ini?', async () => {
+      try {
+        const sb = getSupabase();
+        const { error } = await sb.from('debts').delete().eq('id', id);
+        if (error) throw error;
+        Toast.success('Catatan berhasil dihapus');
+        await loadData();
+      } catch(err) {
+        Toast.error('Gagal menghapus: ' + (err.message || ''));
+      }
     });
   }
 
