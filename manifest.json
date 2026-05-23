@@ -1,48 +1,14 @@
 {
-  "name": "KASIRKU - POS Toko Bangunan",
-  "short_name": "KASIRKU",
-  "description": "Aplikasi Point of Sale modern untuk toko bangunan",
+  "name": "Tokku — ERP/POS Toko Bangunan",
+  "short_name": "Tokku",
+  "description": "Platform ERP/POS modern untuk toko bangunan",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0b0f",
-  "theme_color": "#f97316",
+  "background_color": "#070a12",
+  "theme_color": "#2563eb",
   "orientation": "any",
   "icons": [
-    {
-      "src": "./icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Kasir POS",
-      "short_name": "Kasir",
-      "url": "./pages/kasir.html",
-      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Riwayat Transaksi",
-      "short_name": "Transaksi",
-      "url": "./pages/transaksi.html",
-      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Monitor Stok",
-      "short_name": "Stok",
-      "url": "./pages/stok.html",
-      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "categories": ["business", "productivity"],
-  "lang": "id",
-  "dir": "ltr"
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
 }

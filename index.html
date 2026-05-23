@@ -3,830 +3,695 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KASIRKU — Login</title>
+  <title>Tokku — Login</title>
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="KASIRKU">
-  <meta name="theme-color" content="#7af957">
+  <meta name="apple-mobile-web-app-title" content="Tokku">
+  <meta name="theme-color" content="#2563eb">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background: #070a12;
       overflow: hidden;
+      color: #f0f4ff;
     }
 
-    /* ─── Animated background particles ─── */
-    .bg-particles {
+    /* ── Animated mesh bg ── */
+    .bg-mesh {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(37,99,235,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(124,58,237,0.12) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 30% at 50% 50%, rgba(245,158,11,0.04) 0%, transparent 50%);
     }
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(87, 243, 249, 0.2) 0%, transparent 70%);
-      animation: float linear infinite;
-    }
-    @keyframes float {
-      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
-      10%  { opacity: 1; }
-      90%  { opacity: 1; }
-      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    .bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
     }
 
-    /* ─── Main Container ─── */
-    .container {
+    /* ── Main Card ── */
+    .login-card {
       position: relative;
-      width: 850px;
-      max-width: calc(100vw - 32px);
-      height: 580px;
-      background: #1e293b;
-      border-radius: 24px;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
-      overflow: hidden;
       z-index: 1;
+      width: 900px;
+      max-width: calc(100vw - 32px);
+      min-height: 560px;
+      background: #0d1117;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
     }
 
-    /* ─── Form Boxes ─── */
-    .form-box {
+    /* ── Left Panel (Hero) ── */
+    .hero-panel {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 40%, #312e81 100%);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-panel::before {
+      content: '';
       position: absolute;
-      right: 0;
-      width: 50%;
-      height: 100%;
-      background: #1e293b;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 65%);
+    }
+
+    .hero-logo {
       display: flex;
       align-items: center;
-      color: #e2e8f0;
-      padding: 40px;
-      z-index: 1;
-      transition: 0.6s ease-in-out 1.2s, visibility 0s 1s;
-    }
-    .container.active .form-box { right: 50%; }
-    .form-box.register { visibility: hidden; }
-    .container.active .form-box.register { visibility: visible; }
-
-    .form-box form { width: 100%; }
-
-    .form-box h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #f1f5f9;
-    }
-    .form-box .subtitle {
-      font-size: 0.82rem;
-      color: #94a3b8;
-      margin-bottom: 24px;
-    }
-
-    /* ─── Input Box ─── */
-    .input-box {
+      gap: 12px;
       position: relative;
+      z-index: 1;
+    }
+    .hero-logo-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+      font-size: 24px;
+    }
+    .hero-logo-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .hero-logo-name span { color: #fbbf24; }
+    .hero-logo-sub { font-size: 0.68rem; color: rgba(255,255,255,0.55); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+    .hero-content { position: relative; z-index: 1; }
+    .hero-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 900;
+      line-height: 1.15;
+      color: #fff;
       margin-bottom: 14px;
     }
-    .input-box label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
-    .input-box input {
-      width: 100%;
-      padding: 12px 44px 12px 16px;
-      background: #0f172a;
-      border: 1.5px solid #334155;
-      border-radius: 10px;
-      font-size: 0.875rem;
-      color: #e2e8f0;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      box-sizing: border-box;
-    }
-    .input-box input:focus {
-      border-color: #57f1f9;
-      box-shadow: 0 0 0 3px rgba(122,249,87,0.15);
-    }
-    .input-box input::placeholder { color: #475569; }
-    /* Ikon sejajar dengan INPUT (bukan label+input) */
-    .input-box i {
-      position: absolute;
-      right: 14px;
-      bottom: 12px;
-      font-size: 18px;
-      color: #475569;
-      pointer-events: none;
-      line-height: 1;
-    }
-    /* Ikon mata bisa diklik */
-    .input-box i.toggle-pwd {
-      pointer-events: all;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .input-box i.toggle-pwd:hover { 
-      color: #57c6f9; 
-      font-weight: 600;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
+    .hero-title span { color: #fbbf24; }
+    .hero-desc { font-size: 0.875rem; color: rgba(255,255,255,0.7); line-height: 1.7; margin-bottom: 28px; }
 
-    /* ─── PIN Input ─── */
-    .pin-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
-      justify-content: center;
-      margin-bottom: 6px;
-      width: 100%;
-    }
-    .pin-dot {
-      width: 100%;
-      height: 38px;
-      max-width: 38px;
-      background: #0f172a;
-      border: 1.5px solid #334155;
-      border-radius: 8px;
-      font-size: 1.4rem;
-      text-align: center;
-      color: #c057f9;
-      font-weight: 800;
-      font-family: 'Sora', sans-serif;
-      outline: none;
-      caret-color: transparent;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    .pin-dot:focus {
-      border-color: #7af957;
-      box-shadow: 0 0 0 3px rgba(122,249,87,0.15);
-    }
+    .hero-features { display: flex; flex-direction: column; gap: 10px; }
+    .hero-feature { display: flex; align-items: center; gap: 10px; }
+    .hero-feature-dot { width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; flex-shrink: 0; }
+    .hero-feature span { font-size: 0.82rem; color: rgba(255,255,255,0.75); }
 
-    /* ─── Forgot ─── */
-    .forgot-link { text-align: right; margin-bottom: 18px; }
-    .forgot-link a { font-size: 0.78rem; color: #7af957; text-decoration: none; }
+    .hero-footer { position: relative; z-index: 1; font-size: 0.72rem; color: rgba(255,255,255,0.4); }
 
-    /* ─── Btn ─── */
-    .btn {
-      width: 100%;
-      height: 46px;
-      background: linear-gradient(135deg, #7af957, #22c55e);
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: #fff;
-      font-family: inherit;
-      transition: transform 0.15s, box-shadow 0.15s;
+    /* ── Right Panel (Form) ── */
+    .form-panel {
+      padding: 44px 40px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      gap: 8px;
-      text-decoration: none;
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(122,249,87,0.35); }
-    .btn:active { transform: translateY(0); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn.outline {
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.5);
-      color: #fff;
-    }
-    .btn.outline:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
 
-    .switch-text {
-      margin-top: 14px;
-      font-size: 0.78rem;
-      color: #64748b;
-      text-align: center;
+    .form-header { margin-bottom: 32px; }
+    .form-header h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
     }
-    .switch-text a { color: #7af957; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .form-header p { font-size: 0.82rem; color: #8fa0be; }
 
-    /* ─── Account Select (Login Screen 2) ─── */
-    #account-select-view { display: none; }
-    .account-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 220px; overflow-y: auto; }
+    /* Account selector */
+    .account-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
     .account-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 14px;
-      background: #0f172a;
-      border: 1.5px solid #334155;
-      border-radius: 10px;
+      padding: 11px 14px;
+      background: #131923;
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      transition: all 0.2s;
     }
-    .account-item:hover, .account-item.selected { border-color: #7af957; background: rgba(122,249,87,0.05); }
+    .account-item:hover, .account-item.selected {
+      border-color: rgba(59,130,246,0.5);
+      background: rgba(37,99,235,0.1);
+    }
     .account-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, #7af957, #22c55e);
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
       display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 1rem; color: #fff; font-family: 'Sora', sans-serif;
-      flex-shrink: 0;
+      font-weight: 800; font-size: 1rem; color: #fff;
+      font-family: 'Outfit', sans-serif; flex-shrink: 0;
     }
-    .account-info .acc-name { font-weight: 600; font-size: 0.875rem; color: #e2e8f0; }
-    .account-info .acc-email { font-size: 0.72rem; color: #64748b; }
+    .account-info .acc-name { font-weight: 600; font-size: 0.875rem; }
+    .account-info .acc-email { font-size: 0.72rem; color: #4a5a78; }
 
-    /* ─── Toggle Panel ─── */
-    .toggle-box { position: absolute; width: 100%; height: 100%; }
-    .toggle-box::before {
-      content: '';
-      position: absolute;
-      left: -250%;
-      width: 300%;
-      height: 100%;
-      background: linear-gradient(135deg, #7af957 0%, #22c55e 100%);
-      border-radius: 150px;
-      z-index: 2;
-      transition: 1.8s ease-in-out;
+    /* Form fields */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #8fa0be; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      padding: 11px 42px 11px 14px;
+      background: #0f1621;
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      font-size: 0.875rem;
+      color: #f0f4ff;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
     }
-    .container.active .toggle-box::before { left: 50%; }
-
-    .toggle-panel {
+    .form-input:focus {
+      border-color: rgba(59,130,246,0.6);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .form-input::placeholder { color: #2d3a52; }
+    .input-wrap { position: relative; }
+    .input-wrap i {
       position: absolute;
-      width: 50%;
-      height: 100%;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #2d3a52;
+      pointer-events: none;
+    }
+    .input-wrap i.toggle-pwd { pointer-events: all; cursor: pointer; transition: color 0.2s; }
+    .input-wrap i.toggle-pwd:hover { color: #8fa0be; }
+
+    /* PIN Grid */
+    .pin-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+    .pin-dot {
+      width: 100%;
+      height: 40px;
+      background: #0f1621;
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      font-size: 1.4rem;
       text-align: center;
-      padding: 40px;
-      z-index: 2;
-      transition: 0.6s ease-in-out;
+      color: #3b82f6;
+      font-weight: 800;
+      outline: none;
+      caret-color: transparent;
+      transition: all 0.2s;
+      padding: 0;
     }
-    .toggle-panel .logo-icon {
-      width: 64px; height: 64px; border-radius: 16px;
-      background: rgba(255,255,255,0.15);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 32px; margin-bottom: 20px;
-      backdrop-filter: blur(8px);
-    }
-    .toggle-panel h1 { font-family: 'Sora', sans-serif; font-size: 1.7rem; font-weight: 800; margin-bottom: 10px; }
-    .toggle-panel p { font-size: 0.82rem; color: rgba(255,255,255,0.8); margin-bottom: 28px; line-height: 1.6; }
-    .toggle-panel.toggle-left { left: 0; transition-delay: 1.2s; }
-    .container.active .toggle-panel.toggle-left { left: -50%; transition-delay: 0.6s; }
-    .toggle-panel.toggle-right { right: -50%; transition-delay: 0.6s; }
-    .container.active .toggle-panel.toggle-right { right: 0; transition-delay: 1.2s; }
+    .pin-dot:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
 
-    /* ─── Role Selector ─── */
-    .role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+    /* Role grid */
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
     .role-card { position: relative; }
     .role-card input { position: absolute; opacity: 0; }
     .role-label {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 8px; border-radius: 10px; border: 1.5px solid #334155;
-      background: #0f172a; cursor: pointer;
-      font-size: 0.72rem; font-weight: 600; color: #64748b;
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 10px 8px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.08);
+      background: #0f1621; cursor: pointer;
+      font-size: 0.72rem; font-weight: 600; color: #4a5a78;
+      transition: all 0.2s; text-align: center;
     }
     .role-label .icon { font-size: 18px; }
-    .role-card input:checked + .role-label { border-color: #7af957; color: #7af957; background: rgba(122,249,87,0.08); }
-    .role-label:hover { border-color: #475569; color: #94a3b8; }
+    .role-card input:checked + .role-label { border-color: #3b82f6; color: #3b82f6; background: rgba(37,99,235,0.1); }
 
-    /* ─── Password strength ─── */
+    /* Password strength */
     .strength-bar { display: flex; gap: 3px; margin-top: 6px; }
-    .strength-bar div { flex: 1; height: 3px; border-radius: 2px; background: #334155; transition: background 0.3s; }
+    .strength-bar div { flex: 1; height: 3px; border-radius: 2px; background: #131923; transition: background 0.3s; }
 
-    /* ─── Toast ─── */
-    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
-      color: #fff; backdrop-filter: blur(10px); animation: toastIn 0.3s ease;
-      max-width: 320px; display: flex; align-items: center; gap: 8px;
+    /* Buttons */
+    .btn-login {
+      width: 100%; height: 46px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 10px; border: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 700; color: #fff;
+      font-family: inherit; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.35);
     }
-    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .toast.success { background: rgba(34,197,94,0.9); }
-    .toast.error   { background: rgba(239,68,68,0.9); }
-    .toast.info    { background: rgba(6,182,212,0.9); }
+    .btn-login:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.45); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    /* ─── Loader ─── */
+    .btn-outline-login {
+      width: 100%; height: 40px;
+      background: transparent; border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; color: #8fa0be;
+      font-family: inherit; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-outline-login:hover { border-color: #3b82f6; color: #3b82f6; background: rgba(37,99,235,0.08); }
+
+    .switch-text { margin-top: 14px; font-size: 0.78rem; color: #4a5a78; text-align: center; }
+    .switch-text a { color: #3b82f6; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .switch-text a:hover { color: #60a5fa; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 16px; border-radius: 10px; font-size: 0.845rem; font-weight: 600; color: #fff; animation: toastIn 0.25s ease; max-width: 300px; display: flex; align-items: center; gap: 8px; }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .toast.success { background: rgba(16,185,129,0.95); }
+    .toast.error   { background: rgba(239,68,68,0.95); }
+    .toast.info    { background: rgba(6,182,212,0.95); }
+
+    /* Spinner */
     .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ─── Mobile ─── */
-    @media (max-width: 650px) {
-      .container { height: calc(100dvh - 32px); border-radius: 20px; }
-      .form-box { bottom: 0; width: 100%; height: 72%; padding: 28px 24px; }
-      .container.active .form-box { right: 0; bottom: 30%; }
-      .toggle-box::before { left: 0; top: -270%; width: 100%; height: 300%; border-radius: 20vw; }
-      .container.active .toggle-box::before { left: 0; top: 70%; }
-      .toggle-panel { width: 100%; height: 30%; padding: 20px; }
-      .toggle-panel.toggle-left { top: 0; }
-      .toggle-panel.toggle-right { right: 0; bottom: -30%; }
-      .container.active .toggle-panel.toggle-left { left: 0; top: -30%; }
-      .container.active .toggle-panel.toggle-right { bottom: 0; }
-      .toggle-panel h1 { font-size: 1.3rem; margin-bottom: 6px; }
-      .toggle-panel p { display: none; }
-      .toggle-panel .logo-icon { width: 44px; height: 44px; font-size: 22px; margin-bottom: 10px; }
-      .form-box h1 { font-size: 1.3rem; }
+    /* Views toggle */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* No account view */
+    .no-account-box { text-align: center; padding: 20px 0; }
+    .no-account-box .icon-big { font-size: 48px; margin-bottom: 12px; display: block; }
+    .no-account-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .no-account-box p { font-size: 0.82rem; color: #8fa0be; margin-bottom: 20px; line-height: 1.6; }
+
+    /* PIN section */
+    #pin-section { margin-top: 12px; }
+    .pin-target-label { text-align: center; font-size: 0.78rem; color: #8fa0be; margin-bottom: 8px; }
+    .pin-target-label strong { color: #3b82f6; }
+    .pin-hint { font-size: 0.7rem; color: #4a5a78; text-align: center; margin-top: 4px; }
+
+    /* No PIN notice */
+    .no-pin-notice {
+      text-align: center;
+      padding: 14px;
+      background: rgba(6,182,212,0.07);
+      border: 1px solid rgba(6,182,212,0.2);
+      border-radius: 10px;
+      margin-top: 12px;
     }
-    @media (max-width: 400px) {
-      .form-box { padding: 20px 16px; }
+    .no-pin-notice p { font-size: 0.8rem; color: #06b6d4; margin-bottom: 4px; }
+    .no-pin-notice .sub { font-size: 0.74rem; color: #8fa0be; margin-bottom: 12px; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .login-card { grid-template-columns: 1fr; min-height: unset; }
+      .hero-panel { display: none; }
+      .form-panel { padding: 32px 24px; }
     }
+    @media (max-width: 400px) { .form-panel { padding: 24px 16px; } }
   </style>
 </head>
 <body>
-  <!-- Background particles -->
-  <div class="bg-particles" id="particles"></div>
-  <div class="toast-container" id="toast-container"></div>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<div class="toast-container" id="toast-container"></div>
 
-  <div class="container" id="main-container">
-
-    <!-- ══ LOGIN FORM (Email + Password) ══ -->
-    <div class="form-box login" id="form-login-box">
-      <form onsubmit="return false;" style="width:100%;">
-        <!-- View: Pilih Akun & PIN Login -->
-        <div id="account-select-view" style="display:none;">
-          <h1>Pilih Akun 🔐</h1>
-          <p class="subtitle">Pilih akun lalu masukkan PIN 6 digit</p>
-
-          <div class="account-list" id="account-list">
-            <!-- Diisi JS -->
-          </div>
-
-          <div id="pin-section" style="display:none;">
-            <div style="text-align:center; margin-bottom:10px;">
-              <span style="font-size:0.8rem; color:#94a3b8;">PIN untuk: </span>
-              <strong id="pin-target-name" style="color:#57f1f9; font-size:0.8rem;"></strong>
-            </div>
-            <div id="pin-grid" style="display:grid; grid-template-columns:repeat(6,minmax(0,38px)); gap:4px; width:100%; margin-bottom:6px; justify-content:center;">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            </div>
-            <p style="font-size:0.72rem; color:#64748b; text-align:center; margin-bottom:12px;">Ketik 6 digit PIN Anda</p>
-          </div>
-
-          <!-- Tampil kalau akun belum punya PIN -->
-          <div id="no-pin-notice" style="display:none; margin-bottom:12px; padding:12px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.25); border-radius:10px; text-align:center;">
-            <p style="font-size:0.8rem; color:#06b6d4; margin:0 0 8px;">Akun ini belum punya PIN.</p>
-            <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 10px;">Daftarkan PIN di halaman Pengaturan setelah masuk.</p>
-            <button class="btn" onclick="handleDirectSessionLogin()" style="height:38px; font-size:0.82rem;">
-              <i class="bx bx-log-in"></i> Masuk Langsung
-            </button>
-          </div>
-
-          <button class="btn" id="btn-pin-login" onclick="handlePinLogin()" style="display:none;">
-            <i class="bx bx-log-in"></i> Masuk dengan PIN
-          </button>
-
-        <!-- View fallback: Tidak ada akun tersimpan -->
-        <div id="no-account-view" style="display:none;">
-          <h1>Selamat datang 👋</h1>
-          <p class="subtitle">Belum ada akun tersimpan</p>
-          <p style="font-size:0.82rem; color:#94a3b8; text-align:center; margin:16px 0 24px; line-height:1.6;">Daftar akun baru untuk mulai menggunakan KASIRKU.</p>
-          <button class="btn" onclick="switchTab('register')">
-            <i class="bx bx-user-plus"></i> Daftar Sekarang
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- ══ REGISTER FORM ══ -->
-    <div class="form-box register" id="form-register-box">
-      <form onsubmit="return false;" style="width:100%;">
-        <h1>Buat Akun 🚀</h1>
-        <p class="subtitle">Daftar untuk mulai kelola toko Anda</p>
-
-        <div class="input-box">
-          <label>Nama </label>
-          <input type="text" id="reg-name" placeholder="Nama kamu" autocomplete="name">
-          <i class='bx bxs-user'></i>
-        </div>
-        <div class="input-box">
-          <label>Email</label>
-          <input type="email" id="reg-email" placeholder="nama@email.com" autocomplete="email">
-          <i class='bx bxs-envelope'></i>
-        </div>
-        <div class="input-box">
-          <label>Password</label>
-          <input type="password" id="reg-password" placeholder="Min. 8 karakter" oninput="checkStrength(this.value)" autocomplete="new-password">
-          <i class='bx bxs-hide toggle-pwd' id="reg-pwd-toggle" onclick="togglePwdVisibility('reg-password','reg-pwd-toggle')"></i>
-          <div class="strength-bar" id="strength-bar">
-            <div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div>
-          </div>
-        </div>
-
-        <div class="input-box" style="margin-bottom:6px;">
-          <label>PIN Kasir (6 digit) <span style="color:#57d8f9;">*</span></label>
-          <div id="reg-pin-grid" style="display:grid; grid-template-columns:repeat(6,minmax(0,38px)); gap:4px; width:100%; margin-bottom:4px; justify-content:center;">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          </div>
-          <p style="font-size:0.7rem; color:#64748b; margin-top:4px; text-align:center;">PIN digunakan untuk login cepat berikutnya</p>
-        </div>
-
-        <div class="role-grid" style="margin-bottom:14px;">
-          <label class="role-card">
-            <input type="radio" name="reg-role" value="owner">
-            <div class="role-label"><span class="icon">👑</span>Pemilik</div>
-          </label>
-          <label class="role-card">
-            <input type="radio" name="reg-role" value="manager">
-            <div class="role-label"><span class="icon">📊</span>Manajer</div>
-          </label>
-          <label class="role-card">
-            <input type="radio" name="reg-role" value="kasir" checked>
-            <div class="role-label"><span class="icon">🧾</span>Kasir</div>
-          </label>
-        </div>
-
-        <button class="btn" id="btn-register" onclick="handleRegister()">
-          <i class='bx bx-user-plus'></i> Buat Akun
-        </button>
-        <p class="switch-text">Sudah punya akun? <a onclick="switchTab('login')">Masuk</a></p>
-      </form>
-    </div>
-
-    <!-- ══ TOGGLE PANEL ══ -->
-    <div class="toggle-box">
-      <div class="toggle-panel toggle-left">
-        <div class="logo-icon">🏪</div>
-        <h1>KASIRKU</h1>
-        <p>Sistem POS modern untuk toko bangunan Anda. Kelola transaksi, stok & laporan.</p>
-        <button class="btn outline" onclick="switchTab('register')">Daftar Sekarang</button>
-      </div>
-      <div class="toggle-panel toggle-right">
-        <div class="logo-icon">👋</div>
-        <h1>Selamat Datang!</h1>
-        <p>Sudah punya akun? Masuk dan mulai kelola toko Anda hari ini.</p>
-        <button class="btn outline" onclick="switchTab('login')">Masuk</button>
+<div class="login-card">
+  <!-- Hero -->
+  <div class="hero-panel">
+    <div class="hero-logo">
+      <div class="hero-logo-icon">🏪</div>
+      <div>
+        <div class="hero-logo-name">Tokku<span>.</span></div>
+        <div class="hero-logo-sub">Toko Bangunan ERP/POS</div>
       </div>
     </div>
+
+    <div class="hero-content">
+      <div class="hero-title">Kelola Toko<br>Lebih <span>Cerdas</span><br>& Efisien</div>
+      <div class="hero-desc">Platform ERP/POS modern untuk toko bangunan. Satu sistem untuk semua kebutuhan operasional toko Anda.</div>
+      <div class="hero-features">
+        <div class="hero-feature"><div class="hero-feature-dot"></div><span>Kasir POS super cepat dengan barcode</span></div>
+        <div class="hero-feature"><div class="hero-feature-dot"></div><span>Manajemen stok & inventori lengkap</span></div>
+        <div class="hero-feature"><div class="hero-feature-dot"></div><span>Laporan keuangan & analytics real-time</span></div>
+        <div class="hero-feature"><div class="hero-feature-dot"></div><span>Utang, piutang & manajemen pelanggan</span></div>
+        <div class="hero-feature"><div class="hero-feature-dot"></div><span>Multi-user dengan role management</span></div>
+      </div>
+    </div>
+
+    <div class="hero-footer">© 2025 Tokku · Semua hak dilindungi</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
-  <script>
-    // ─── Background Particles ───
-    const particleContainer = document.getElementById('particles');
-    for (let i = 0; i < 18; i++) {
-      const p = document.createElement('div');
-      const size = Math.random() * 120 + 40;
-      p.className = 'particle';
-      p.style.cssText = `
-        width: ${size}px; height: ${size}px;
-        left: ${Math.random() * 100}%;
-        animation-duration: ${Math.random() * 15 + 12}s;
-        animation-delay: ${Math.random() * 12}s;
-        opacity: 0;
-      `;
-      particleContainer.appendChild(p);
-    }
+  <!-- Form -->
+  <div class="form-panel">
+    <!-- VIEW: Account Selector -->
+    <div class="view active" id="view-accounts">
+      <div class="form-header">
+        <h2>Selamat datang 👋</h2>
+        <p>Pilih akun untuk melanjutkan</p>
+      </div>
 
-    // ─── Tab Switch ───
-    const container = document.getElementById('main-container');
-    function switchTab(tab) {
-      if (tab === 'register') container.classList.add('active');
-      else container.classList.remove('active');
-    }
-
-    // ─── Toast ───
-    function showToast(msg, type = 'info') {
-      const t = document.createElement('div');
-      t.className = `toast ${type}`;
-      const icons = { success: '✓', error: '✕', info: 'ℹ' };
-      t.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`;
-      document.getElementById('toast-container').appendChild(t);
-      setTimeout(() => t.remove(), 3500);
-    }
-
-    // ─── PIN Grid Behavior ───
-    function initPinGrid(gridId) {
-      const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
-      inputs.forEach((inp, idx) => {
-        // type=password sudah di-set di HTML, jangan override agar dots tampil
-        inp.inputMode = 'numeric';
-        inp.autocomplete = 'off';
-        inp.addEventListener('input', (e) => {
-          // Ambil hanya angka terakhir
-          const raw = e.target.value.replace(/\D/g, '');
-          e.target.value = raw ? raw.slice(-1) : '';
-          if (e.target.value && idx < inputs.length - 1) {
-            inputs[idx + 1].focus();
-          }
-          // Auto-trigger login jika PIN sudah lengkap di login screen
-          if (gridId === 'pin-grid') {
-            const full = [...inputs].every(i => i.value.length === 1);
-            if (full) {
-              const btnPin = document.getElementById('btn-pin-login');
-              if (btnPin && btnPin.style.display !== 'none') {
-                setTimeout(() => handlePinLogin(), 200);
-              }
-            }
-          }
-        });
-        inp.addEventListener('keydown', (e) => {
-          if (e.key === 'Backspace') {
-            if (inp.value) { inp.value = ''; }
-            else if (idx > 0) { inputs[idx - 1].value = ''; inputs[idx - 1].focus(); }
-            e.preventDefault();
-          }
-          // Blokir huruf, hanya izinkan angka dan control keys
-          if (!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
-            e.preventDefault();
-          }
-        });
-        inp.addEventListener('paste', (e) => {
-          const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
-          e.preventDefault();
-          inputs.forEach((d, i) => { d.value = text[i] || ''; });
-          const last = Math.min(text.length, inputs.length) - 1;
-          if (last >= 0) inputs[last].focus();
-        });
-        inp.addEventListener('click', () => { inp.select(); });
-      });
-    }
-
-    function getPinValue(gridId) {
-      return [...document.querySelectorAll(`#${gridId} .pin-dot`)].map(i => i.value).join('');
-    }
-
-    function clearPin(gridId) {
-      document.querySelectorAll(`#${gridId} .pin-dot`).forEach(i => i.value = '');
-      document.querySelector(`#${gridId} .pin-dot`)?.focus();
-    }
-
-    initPinGrid('pin-grid');
-    initPinGrid('reg-pin-grid');
-
-    // ─── Password Strength ───
-    function checkStrength(val) {
-      let score = 0;
-      if (val.length >= 8) score++;
-      if (/[A-Z]/.test(val)) score++;
-      if (/[0-9]/.test(val)) score++;
-      if (/[^A-Za-z0-9]/.test(val)) score++;
-      const colors = ['#334155','#ef4444','#f59e0b','#22c55e','#06b6d4'];
-      for (let i = 1; i <= 4; i++) {
-        document.getElementById('s'+i).style.background = i <= score ? colors[score] : '#334155';
-      }
-    }
-
-    // ─── Saved Accounts ───
-    function getSavedAccounts() {
-      try { return JSON.parse(localStorage.getItem('kasirku_saved_accounts') || '[]'); }
-      catch { return []; }
-    }
-
-    function saveAccount(name, email, pinHash, encPwd) {
-      const accounts = getSavedAccounts().filter(a => a.email !== email);
-      accounts.unshift({ name, email, pinHash, encPwd: encPwd || null, addedAt: Date.now() });
-      localStorage.setItem('kasirku_saved_accounts', JSON.stringify(accounts.slice(0, 5)));
-    }
-
-    // Obfuscate password for localStorage (XOR + base64)
-    function encodePassword(password, email) {
-      const key = email + 'kasirku_pwd_2024';
-      let result = '';
-      for (let i = 0; i < password.length; i++) {
-        result += String.fromCharCode(password.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-      }
-      return btoa(result);
-    }
-    function decodePassword(enc, email) {
-      try {
-        const key = email + 'kasirku_pwd_2024';
-        const raw = atob(enc);
-        let result = '';
-        for (let i = 0; i < raw.length; i++) {
-          result += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-        }
-        return result;
-      } catch { return null; }
-    }
-
-    // Simple PIN hash (not cryptographic, just obfuscation for localStorage)
-    function hashPin(pin, email) {
-      let h = 0;
-      const str = pin + email + 'kasirku_salt_2024';
-      for (let i = 0; i < str.length; i++) { h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
-      return h.toString(36);
-    }
-
-    // ─── Login Views ───
-    let selectedAccountEmail = null;
-
-    function showAccountSelector() {
-      const accounts = getSavedAccounts();
-      if (accounts.length === 0) {
-        document.getElementById('account-select-view').style.display = 'none';
-        document.getElementById('no-account-view').style.display = 'block';
-        return;
-      }
-      document.getElementById('no-account-view').style.display = 'none';
-      document.getElementById('account-select-view').style.display = 'block';
-
-      const list = document.getElementById('account-list');
-      list.innerHTML = accounts.map(a => `
-        <div class="account-item" onclick="selectAccount('${a.email}', '${a.name}', this)" data-email="${a.email}">
-          <div class="account-avatar">${a.name.charAt(0).toUpperCase()}</div>
-          <div class="account-info">
-            <div class="acc-name">${a.name}</div>
-            <div class="acc-email">${a.email}</div>
-          </div>
-          <i class='bx bx-chevron-right' style="color:#475569; margin-left:auto;"></i>
+      <!-- No account state -->
+      <div id="no-account-view" style="display:none;">
+        <div class="no-account-box">
+          <span class="icon-big">🚀</span>
+          <h3>Belum ada akun</h3>
+          <p>Daftarkan akun baru untuk mulai menggunakan Tokku dan kelola toko Anda.</p>
+          <button class="btn-login" onclick="showView('view-register')"><i class='bx bx-user-plus'></i> Daftar Sekarang</button>
         </div>
-      `).join('');
-    }
+      </div>
 
-    function selectAccount(email, name, el) {
-      document.querySelectorAll('.account-item').forEach(a => a.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedAccountEmail = email;
-      document.getElementById('pin-target-name').textContent = name;
+      <!-- Account list -->
+      <div id="account-list-wrap">
+        <div class="account-list" id="account-list"></div>
 
-      const acc = getSavedAccounts().find(a => a.email === email);
-      const hasPin = acc?.pinHash && acc.pinHash !== '';
+        <!-- PIN section -->
+        <div id="pin-section" style="display:none;">
+          <div class="pin-target-label">PIN untuk: <strong id="pin-target-name"></strong></div>
+          <div class="pin-grid" id="pin-grid">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          </div>
+          <p class="pin-hint">Ketik 6 digit PIN Anda</p>
+          <div style="margin-top:12px;">
+            <button class="btn-login" id="btn-pin-login" onclick="handlePinLogin()">
+              <i class='bx bx-log-in'></i> Masuk dengan PIN
+            </button>
+          </div>
+        </div>
 
-      if (hasPin) {
-        document.getElementById('pin-section').style.display = 'block';
-        document.getElementById('btn-pin-login').style.display = 'flex';
-        document.getElementById('no-pin-notice').style.display = 'none';
-        clearPin('pin-grid');
-        setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100);
-      } else {
-        document.getElementById('pin-section').style.display = 'none';
-        document.getElementById('btn-pin-login').style.display = 'none';
-        document.getElementById('no-pin-notice').style.display = 'block';
-      }
-    }
+        <!-- No PIN notice -->
+        <div class="no-pin-notice" id="no-pin-notice" style="display:none;">
+          <p>Akun ini belum memiliki PIN.</p>
+          <p class="sub">Daftarkan PIN di Pengaturan setelah masuk.</p>
+          <button class="btn-login" onclick="handleDirectSessionLogin()" style="margin-top:0;">
+            <i class='bx bx-log-in'></i> Masuk Langsung
+          </button>
+        </div>
 
-    function addAnotherAccount() {
-      // Hapus semua akun tersimpan sementara dan arahkan ke register
-      switchTab('register');
-    }
+        <div style="margin-top:14px;">
+          <button class="btn-outline-login" onclick="showView('view-register')">
+            <i class='bx bx-user-plus'></i> Tambah akun baru
+          </button>
+        </div>
+      </div>
+    </div>
 
-    // ─── Login langsung via sesi aktif (akun tanpa PIN) ───
-    async function handleDirectSessionLogin() {
-      if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
-      try {
-        const isAuth = await KasirkuDB.Auth.isAuthenticated();
-        const user   = getCurrentUser();
-        if (isAuth && user?.email === selectedAccountEmail) {
-          showToast('Berhasil masuk!', 'success');
-          setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
-          return;
+    <!-- VIEW: Register -->
+    <div class="view" id="view-register">
+      <div class="form-header">
+        <h2>Buat Akun 🚀</h2>
+        <p>Daftar untuk mulai kelola toko Anda</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nama</label>
+        <div class="input-wrap">
+          <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap" autocomplete="name">
+          <i class='bx bxs-user'></i>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div class="input-wrap">
+          <input type="email" id="reg-email" class="form-input" placeholder="nama@email.com" autocomplete="email">
+          <i class='bx bxs-envelope'></i>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="reg-password" class="form-input" placeholder="Min. 8 karakter" oninput="checkStrength(this.value)" autocomplete="new-password">
+          <i class='bx bxs-hide toggle-pwd' id="reg-pwd-toggle" onclick="togglePwdVisibility('reg-password','reg-pwd-toggle')"></i>
+        </div>
+        <div class="strength-bar" id="strength-bar"><div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PIN Kasir (6 digit) <span style="color:#3b82f6;">*</span></label>
+        <div class="pin-grid" id="reg-pin-grid">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+        </div>
+        <p class="pin-hint">PIN untuk login cepat berikutnya</p>
+      </div>
+
+      <div class="role-grid">
+        <label class="role-card"><input type="radio" name="reg-role" value="owner"><div class="role-label"><span class="icon">👑</span>Pemilik</div></label>
+        <label class="role-card"><input type="radio" name="reg-role" value="manager"><div class="role-label"><span class="icon">📊</span>Manajer</div></label>
+        <label class="role-card"><input type="radio" name="reg-role" value="kasir" checked><div class="role-label"><span class="icon">🧾</span>Kasir</div></label>
+      </div>
+
+      <button class="btn-login" id="btn-register" onclick="handleRegister()">
+        <i class='bx bx-user-plus'></i> Buat Akun
+      </button>
+      <p class="switch-text">Sudah punya akun? <a onclick="showView('view-accounts')">Kembali</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
+<script>
+  // ── View switcher ──
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id)?.classList.add('active');
+  }
+
+  // ── Toast ──
+  function showToast(msg, type = 'info') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = { success:'✓', error:'✕', info:'ℹ' };
+    t.innerHTML = `<span>${icons[type]||'ℹ'}</span> ${msg}`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── PIN Grid ──
+  function initPinGrid(gridId) {
+    const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
+    inputs.forEach((inp, idx) => {
+      inp.inputMode = 'numeric'; inp.autocomplete = 'off';
+      inp.addEventListener('input', e => {
+        const raw = e.target.value.replace(/\D/g, '');
+        e.target.value = raw ? raw.slice(-1) : '';
+        if (e.target.value && idx < inputs.length - 1) inputs[idx+1].focus();
+        if (gridId === 'pin-grid') {
+          const full = [...inputs].every(i => i.value.length === 1);
+          if (full) setTimeout(() => handlePinLogin(), 200);
         }
-        // Coba re-auth via stored password
-        const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
-        if (acc?.encPwd) {
-          const pwd = decodePassword(acc.encPwd, selectedAccountEmail);
-          if (pwd) {
-            await KasirkuDB.Auth.login(selectedAccountEmail, pwd);
-            showToast('Berhasil masuk!', 'success');
-            setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
-            return;
-          }
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace') {
+          if (inp.value) { inp.value = ''; }
+          else if (idx > 0) { inputs[idx-1].value = ''; inputs[idx-1].focus(); }
+          e.preventDefault();
         }
-        showToast('Sesi habis. Silakan daftar ulang atau hubungi admin.', 'error');
-      } catch(e) {
-        showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error');
-      }
-    }
-
-    // ─── Handle PIN Login ───
-    async function handlePinLogin() {
-      if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
-      const pin = getPinValue('pin-grid');
-      if (pin.length !== 6) { showToast('Masukkan 6 digit PIN.', 'error'); return; }
-
-      const accounts = getSavedAccounts();
-      const acc = accounts.find(a => a.email === selectedAccountEmail);
-      if (!acc) { showToast('Akun tidak ditemukan.', 'error'); return; }
-
-      const expected = hashPin(pin, selectedAccountEmail);
-      if (expected !== acc.pinHash) {
-        showToast('PIN salah. Coba lagi.', 'error');
-        clearPin('pin-grid');
-        return;
-      }
-
-      // PIN cocok → login via stored session or re-auth via stored password
-      const btn = document.getElementById('btn-pin-login');
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spin"></div> Memverifikasi...';
-
-      try {
-        const isAuth = await KasirkuDB.Auth.isAuthenticated();
-        const user = getCurrentUser();
-        if (isAuth && user?.email === selectedAccountEmail) {
-          showToast('Berhasil masuk!', 'success');
-          setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
-        } else {
-          // Sesi habis → coba re-auth otomatis dengan password tersimpan
-          const acc2 = getSavedAccounts().find(a => a.email === selectedAccountEmail);
-          if (acc2?.encPwd) {
-            const pwd = decodePassword(acc2.encPwd, selectedAccountEmail);
-            if (pwd) {
-              try {
-                await KasirkuDB.Auth.login(selectedAccountEmail, pwd);
-                showToast('Berhasil masuk!', 'success');
-                setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600);
-                return;
-              } catch (reAuthErr) { /* Password berubah */ }
-            }
-          }
-          showToast('Sesi habis. Hubungi admin untuk reset akun.', 'error');
-          btn.disabled = false;
-          btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
-        }
-      } catch (e) {
-        showToast('Gagal masuk: ' + (e.message || 'Silakan coba lagi.'), 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
-      }
-    }
-
-    // ─── Register ───
-    async function handleRegister() {
-      const name = document.getElementById('reg-name').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value;
-      const pin = getPinValue('reg-pin-grid');
-      const role = document.querySelector('input[name="reg-role"]:checked')?.value || 'kasir';
-
-      if (!name || !email || !password) { showToast('Semua field wajib diisi.', 'error'); return; }
-      if (password.length < 8) { showToast('Password minimal 8 karakter.', 'error'); return; }
-      if (pin.length !== 6) { showToast('PIN harus 6 digit.', 'error'); return; }
-
-      const btn = document.getElementById('btn-register');
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spin"></div> Mendaftarkan...';
-
-      try {
-        await KasirkuDB.Auth.register(email, password, name, role);
-        // Simpan akun + PIN hash ke localStorage
-        saveAccount(name, email, hashPin(pin, email), encodePassword(password, email));
-        showToast('Registrasi berhasil! Cek email untuk verifikasi.', 'success');
-        setTimeout(() => switchTab('login'), 2000);
-      } catch (error) {
-        showToast(error.message || 'Registrasi gagal.', 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bx bx-user-plus"></i> Buat Akun';
-      }
-    }
-
-    function showForgot() {
-      const email = prompt('Masukkan email Anda untuk reset password:');
-      if (email) {
-        KasirkuDB.Auth.resetPassword(email)
-          .then(() => showToast('Email reset password telah dikirim!', 'success'))
-          .catch(() => showToast('Email tidak ditemukan.', 'error'));
-      }
-    }
-
-    // ─── Enter Key ───
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const isRegister = container.classList.contains('active');
-        if (isRegister) handleRegister();
-        else {
-          const accountView = document.getElementById('account-select-view');
-          if (accountView && accountView.style.display !== 'none') handlePinLogin();
-        }
-      }
+        if (!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      });
+      inp.addEventListener('paste', e => {
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+        e.preventDefault();
+        inputs.forEach((d, i) => { d.value = text[i] || ''; });
+        const last = Math.min(text.length, inputs.length) - 1;
+        if (last >= 0) inputs[last].focus();
+      });
     });
+  }
+  function getPinValue(gridId) { return [...document.querySelectorAll(`#${gridId} .pin-dot`)].map(i => i.value).join(''); }
+  function clearPin(gridId) { document.querySelectorAll(`#${gridId} .pin-dot`).forEach(i => i.value = ''); document.querySelector(`#${gridId} .pin-dot`)?.focus(); }
+  initPinGrid('pin-grid');
+  initPinGrid('reg-pin-grid');
 
-    // ─── Init: cek login & akun tersimpan ───
-    (async () => {
-      if (window.location.hash && window.location.hash.includes('access_token')) {
-        await new Promise(r => setTimeout(r, 800));
+  // ── Password toggle ──
+  function togglePwdVisibility(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
+    if (inp.type === 'password') { inp.type = 'text'; ico.classList.replace('bxs-hide', 'bxs-show'); }
+    else { inp.type = 'password'; ico.classList.replace('bxs-show', 'bxs-hide'); }
+  }
+
+  // ── Strength ──
+  function checkStrength(val) {
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const colors = ['#131923','#ef4444','#f59e0b','#10b981','#3b82f6'];
+    for (let i = 1; i <= 4; i++) document.getElementById('s'+i).style.background = i <= score ? colors[score] : '#131923';
+  }
+
+  // ── Accounts ──
+  function getSavedAccounts() { try { return JSON.parse(localStorage.getItem('tokku_saved_accounts') || '[]'); } catch { return []; } }
+  function saveAccount(name, email, pinHash, encPwd) {
+    const accounts = getSavedAccounts().filter(a => a.email !== email);
+    accounts.unshift({ name, email, pinHash, encPwd: encPwd || null, addedAt: Date.now() });
+    localStorage.setItem('tokku_saved_accounts', JSON.stringify(accounts.slice(0, 5)));
+  }
+  function encodePassword(password, email) {
+    const key = email + 'tokku_pwd_2025';
+    let result = '';
+    for (let i = 0; i < password.length; i++) result += String.fromCharCode(password.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    return btoa(result);
+  }
+  function decodePassword(enc, email) {
+    try {
+      const key = email + 'tokku_pwd_2025';
+      const raw = atob(enc);
+      let result = '';
+      for (let i = 0; i < raw.length; i++) result += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      return result;
+    } catch { return null; }
+  }
+  function hashPin(pin, email) {
+    let h = 0;
+    const str = pin + email + 'tokku_salt_2025';
+    for (let i = 0; i < str.length; i++) { h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
+    return h.toString(36);
+  }
+
+  let selectedAccountEmail = null;
+
+  function showAccountSelector() {
+    const accounts = getSavedAccounts();
+    if (accounts.length === 0) {
+      document.getElementById('no-account-view').style.display = 'block';
+      document.getElementById('account-list-wrap').style.display = 'none';
+      return;
+    }
+    document.getElementById('no-account-view').style.display = 'none';
+    document.getElementById('account-list-wrap').style.display = 'block';
+
+    const list = document.getElementById('account-list');
+    list.innerHTML = accounts.map(a => `
+      <div class="account-item" onclick="selectAccount('${a.email}','${a.name}',this)" data-email="${a.email}">
+        <div class="account-avatar">${a.name.charAt(0).toUpperCase()}</div>
+        <div class="account-info">
+          <div class="acc-name">${a.name}</div>
+          <div class="acc-email">${a.email}</div>
+        </div>
+        <i class='bx bx-chevron-right' style="color:#2d3a52;margin-left:auto;font-size:18px;"></i>
+      </div>
+    `).join('');
+  }
+
+  function selectAccount(email, name, el) {
+    document.querySelectorAll('.account-item').forEach(a => a.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAccountEmail = email;
+    document.getElementById('pin-target-name').textContent = name;
+    const acc = getSavedAccounts().find(a => a.email === email);
+    const hasPin = acc?.pinHash && acc.pinHash !== '';
+    if (hasPin) {
+      document.getElementById('pin-section').style.display = 'block';
+      document.getElementById('no-pin-notice').style.display = 'none';
+      clearPin('pin-grid');
+      setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100);
+    } else {
+      document.getElementById('pin-section').style.display = 'none';
+      document.getElementById('no-pin-notice').style.display = 'block';
+    }
+  }
+
+  async function handleDirectSessionLogin() {
+    if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
+    try {
+      const isAuth = await KasirkuDB.Auth.isAuthenticated();
+      const user = getCurrentUser();
+      if (isAuth && user?.email === selectedAccountEmail) { showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
+      const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+      if (acc?.encPwd) {
+        const pwd = decodePassword(acc.encPwd, selectedAccountEmail);
+        if (pwd) { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
       }
-      try {
-        const isAuth = await KasirkuDB.Auth.isAuthenticated();
-        if (isAuth) { window.location.href = 'pages/dashboard.html'; return; }
-      } catch (e) {}
+      showToast('Sesi habis. Silakan daftar ulang.', 'error');
+    } catch(e) { showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error'); }
+  }
 
-      // Selalu tampilkan account selector (dengan atau tanpa akun tersimpan)
-      showAccountSelector();
-    })();
-  </script>
+  async function handlePinLogin() {
+    if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
+    const pin = getPinValue('pin-grid');
+    if (pin.length !== 6) { showToast('Masukkan 6 digit PIN.', 'error'); return; }
+    const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+    if (!acc) { showToast('Akun tidak ditemukan.', 'error'); return; }
+    const expected = hashPin(pin, selectedAccountEmail);
+    if (expected !== acc.pinHash) { showToast('PIN salah. Coba lagi.', 'error'); clearPin('pin-grid'); return; }
+    const btn = document.getElementById('btn-pin-login');
+    btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Memverifikasi...';
+    try {
+      const isAuth = await KasirkuDB.Auth.isAuthenticated();
+      const user = getCurrentUser();
+      if (isAuth && user?.email === selectedAccountEmail) { showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); }
+      else {
+        const acc2 = getSavedAccounts().find(a => a.email === selectedAccountEmail);
+        if (acc2?.encPwd) {
+          const pwd = decodePassword(acc2.encPwd, selectedAccountEmail);
+          if (pwd) { try { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; } catch(re) {} }
+        }
+        showToast('Sesi habis. Hubungi admin.', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN';
+      }
+    } catch(e) { showToast('Gagal: ' + (e.message || 'Coba lagi.'), 'error'); btn.disabled = false; btn.innerHTML = '<i class="bx bx-log-in"></i> Masuk dengan PIN'; }
+  }
+
+  async function handleRegister() {
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const pin      = getPinValue('reg-pin-grid');
+    const role     = document.querySelector('input[name="reg-role"]:checked')?.value || 'kasir';
+    if (!name || !email || !password) { showToast('Semua field wajib diisi.', 'error'); return; }
+    if (password.length < 8) { showToast('Password minimal 8 karakter.', 'error'); return; }
+    if (pin.length !== 6) { showToast('PIN harus 6 digit.', 'error'); return; }
+    const btn = document.getElementById('btn-register');
+    btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Mendaftarkan...';
+    try {
+      await KasirkuDB.Auth.register(email, password, name, role);
+      saveAccount(name, email, hashPin(pin, email), encodePassword(password, email));
+      showToast('Registrasi berhasil! Cek email untuk verifikasi.', 'success');
+      setTimeout(() => showView('view-accounts'), 2000);
+    } catch(error) { showToast(error.message || 'Registrasi gagal.', 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="bx bx-user-plus"></i> Buat Akun'; }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const active = document.querySelector('.view.active')?.id;
+      if (active === 'view-accounts') handlePinLogin();
+      else if (active === 'view-register') handleRegister();
+    }
+  });
+
+  (async () => {
+    if (window.location.hash?.includes('access_token')) await new Promise(r => setTimeout(r, 800));
+    try { const isAuth = await KasirkuDB.Auth.isAuthenticated(); if (isAuth) { window.location.href = 'pages/dashboard.html'; return; } } catch(e) {}
+    showAccountSelector();
+  })();
+</script>
 </body>
 </html>

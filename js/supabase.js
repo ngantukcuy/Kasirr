@@ -20,7 +20,7 @@
             persistSession:     true,
             autoRefreshToken:   true,
             detectSessionInUrl: true,
-            storageKey:         'kasirku-auth-token',
+            storageKey:         'tokku-auth-token',
           },
           realtime: { params: { eventsPerSecond: 10 } },
         });

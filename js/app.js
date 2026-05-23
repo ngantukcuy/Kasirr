@@ -13,7 +13,7 @@ const _sb = (() => {
   const SUPABASE_URL = window.__KASIRKU_URL__ || localStorage.getItem('__kasirku_sb_url') || 'https://fzuhmyzyraizizpxkltr.supabase.co';
   const SUPABASE_KEY = window.__KASIRKU_KEY__ || localStorage.getItem('__kasirku_sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6dWhteXp5cmFpeml6cHhrbHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMTQ0NTIsImV4cCI6MjA5Mzc5MDQ1Mn0.qy1_36YicMBg2-t4f4ynQnDX0kaOXBVauKf40RdedBI';
   const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'kasirku-auth-token' }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'tokku-auth-token' }
   });
   window.__SB_CLIENT__ = client;
   return client;
@@ -187,14 +187,14 @@ function calculateLoyaltyPoints(totalAmount, tier = 'regular') {
 let _cachedUser = null;
 
 function getCurrentUser() {
-  try { return _cachedUser || JSON.parse(localStorage.getItem('kasirku_user') || 'null'); }
+  try { return _cachedUser || JSON.parse(localStorage.getItem('tokku_user') || 'null'); }
   catch { return null; }
 }
 
 function _saveUser(user) {
   _cachedUser = user;
-  if (user) localStorage.setItem('kasirku_user', JSON.stringify(user));
-  else localStorage.removeItem('kasirku_user');
+  if (user) localStorage.setItem('tokku_user', JSON.stringify(user));
+  else localStorage.removeItem('tokku_user');
 }
 
 // ============================================================
@@ -911,3 +911,63 @@ function applyMobileTableLabels() {
     applyMobileTableLabels();
   });
 })();
+
+// ============================================================
+// Tokku v2 — Global UI helpers (sidebar, theme, logout)
+// ============================================================
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('active');
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light-theme');
+  const newTheme = isLight ? 'light' : 'dark';
+  localStorage.setItem('tokku_theme', newTheme);
+  try { new BroadcastChannel('tokku_theme_channel').postMessage({ theme: newTheme }); } catch(e) {}
+}
+
+async function handleLogout() {
+  try { await KasirkuDB.Auth.logout(); } catch(e) {}
+  // Determine correct path to index.html
+  const depth = window.location.pathname.split('/').filter(Boolean).length;
+  const prefix = depth > 1 ? '../'.repeat(depth - 1) : './';
+  window.location.href = prefix + 'index.html';
+}
+
+// Update user info in sidebar
+function updateSidebarUser() {
+  const user = getCurrentUser();
+  if (!user) return;
+  const name = user.name || user.email || 'User';
+  const role = user.role || 'kasir';
+  const roleLabel = { owner: 'Pemilik', manager: 'Manajer', kasir: 'Kasir', stoker: 'Stoker', admin: 'Admin' }[role] || role;
+  const el = document.getElementById('user-name');
+  const er = document.getElementById('user-role');
+  const ea = document.getElementById('user-avatar');
+  if (el) el.textContent = name;
+  if (er) er.textContent = roleLabel;
+  if (ea && typeof ea.textContent !== 'undefined') ea.textContent = name.charAt(0).toUpperCase();
+}
+
+// Theme init — called on every page
+(function() {
+  const theme = localStorage.getItem('tokku_theme') || 'dark';
+  if (theme === 'light') document.documentElement.classList.add('light-theme');
+  try {
+    const ch = new BroadcastChannel('tokku_theme_channel');
+    ch.onmessage = e => {
+      if (e.data?.theme === 'light') document.documentElement.classList.add('light-theme');
+      else document.documentElement.classList.remove('light-theme');
+    };
+  } catch(e) {}
+})();
+

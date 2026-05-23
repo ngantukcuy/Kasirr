@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pengaturan Toko — KASIRKU</title>
+  <title>Pengaturan Toko — Tokku</title>
   <link rel="manifest" href="../manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="KASIRKU">
+  <meta name="apple-mobile-web-app-title" content="Tokku">
   <meta name="theme-color" content="#7af957">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=7">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=2">
   <style>
     .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .settings-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
@@ -44,65 +44,45 @@
     html.light-theme body { background:var(--bg-primary); color:var(--text-primary); }
     @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
   </style>
+
+  <style>
+    /* Tokku v2 patch — override legacy CSS vars */
+    :root {
+      --accent: var(--brand);
+      --accent-light: var(--brand-light);
+      --accent-glow: var(--brand-glow);
+      --accent-border: var(--brand-border);
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --bg-primary: var(--bg-base);
+      --bg-secondary: var(--bg-surface);
+      --bg-tertiary: var(--bg-elevated);
+      --bg-card: var(--bg-card);
+      --success-bg: var(--success-bg);
+      --warning-bg: var(--warning-bg);
+      --danger-bg: var(--danger-bg);
+      --info-bg: var(--info-bg);
+      --border-strong: var(--border-md);
+    }
+  </style>
 </head>
 <body>
 <div class="app-wrapper">
     <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <a href="dashboard.html" class="sidebar-brand">
-      <div class="brand-icon"><i class='bx bx-store-alt'></i></div>
-      <div class="brand-name">KASIR<em>KU</em></div>
-    </a>
-    <nav class="sidebar-nav">
-      <div class="nav-section">Utama</div>
-      <a href="dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Dashboard</a>
-      <a href="kasir.html" class="nav-item"><i class='bx bx-receipt'></i> Kasir POS <span class="nav-badge">HOT</span></a>
-      <a href="transaksi.html" class="nav-item"><i class='bx bx-list-ul'></i> Riwayat Transaksi</a>
-      <div class="nav-section">Inventori</div>
-      <a href="produk.html" class="nav-item"><i class='bx bx-package'></i> Produk &amp; Stok</a>
-      <a href="kategori.html" class="nav-item"><i class='bx bx-folder-open'></i> Kategori</a>
-      <a href="stok.html" class="nav-item"><i class='bx bx-stats'></i> Monitor Stok</a>
-      <a href="laporan-stok.html" class="nav-item"><i class='bx bx-trending-up'></i> Laporan Stok</a>
-      <div class="nav-section">Keuangan</div>
-      <a href="keuangan.html" class="nav-item"><i class='bx bx-wallet-alt'></i> Manajemen Keuangan</a>
-      <a href="utang-piutang.html" class="nav-item"><i class='bx bx-transfer-alt'></i> Utang &amp; Piutang</a>
-      <div class="nav-section">Pelanggan</div>
-      <a href="pelanggan.html" class="nav-item"><i class='bx bx-group'></i> Pelanggan</a>
-      <div class="nav-section">Laporan</div>
-      <a href="laporan-dashboard.html" class="nav-item"><i class='bx bx-pie-chart-alt-2'></i> Dashboard Laporan</a>
-      <a href="laporan.html" class="nav-item"><i class='bx bx-bar-chart-alt-2'></i> Laporan Penjualan</a>
-      <div class="nav-section">Toko</div>
-      <a href="cabang.html" class="nav-item"><i class='bx bx-buildings'></i> Toko Cabang</a>
-      <div class="nav-section">Pengaturan</div>
-      <a href="pengguna.html" class="nav-item"><i class='bx bx-user-circle'></i> Manajemen User</a>
-      <a href="pengaturan.html" class="nav-item active"><i class='bx bx-cog'></i> Pengaturan Toko</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="user-avatar" id="user-avatar">A</div>
-        <div class="user-info">
-          <div class="user-name" id="user-name">Loading...</div>
-          <div class="user-role" id="user-role">-</div>
-        </div>
-        <button class="btn-logout" onclick="handleLogout()" title="Keluar">
-          <i class='bx bx-log-out'></i>
-        </button>
-      </div>
-    </div>
-  </aside>
+    <!-- nav injected -->
 
   <main class="main-content">
     <header class="top-header">
-      <button class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
-        <i class='bx bx-menu' style="font-size:22px;"></i>
-      </button>
+      <button class="icon-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
       <div class="header-title"><h1>Pengaturan Toko</h1><p>Kelola informasi dan konfigurasi toko</p></div>
       <div class="header-actions">
         <button class="btn btn-primary btn-sm" onclick="saveAll()" id="btn-save-all">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Simpan Semua
         </button>
-      </div>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle tema"><i class='bx bx-moon'></i></button>
+        </div>
     </header>
 
     <div class="page-content">
@@ -284,11 +264,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase.js?v=14"></script>
-<script src="_sidebar.js?v=14"></script>
-<script src="../js/helpers.js?v=14"></script>
+<script src="../js/supabase.js?v=15"></script>
+<script src="_sidebar.js?v=15"></script>
+<script src="../js/helpers.js?v=15"></script>
 <script src="../js/receipt.js?v=14"></script>
-<script src="../js/app.js?v=14"></script>
+<script src="../js/app.js?v=15"></script>
 <script>
   let _storeSettings = {};
 
@@ -444,15 +424,15 @@
   function applyTheme(isLight) {
     if (isLight) {
       document.documentElement.classList.add('light-theme');
-      localStorage.setItem('kasirku_theme', 'light');
+      localStorage.setItem('tokku_theme', 'light');
     } else {
       document.documentElement.classList.remove('light-theme');
-      localStorage.setItem('kasirku_theme', 'dark');
+      localStorage.setItem('tokku_theme', 'dark');
     }
     updateThemeButtons(isLight);
     // Broadcast ke semua tab/halaman yang sudah terbuka (BroadcastChannel)
     try {
-      const bc = new BroadcastChannel('kasirku_theme_channel');
+      const bc = new BroadcastChannel('tokku_theme_channel');
       bc.postMessage({ theme: isLight ? 'light' : 'dark' });
       bc.close();
     } catch(e) {}
@@ -482,7 +462,7 @@
 
   // Load tema tersimpan
   (function loadSavedTheme() {
-    const saved = localStorage.getItem('kasirku_theme');
+    const saved = localStorage.getItem('tokku_theme');
     const isLight = saved === 'light';
     if (isLight) document.documentElement.classList.add('light-theme');
     const sw = document.getElementById('theme-toggle-switch');
