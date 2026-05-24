@@ -15,23 +15,23 @@
 
 function renderSidebar(activePage) {
   const navItems = [
-    { href: 'laporan-dashboard.html', icon: 'bx-pie-chart-alt-2', label: '1. Laporan' },
-    { href: 'keuangan.html',         icon: 'bx-wallet-alt',      label: '2. Kas Harian' },
-    { href: 'transaksi.html',        icon: 'bx-list-ul',         label: '3. Riwayat Transaksi' },
-    { href: 'stok.html',             icon: 'bx-stats',           label: '4. Stok' },
+    { href: 'laporan-dashboard.html', icon: 'bx-pie-chart-alt-2', label: 'Laporan' },
+    { href: 'keuangan.html',         icon: 'bx-wallet-alt',      label: 'Kas Harian' },
+    { href: 'transaksi.html',        icon: 'bx-list-ul',         label: 'Riwayat Transaksi' },
+    { href: 'stok.html',             icon: 'bx-stats',           label: 'Stok' },
     { 
-      section: '5. Products',
+      section: 'Products',
       items: [
         { href: 'produk.html',       icon: 'bx-package',         label: 'SKU Master' },
         { href: 'kategori.html',     icon: 'bx-folder-open',     label: 'Kategori' },
       ]
     },
-    { href: 'retur.html',            icon: 'bx-undo',            label: '6. Retur' },
-    { href: 'pelanggan.html',        icon: 'bx-group',           label: '7. Relasi' },
-    { href: 'deposit.html',          icon: 'bx-credit-card',     label: '8. Deposit' },
-    { href: 'utang-piutang.html',    icon: 'bx-transfer-alt',    label: '9. Utang dan Piutang' },
-    { href: 'pembayaran.html',       icon: 'bx-money',           label: '10. Pembayaran' },
-    { href: 'pengaturan.html',       icon: 'bx-cog',             label: '11. Master' },
+    { href: 'retur.html',            icon: 'bx-undo',            label: 'Retur' },
+    { href: 'pelanggan.html',        icon: 'bx-group',           label: 'Relasi' },
+    { href: 'deposit.html',          icon: 'bx-credit-card',     label: 'Deposit' },
+    { href: 'utang-piutang.html',    icon: 'bx-transfer-alt',    label: 'Utang dan Piutang' },
+    { href: 'pembayaran.html',       icon: 'bx-money',           label: 'Pembayaran' },
+    { href: 'pengaturan.html',       icon: 'bx-cog',             label: 'Master' },
     { section: 'POS' },
     { href: 'kasir.html',            icon: 'bx-receipt',         label: 'Kasir / POS', badge: 'HOT' },
   ];
