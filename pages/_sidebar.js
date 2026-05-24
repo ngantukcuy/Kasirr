@@ -113,3 +113,23 @@ function toggleTheme() {
   const newTheme = isLight ? 'light' : 'dark';
   localStorage.setItem('tokku_theme', newTheme);
 }
+
+// Auto-inject nav when sidebar has data-active attribute
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  const activePage = sidebar.dataset.active;
+  if (!activePage) return;
+  // Build and inject the nav
+  const navHTML = renderSidebar(activePage);
+  // Extract just the <nav> and footer from full sidebar HTML
+  const tmp = document.createElement('div');
+  tmp.innerHTML = navHTML;
+  const nav = tmp.querySelector('.sidebar-nav');
+  const footer = tmp.querySelector('.sidebar-footer');
+  if (nav) sidebar.appendChild(nav);
+  if (footer) sidebar.appendChild(footer);
+  // Add brand
+  const brand = tmp.querySelector('.sidebar-brand');
+  if (brand) sidebar.prepend(brand);
+});

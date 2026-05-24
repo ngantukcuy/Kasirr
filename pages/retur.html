@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retur Barang — Tokku</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-wrapper">
+  <script src="../js/supabase.js?v=15"></script>
+  <script src="../js/app.js?v=17"></script>
+  <script src="../pages/_sidebar.js"></script>
+  <div class="main-content">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px;text-align:center;padding:32px;">
+      <div style="font-size:56px;">🔄</div>
+      <h2 style="font-family:var(--font-display,sans-serif);font-size:1.5rem;font-weight:800;">Halaman Retur Barang</h2>
+      <p style="color:var(--text-muted,#8fa0be);max-width:380px;line-height:1.7;">Fitur ini sedang dalam pengembangan dan akan segera tersedia.</p>
+      <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:var(--primary,#2563eb);color:#fff;border-radius:10px;font-weight:600;text-decoration:none;font-size:0.875rem;">
+        <i class='bx bx-arrow-back'></i> Kembali ke Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+<script>
+  (async () => {
+    await requireAuth();
+    injectSidebar('retur.html');
+    updateSidebarUser();
+  })();
+</script>
+</body>
+</html>

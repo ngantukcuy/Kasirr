@@ -1312,3 +1312,32 @@ tbody tr:hover td:first-child { border-left: 2px solid var(--brand); padding-lef
   .cart-panel { display: none !important; position: static !important; height: calc(100dvh - var(--header-h) - 44px) !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; border-bottom: none !important; }
   .cart-panel.pos-active { display: flex !important; }
 }
+
+/* ============================
+   RESPONSIVE TABLE (mobile)
+   ============================ */
+@media (max-width: 768px) {
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 0 var(--r-lg,12px) var(--r-lg,12px);
+  }
+  .table-scroll table {
+    min-width: 600px;
+  }
+  /* Hide non-essential columns on mobile */
+  .table-scroll thead th.col-hide-mobile,
+  .table-scroll tbody td.col-hide-mobile {
+    display: none;
+  }
+  /* Card-style rows for very narrow screens */
+}
+@media (max-width: 480px) {
+  .table-scroll table {
+    min-width: 520px;
+  }
+  thead th, tbody td {
+    padding: 10px 10px;
+    font-size: 0.78rem;
+  }
+}

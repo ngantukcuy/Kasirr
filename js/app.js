@@ -1,7 +1,5 @@
 // ============================================================
-// KASIRKU — app.js
-// File utama yang digunakan di semua halaman (non-module, UMD)
-// Menyediakan: KasirkuDB, Toast, Modal, getCurrentUser, formatCurrency, getToday
+// KASIRKU — app.js  v17
 // ============================================================
 
 const _sb = (() => {
@@ -20,6 +18,7 @@ async function _waitReady() {
   if (window.__KASIRKU_READY__) await window.__KASIRKU_READY__;
 }
 
+// ── Toast ──
 const Toast = (() => {
   function _show(msg, type = 'info', duration = 3500) {
     let container = document.getElementById('toast-container');
@@ -52,6 +51,7 @@ const Toast = (() => {
   };
 })();
 
+// ── Modal ──
 const Modal = (() => {
   function _render(title, body, actions) {
     document.getElementById('kasirku-modal')?.remove();
@@ -80,24 +80,21 @@ const Modal = (() => {
       const el = _render(title, body, `<button id="modal-ok" style="padding:8px 18px;border-radius:8px;border:none;background:#7af957;color:#0a0b0f;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:600;">OK</button>`);
       el.querySelector('#modal-ok').onclick = () => { el.remove(); onOk?.(); };
     },
-    show(id) {
-      const el = document.getElementById(id);
-      if (el) { el.classList.add('active'); el.style.display = 'flex'; }
-    },
-    hide(id) {
-      const el = document.getElementById(id);
-      if (el) { el.classList.remove('active'); el.style.display = ''; }
-    }
+    show(id) { const el = document.getElementById(id); if (el) { el.classList.add('active'); el.style.display = 'flex'; } },
+    hide(id) { const el = document.getElementById(id); if (el) { el.classList.remove('active'); el.style.display = ''; } }
   };
 })();
 
+// ── Helpers ──
 function formatCurrency(amount) {
   if (!amount && amount !== 0) return 'Rp 0';
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 }
-
 function formatRupiah(amount) { return formatCurrency(amount); }
-
+function formatNumber(num) {
+  if (!num && num !== 0) return '0';
+  return new Intl.NumberFormat('id-ID').format(num);
+}
 function formatDate(date, fmt = 'short') {
   if (!date) return '-';
   const d = new Date(date);
@@ -105,28 +102,45 @@ function formatDate(date, fmt = 'short') {
     short:    { day:'2-digit', month:'2-digit', year:'numeric' },
     long:     { day:'long', month:'long', year:'numeric' },
     datetime: { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' },
+    time:     { hour:'2-digit', minute:'2-digit' },
   };
   return d.toLocaleDateString('id-ID', opts[fmt] || opts.short);
 }
+function getToday() { return new Date().toISOString().split('T')[0]; }
 
-function getToday() {
-  const now = new Date();
-  return now.toISOString().split('T')[0];
-}
-
+// ── User cache ──
 let _cachedUser = null;
 function getCurrentUser() {
   try { return _cachedUser || JSON.parse(localStorage.getItem('tokku_user') || 'null'); }
   catch { return null; }
 }
-
 function _saveUser(user) {
   _cachedUser = user;
   if (user) localStorage.setItem('tokku_user', JSON.stringify(user));
   else localStorage.removeItem('tokku_user');
 }
 
+// updateSidebarUser — update avatar/name/role di sidebar setelah inject
+function updateSidebarUser() {
+  const user = getCurrentUser() || {};
+  const name = user.full_name || user.email || 'User';
+  const role = user.role || 'kasir';
+  const roleLabel = { owner:'Pemilik', admin:'Admin', manager:'Manajer', kasir:'Kasir', stoker:'Stoker' }[role] || role;
+  const initial = name.charAt(0).toUpperCase();
+  const el = {
+    avatar: document.getElementById('user-avatar'),
+    name:   document.getElementById('user-name'),
+    role:   document.getElementById('user-role'),
+  };
+  if (el.avatar) el.avatar.textContent = initial;
+  if (el.name)   el.name.textContent   = name;
+  if (el.role)   el.role.textContent   = roleLabel;
+}
+
+// ── KasirkuDB ──
 const KasirkuDB = {
+
+  // ── Auth ──
   Auth: {
     async login(email, password) {
       const { data, error } = await _sb.auth.signInWithPassword({ email, password });
@@ -144,22 +158,15 @@ const KasirkuDB = {
       await _waitReady();
       const { data: { session } } = await _sb.auth.getSession();
       if (!session) return false;
-      try {
-        const profile = await KasirkuDB.Auth._loadProfile(session.user.id);
-        _saveUser(profile);
-      } catch {}
+      try { const profile = await KasirkuDB.Auth._loadProfile(session.user.id); _saveUser(profile); } catch {}
       return true;
     },
     async register(email, password, fullName, role = 'kasir') {
       const { data, error } = await _sb.auth.signUp({ email, password });
       if (error) throw error;
-      // Buat profil di tabel profiles setelah signup
       if (data.user) {
         const { error: profileError } = await _sb.from('profiles').upsert({
-          id:        data.user.id,
-          email:     email,
-          full_name: fullName,
-          role:      role,
+          id: data.user.id, email, full_name: fullName, role,
         });
         if (profileError) throw profileError;
       }
@@ -172,11 +179,18 @@ const KasirkuDB = {
     }
   },
 
+  // ── Products ──
   Products: {
     async getAll(filters = {}) {
       let q = _sb.from('products').select('*, categories(name)').eq('is_active', true).order('name');
-      if (filters.search) q = q.ilike('name', `%${filters.search}%`);
+      if (filters.search)      q = q.ilike('name', `%${filters.search}%`);
+      if (filters.category_id) q = q.eq('category_id', filters.category_id);
       const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+    async getByBarcode(barcode) {
+      const { data, error } = await _sb.from('products').select('*, categories(name)').eq('barcode', barcode).eq('is_active', true).single();
       if (error) throw error;
       return data;
     },
@@ -193,9 +207,55 @@ const KasirkuDB = {
     async delete(id) {
       const { error } = await _sb.from('products').update({ is_active: false }).eq('id', id);
       if (error) throw error;
+    },
+    async adjustStock(productId, qty, type = 'in', notes = '') {
+      // type: 'in' | 'out' | 'adjustment'
+      const { data: product, error: fetchErr } = await _sb.from('products').select('stock').eq('id', productId).single();
+      if (fetchErr) throw fetchErr;
+      const newStock = type === 'in'
+        ? (product.stock || 0) + qty
+        : type === 'out'
+          ? Math.max(0, (product.stock || 0) - qty)
+          : qty; // adjustment = set absolute
+      const { data, error } = await _sb.from('products').update({ stock: newStock }).eq('id', productId).select().single();
+      if (error) throw error;
+      // Log stock movement
+      const user = getCurrentUser();
+      await _sb.from('stock_movements').insert({
+        product_id: productId,
+        type,
+        quantity: qty,
+        notes,
+        user_id: user?.id || null,
+      }).then(() => {}).catch(() => {}); // non-fatal
+      return data;
     }
   },
 
+  // ── Categories ──
+  Categories: {
+    async getAll() {
+      const { data, error } = await _sb.from('categories').select('*').order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    async create(d) {
+      const { data, error } = await _sb.from('categories').insert(d).select().single();
+      if (error) throw error;
+      return data;
+    },
+    async update(id, d) {
+      const { data, error } = await _sb.from('categories').update(d).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    async delete(id) {
+      const { error } = await _sb.from('categories').delete().eq('id', id);
+      if (error) throw error;
+    }
+  },
+
+  // ── Transactions ──
   Transactions: {
     async create(tx, items) {
       const { data, error } = await _sb.from('transactions').insert(tx).select().single();
@@ -205,16 +265,39 @@ const KasirkuDB = {
       if (itemErr) throw itemErr;
       return data;
     },
-    async getAll() {
-      const { data, error } = await _sb.from('transactions').select('*, customers(name), profiles!cashier_id(full_name)').order('created_at', { ascending: false });
+    async getAll(filters = {}) {
+      let q = _sb.from('transactions')
+        .select('*, customers(name), profiles!cashier_id(full_name)', { count: 'exact' })
+        .order('created_at', { ascending: false });
+      if (filters.search)    q = q.ilike('invoice_number', `%${filters.search}%`);
+      if (filters.date_from) q = q.gte('created_at', filters.date_from);
+      if (filters.date_to)   q = q.lte('created_at', filters.date_to + 'T23:59:59');
+      if (filters.limit)     q = q.limit(filters.limit);
+      if (filters.offset)    q = q.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
+      const { data, error, count } = await q;
+      if (error) throw error;
+      return { data: data || [], count: count || 0 };
+    },
+    async getById(id) {
+      const { data, error } = await _sb.from('transactions')
+        .select('*, customers(name, phone, address), profiles!cashier_id(full_name), transaction_items(*, products(name, barcode))')
+        .eq('id', id).single();
       if (error) throw error;
       return data;
     }
   },
 
+  // ── Customers ──
   Customers: {
-    async getAll() {
-      const { data, error } = await _sb.from('customers').select('*').eq('is_active', true).order('name');
+    async getAll(search = '') {
+      let q = _sb.from('customers').select('*').order('name');
+      if (search) q = q.ilike('name', `%${search}%`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+    async getById(id) {
+      const { data, error } = await _sb.from('customers').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -222,9 +305,37 @@ const KasirkuDB = {
       const { data, error } = await _sb.from('customers').insert(d).select().single();
       if (error) throw error;
       return data;
+    },
+    async update(id, d) {
+      const { data, error } = await _sb.from('customers').update(d).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
     }
   },
 
+  // ── Users (pengguna/master) ──
+  Users: {
+    async getAll() {
+      const { data, error } = await _sb.from('profiles').select('*').order('full_name');
+      if (error) throw error;
+      return data || [];
+    },
+    async updateRole(id, role) {
+      const { data, error } = await _sb.from('profiles').update({ role }).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    async deactivate(id) {
+      const { error } = await _sb.from('profiles').update({ is_active: false }).eq('id', id);
+      if (error) throw error;
+    },
+    async activate(id) {
+      const { error } = await _sb.from('profiles').update({ is_active: true }).eq('id', id);
+      if (error) throw error;
+    }
+  },
+
+  // ── Settings ──
   Settings: {
     async get() {
       await _waitReady();
@@ -238,7 +349,7 @@ const KasirkuDB = {
       await _waitReady();
       const { data: { session } } = await _sb.auth.getSession();
       if (!session) throw new Error('Tidak ada sesi aktif');
-      const allowed = ['store_name','store_address','store_phone','store_logo','receipt_footer','tax_percent','receipt_size'];
+      const allowed = ['store_name','store_address','store_phone','store_email','store_website','store_logo','receipt_footer','tax_percent','receipt_size'];
       const patch = {};
       allowed.forEach(k => { if (settings[k] !== undefined) patch[k] = settings[k]; });
       patch.updated_at = new Date().toISOString();
@@ -248,28 +359,73 @@ const KasirkuDB = {
     }
   },
 
+  // ── StoreSettings (alias Settings — dipakai halaman kasir) ──
+  StoreSettings: {
+    async get() { return KasirkuDB.Settings.get(); },
+    async update(d) { return KasirkuDB.Settings.update(d); }
+  },
+
+  // ── Expenses ──
   Expenses: {
-    async getAll() {
-      const { data, error } = await _sb.from('expenses').select('*').order('created_at', { ascending: false });
+    async getAll(filters = {}) {
+      let q = _sb.from('expenses').select('*').order('created_at', { ascending: false });
+      if (filters.date_from) q = q.gte('created_at', filters.date_from);
+      if (filters.date_to)   q = q.lte('created_at', filters.date_to + 'T23:59:59');
+      const { data, error } = await q;
       if (error) throw error;
-      return data;
+      return data || [];
     },
     async create(d) {
       const { data, error } = await _sb.from('expenses').insert(d).select().single();
       if (error) throw error;
       return data;
     }
-  }
+  },
+
+  // ── Cash Sessions (Kas Harian) ──
+  CashSessions: {
+    async getOpen(userId) {
+      const { data, error } = await _sb.from('cash_sessions')
+        .select('*').eq('user_id', userId).eq('status', 'open').single();
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
+      return data || null;
+    },
+    async open(userId, openingBalance) {
+      const { data, error } = await _sb.from('cash_sessions').insert({
+        user_id: userId,
+        opening_balance: openingBalance,
+        status: 'open',
+        opened_at: new Date().toISOString(),
+      }).select().single();
+      if (error) throw error;
+      return data;
+    },
+    async close(sessionId, closingBalance, notes = '') {
+      const { data, error } = await _sb.from('cash_sessions').update({
+        closing_balance: closingBalance,
+        status: 'closed',
+        closed_at: new Date().toISOString(),
+        notes,
+      }).eq('id', sessionId).select().single();
+      if (error) throw error;
+      return data;
+    }
+  },
+
 };
 
-window.KasirkuDB = KasirkuDB;
-window.Toast = Toast;
-window.Modal = Modal;
-window.formatCurrency = formatCurrency;
-window.formatRupiah = formatRupiah;
-window.formatDate = formatDate;
-window.getToday = getToday;
-window.getCurrentUser = getCurrentUser;
+// ── Globals ──
+window._sb = _sb;  // expose for pages that query directly
+window.KasirkuDB   = KasirkuDB;
+window.Toast       = Toast;
+window.Modal       = Modal;
+window.formatCurrency  = formatCurrency;
+window.formatRupiah    = formatRupiah;
+window.formatNumber    = formatNumber;
+window.formatDate      = formatDate;
+window.getToday        = getToday;
+window.getCurrentUser  = getCurrentUser;
+window.updateSidebarUser = updateSidebarUser;
 window.requireAuth = async () => {
   const auth = await KasirkuDB.Auth.isAuthenticated();
   if (!auth) window.location.href = '../index.html';
