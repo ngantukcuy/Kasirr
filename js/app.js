@@ -150,6 +150,21 @@ const KasirkuDB = {
       } catch {}
       return true;
     },
+    async register(email, password, fullName, role = 'kasir') {
+      const { data, error } = await _sb.auth.signUp({ email, password });
+      if (error) throw error;
+      // Buat profil di tabel profiles setelah signup
+      if (data.user) {
+        const { error: profileError } = await _sb.from('profiles').upsert({
+          id:        data.user.id,
+          email:     email,
+          full_name: fullName,
+          role:      role,
+        });
+        if (profileError) throw profileError;
+      }
+      return data;
+    },
     async _loadProfile(userId) {
       const { data, error } = await _sb.from('profiles').select('*').eq('id', userId).single();
       if (error) throw error;
