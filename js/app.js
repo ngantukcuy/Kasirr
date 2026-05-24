@@ -225,6 +225,29 @@ const KasirkuDB = {
     }
   },
 
+  Settings: {
+    async get() {
+      await _waitReady();
+      const { data: { session } } = await _sb.auth.getSession();
+      if (!session) throw new Error('Tidak ada sesi aktif');
+      const { data, error } = await _sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (error) throw error;
+      return data;
+    },
+    async update(settings) {
+      await _waitReady();
+      const { data: { session } } = await _sb.auth.getSession();
+      if (!session) throw new Error('Tidak ada sesi aktif');
+      const allowed = ['store_name','store_address','store_phone','store_logo','receipt_footer','tax_percent','receipt_size'];
+      const patch = {};
+      allowed.forEach(k => { if (settings[k] !== undefined) patch[k] = settings[k]; });
+      patch.updated_at = new Date().toISOString();
+      const { data, error } = await _sb.from('profiles').update(patch).eq('id', session.user.id).select().single();
+      if (error) throw error;
+      return data;
+    }
+  },
+
   Expenses: {
     async getAll() {
       const { data, error } = await _sb.from('expenses').select('*').order('created_at', { ascending: false });

@@ -8,7 +8,7 @@
  * @param {number} amount - Jumlah yang akan diformat
  * @returns {string} - Format Rupiah (contoh: Rp 1.500.000)
  */
-export function formatRupiah(amount) {
+function formatRupiah(amount) {
   if (!amount && amount !== 0) return 'Rp 0';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -23,7 +23,7 @@ export function formatRupiah(amount) {
  * @param {string|Date} date - Tanggal
  * @param {string} format - 'short' | 'long' | 'datetime'
  */
-export function formatDate(date, format = 'short') {
+function formatDate(date, format = 'short') {
   if (!date) return '-';
   const d = new Date(date);
   
@@ -40,7 +40,7 @@ export function formatDate(date, format = 'short') {
 /**
  * Format nomor (misal: 1500 -> 1.500)
  */
-export function formatNumber(num) {
+function formatNumber(num) {
   if (!num && num !== 0) return '0';
   return new Intl.NumberFormat('id-ID').format(num);
 }
@@ -48,7 +48,7 @@ export function formatNumber(num) {
 /**
  * Hitung total item di keranjang
  */
-export function calculateCartTotal(items) {
+function calculateCartTotal(items) {
   let subtotal = 0;
   let discountTotal = 0;
   let taxTotal = 0;
@@ -76,7 +76,7 @@ export function calculateCartTotal(items) {
  * @param {number} totalAmount - Total transaksi
  * @param {string} tier - Tier pelanggan
  */
-export function calculateLoyaltyPoints(totalAmount, tier = 'regular') {
+function calculateLoyaltyPoints(totalAmount, tier = 'regular') {
   const pointsPerTier = {
     regular: 1,
     silver: 2,
@@ -90,7 +90,7 @@ export function calculateLoyaltyPoints(totalAmount, tier = 'regular') {
 /**
  * Validasi form
  */
-export function validateProduct(product) {
+function validateProduct(product) {
   const errors = {};
   if (!product.name?.trim()) errors.name = 'Nama produk wajib diisi';
   if (!product.selling_price || product.selling_price <= 0) errors.selling_price = 'Harga jual harus lebih dari 0';
@@ -102,7 +102,7 @@ export function validateProduct(product) {
 /**
  * Generate barcode acak (untuk produk tanpa barcode)
  */
-export function generateBarcode() {
+function generateBarcode() {
   const timestamp = Date.now().toString().slice(-8);
   const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
   return `KB${timestamp}${random}`;
@@ -111,7 +111,7 @@ export function generateBarcode() {
 /**
  * Debounce function untuk search
  */
-export function debounce(fn, delay = 300) {
+function debounce(fn, delay = 300) {
   let timeoutId;
   return (...args) => {
     clearTimeout(timeoutId);
@@ -122,7 +122,7 @@ export function debounce(fn, delay = 300) {
 /**
  * Format tier badge pelanggan
  */
-export function getTierBadge(tier) {
+function getTierBadge(tier) {
   const tiers = {
     regular: { label: 'Regular', color: '#6b7280', icon: '👤' },
     silver: { label: 'Silver', color: '#94a3b8', icon: '🥈' },
@@ -135,7 +135,7 @@ export function getTierBadge(tier) {
 /**
  * Hitung persentase keuntungan
  */
-export function calculateProfit(purchasePrice, sellingPrice) {
+function calculateProfit(purchasePrice, sellingPrice) {
   if (!purchasePrice || purchasePrice === 0) return 0;
   return ((sellingPrice - purchasePrice) / purchasePrice * 100).toFixed(1);
 }
@@ -143,7 +143,7 @@ export function calculateProfit(purchasePrice, sellingPrice) {
 /**
  * Export data ke CSV
  */
-export function exportToCSV(data, filename) {
+function exportToCSV(data, filename) {
   if (!data || data.length === 0) return;
   
   const headers = Object.keys(data[0]).join(',');
@@ -164,7 +164,7 @@ export function exportToCSV(data, filename) {
 /**
  * Get status badge untuk stok
  */
-export function getStockStatus(stock, minStock) {
+function getStockStatus(stock, minStock) {
   if (stock <= 0) return { label: 'Habis', class: 'stock-empty' };
   if (stock <= minStock) return { label: 'Kritis', class: 'stock-low' };
   if (stock <= minStock * 2) return { label: 'Sedikit', class: 'stock-warning' };
