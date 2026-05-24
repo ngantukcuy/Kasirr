@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Produk & Stok — Tokku</title>
+  <title>SKU Master — Tokku</title>
   <link rel="manifest" href="../manifest.json">
   <meta name="theme-color" content="#2563eb">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,14 +14,12 @@
 </head>
 <body>
 <div class="app-wrapper">
-  <!-- Sidebar injected here -->
-
   <main class="main-content">
     <header class="top-header">
       <button class="icon-btn" onclick="toggleSidebar()"><i class='bx bx-menu'></i></button>
       <div class="header-title">
-        <h1>Produk &amp; Stok</h1>
-        <p>Kelola semua produk toko Anda</p>
+        <h1>SKU Master</h1>
+        <p>Kelola produk induk dan eceran</p>
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary btn-sm" onclick="exportExcel()"><i class='bx bx-export'></i> Export</button>
@@ -30,47 +28,13 @@
     </header>
 
     <div class="page-content">
-      <!-- Stats Row -->
-      <div class="stats-grid mb-20" style="grid-template-columns:repeat(4,1fr);">
-        <div class="stat-card" style="--accent-color:var(--brand);--icon-bg:var(--brand-glow);--icon-color:var(--brand-light)">
-          <div class="stat-top"><div class="stat-icon"><i class='bx bx-package'></i></div></div>
-          <div class="stat-value" id="s-total">0</div>
-          <div class="stat-label">Total Produk</div>
-        </div>
-        <div class="stat-card" style="--accent-color:var(--success);--icon-bg:var(--success-bg);--icon-color:var(--success)">
-          <div class="stat-top"><div class="stat-icon"><i class='bx bx-check-circle'></i></div></div>
-          <div class="stat-value" id="s-active">0</div>
-          <div class="stat-label">Produk Aktif</div>
-        </div>
-        <div class="stat-card" style="--accent-color:var(--warning);--icon-bg:var(--warning-bg);--icon-color:var(--warning)">
-          <div class="stat-top"><div class="stat-icon"><i class='bx bx-error'></i></div></div>
-          <div class="stat-value" id="s-low">0</div>
-          <div class="stat-label">Stok Menipis</div>
-        </div>
-        <div class="stat-card" style="--accent-color:var(--danger);--icon-bg:var(--danger-bg);--icon-color:var(--danger)">
-          <div class="stat-top"><div class="stat-icon"><i class='bx bx-x-circle'></i></div></div>
-          <div class="stat-value" id="s-zero">0</div>
-          <div class="stat-label">Stok Habis</div>
-        </div>
-      </div>
-
-      <!-- Table -->
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title"><i class='bx bx-package' style="color:var(--brand-light);margin-right:6px;"></i>Daftar Produk</div>
+          <div class="table-title"><i class='bx bx-package' style="color:var(--brand-light);margin-right:6px;"></i>Daftar SKU</div>
           <div class="search-bar">
             <div class="search-icon"><i class='bx bx-search'></i></div>
-            <input type="text" placeholder="Cari nama, SKU, kategori..." id="search-input" oninput="handleSearch(this.value)">
+            <input type="text" placeholder="Cari nama atau SKU..." id="search-input" oninput="handleSearch(this.value)">
           </div>
-          <select class="form-control" style="width:140px;" id="filter-category" onchange="loadProducts()">
-            <option value="">Semua Kategori</option>
-          </select>
-          <select class="form-control" style="width:130px;" id="filter-stock" onchange="loadProducts()">
-            <option value="">Semua Stok</option>
-            <option value="low">Stok Menipis</option>
-            <option value="zero">Stok Habis</option>
-            <option value="ok">Stok Aman</option>
-          </select>
         </div>
         <div class="table-scroll">
           <table>
@@ -79,10 +43,10 @@
                 <th>Produk</th>
                 <th>SKU</th>
                 <th>Kategori</th>
-                <th>Harga Jual</th>
-                <th>Harga Modal</th>
+                <th>Modal</th>
+                <th>Min. Jual</th>
+                <th>Std. Jual</th>
                 <th>Stok</th>
-                <th>Status</th>
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -90,10 +54,6 @@
               <tr><td colspan="8" class="table-empty"><i class='bx bx-loader-alt'></i><p>Memuat produk...</p></td></tr>
             </tbody>
           </table>
-        </div>
-        <div class="pagination" id="pagination-wrap">
-          <div class="page-info" id="page-info">-</div>
-          <div class="page-btns" id="page-btns"></div>
         </div>
       </div>
     </div>
@@ -104,7 +64,6 @@
 <div class="modal-overlay" id="product-modal">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <i class='bx bx-package' style="color:var(--brand-light);font-size:22px;"></i>
       <div class="modal-title" id="modal-title">Tambah Produk</div>
       <button class="modal-close" onclick="closeModal('product-modal')"><i class='bx bx-x'></i></button>
     </div>
@@ -116,332 +75,134 @@
         </div>
         <div class="form-group">
           <label class="form-label">SKU</label>
-          <input type="text" class="form-control" id="p-sku" placeholder="Auto-generate jika kosong">
+          <input type="text" class="form-control" id="p-sku" placeholder="SKU-XXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Produk Induk (Opsional)</label>
+          <select class="form-control" id="p-parent">
+            <option value="">-- Bukan Produk Eceran --</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Kategori</label>
           <select class="form-control" id="p-category"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Satuan</label>
-          <input type="text" class="form-control" id="p-unit" placeholder="pcs, kg, m, dus...">
-        </div>
-        <div class="form-group">
           <label class="form-label">Harga Modal</label>
-          <div class="input-group">
-            <span class="input-icon" style="color:var(--text-secondary);font-size:12px;font-weight:700;">Rp</span>
-            <input type="number" class="form-control" id="p-cost" placeholder="0" style="padding-left:34px;">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Harga Jual <span class="required">*</span></label>
-          <div class="input-group">
-            <span class="input-icon" style="color:var(--text-secondary);font-size:12px;font-weight:700;">Rp</span>
-            <input type="number" class="form-control" id="p-price" placeholder="0" style="padding-left:34px;">
-          </div>
+          <input type="number" class="form-control" id="p-cost" placeholder="0">
         </div>
         <div class="form-group">
           <label class="form-label">Harga Jual Minimum</label>
-          <div class="input-group">
-            <span class="input-icon" style="color:var(--text-secondary);font-size:12px;font-weight:700;">Rp</span>
-            <input type="number" class="form-control" id="p-min-price" placeholder="0" style="padding-left:34px;">
-          </div>
+          <input type="number" class="form-control" id="p-min-price" placeholder="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Stok Awal</label>
+          <label class="form-label">Harga Jual Standard</label>
+          <input type="number" class="form-control" id="p-std-price" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stok</label>
           <input type="number" class="form-control" id="p-stock" placeholder="0">
         </div>
-        <div class="form-group">
-          <label class="form-label">Stok Minimum Alert</label>
-          <input type="number" class="form-control" id="p-min-stock" placeholder="5">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Barcode</label>
-          <input type="text" class="form-control" id="p-barcode" placeholder="Scan atau ketik barcode">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Deskripsi</label>
-        <textarea class="form-control" id="p-desc" placeholder="Deskripsi produk (opsional)" style="min-height:70px;"></textarea>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-        <input type="checkbox" id="p-active" checked style="width:16px;height:16px;accent-color:var(--brand);">
-        <label for="p-active" style="font-size:0.845rem;cursor:pointer;">Produk aktif (tampil di kasir)</label>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('product-modal')">Batal</button>
-      <button class="btn btn-primary" id="btn-save-product" onclick="saveProduct()"><i class='bx bx-save'></i> Simpan</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Stok Adjustment -->
-<div class="modal-overlay" id="stock-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <i class='bx bx-stats' style="color:var(--success);font-size:22px;"></i>
-      <div class="modal-title">Sesuaikan Stok</div>
-      <button class="modal-close" onclick="closeModal('stock-modal')"><i class='bx bx-x'></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="background:var(--bg-elevated);border-radius:var(--r-lg);padding:14px;margin-bottom:16px;">
-        <div style="font-size:0.78rem;color:var(--text-muted);">Produk</div>
-        <div style="font-weight:700;" id="stock-product-name">-</div>
-        <div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px;">Stok saat ini: <strong id="stock-current" class="text-brand">0</strong></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tipe Penyesuaian</label>
-        <select class="form-control" id="stock-type">
-          <option value="add">+ Tambah Stok (Masuk)</option>
-          <option value="subtract">- Kurangi Stok (Keluar)</option>
-          <option value="set">= Set Stok Baru</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Jumlah</label>
-        <input type="number" class="form-control" id="stock-qty" placeholder="0" min="0">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Catatan</label>
-        <input type="text" class="form-control" id="stock-note" placeholder="Alasan penyesuaian stok...">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('stock-modal')">Batal</button>
-      <button class="btn btn-success" onclick="saveStockAdjustment()"><i class='bx bx-check'></i> Simpan</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Simpan</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase.js?v=15"></script>
-<script src="../js/app.js?v=15"></script>
-<script src="../js/helpers.js?v=15"></script>
-<script src="_sidebar.js?v=15"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/app.js"></script>
+<script src="_sidebar.js"></script>
 <script>
-let products = [], categories = [], currentPage = 1, perPage = 15, editingId = null, stockProductId = null;
-let searchTimeout = null;
+let products = [], categories = [], editingId = null;
 
 (async () => {
   await requireAuth();
-  updateSidebarUser();
   injectSidebar('produk.html');
   await loadCategories();
   await loadProducts();
-  await loadStats();
 })();
 
-function handleSearch(val) {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => { currentPage = 1; loadProducts(); }, 350);
-}
-
 async function loadCategories() {
-  const { data } = await _sb.from('categories').select('id,name').order('name');
+  const { data } = await _sb.from('categories').select('*');
   categories = data || [];
-  const sel = document.getElementById('filter-category');
-  sel.innerHTML = '<option value="">Semua Kategori</option>' + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  const pSel = document.getElementById('p-category');
-  if (pSel) pSel.innerHTML = '<option value="">-- Pilih Kategori --</option>' + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('p-category').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 async function loadProducts() {
-  const search = document.getElementById('search-input').value.trim();
-  const catId  = document.getElementById('filter-category').value;
-  const stockF = document.getElementById('filter-stock').value;
-
-  let q = _sb.from('products').select('*,categories(name)', {count:'exact'}).order('name');
-  if (search) q = q.ilike('name', `%${search}%`);
-  if (catId) q = q.eq('category_id', catId);
-  if (stockF === 'zero') q = q.eq('stock', 0);
-  else if (stockF === 'low') q = q.gt('stock', 0).lte('stock', 10);
-  else if (stockF === 'ok') q = q.gt('stock', 10);
-
-  const from = (currentPage - 1) * perPage;
-  const { data, count } = await q.range(from, from + perPage - 1);
+  const { data } = await _sb.from('products').select('*, categories(name)').eq('is_active', true);
   products = data || [];
-
   renderTable(products);
-  renderPagination(count || 0);
+  document.getElementById('p-parent').innerHTML = '<option value="">-- Bukan Produk Eceran --</option>' + 
+    products.filter(p => !p.parent_id).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 }
 
 function renderTable(rows) {
   const tbody = document.getElementById('product-tbody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8"><div class="table-empty"><i class="bx bx-package"></i><p>Tidak ada produk ditemukan</p></div></td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.map(p => {
-    const stockStatus = p.stock === 0 ? 'badge-danger' : p.stock <= (p.min_stock || 10) ? 'badge-warning' : 'badge-success';
-    const stockLabel  = p.stock === 0 ? 'Habis' : p.stock <= (p.min_stock || 10) ? 'Menipis' : 'Aman';
-    return `<tr>
-      <td>
-        <div class="td-bold">${p.name}</div>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${p.description || ''}</div>
-      </td>
-      <td><span class="font-mono" style="font-size:0.8rem;">${p.sku || '-'}</span></td>
+  tbody.innerHTML = rows.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.sku || '-'}</td>
       <td>${p.categories?.name || '-'}</td>
-      <td class="td-bold text-brand">${formatCurrency(p.selling_price || p.price || 0)}</td>
-      <td class="text-secondary">${formatCurrency(p.cost_price || 0)}</td>
+      <td>${formatCurrency(p.cost_price)}</td>
+      <td>${formatCurrency(p.min_selling_price)}</td>
+      <td>${formatCurrency(p.standard_selling_price)}</td>
+      <td>${p.stock}</td>
       <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="fw-bold ${p.stock === 0 ? 'text-danger' : p.stock <= (p.min_stock||10) ? 'text-warning' : 'text-success'}">${formatNumber(p.stock || 0)}</span>
-          <span style="color:var(--text-muted);font-size:0.75rem;">${p.unit || 'pcs'}</span>
-        </div>
+        <button class="btn btn-sm" onclick="editProduct('${p.id}')">Edit</button>
       </td>
-      <td>
-        <span class="badge ${stockStatus}">${stockLabel}</span>
-        ${!p.is_active ? '<span class="badge badge-neutral" style="margin-left:4px;">Nonaktif</span>' : ''}
-      </td>
-      <td>
-        <div style="display:flex;gap:4px;">
-          <button class="btn btn-secondary btn-icon btn-sm" onclick="openStockModal('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.stock||0})" title="Sesuaikan Stok"><i class='bx bx-stats'></i></button>
-          <button class="btn btn-secondary btn-icon btn-sm" onclick="editProduct('${p.id}')" title="Edit"><i class='bx bx-edit'></i></button>
-          <button class="btn btn-icon btn-sm" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-bg);" onclick="deleteProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')"><i class='bx bx-trash'></i></button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function renderPagination(total) {
-  const pages = Math.ceil(total / perPage);
-  document.getElementById('page-info').textContent = `${formatNumber(total)} produk · Hal ${currentPage}/${pages||1}`;
-  const btns = document.getElementById('page-btns');
-  btns.innerHTML = `
-    <button class="page-btn" onclick="changePage(${currentPage-1})" ${currentPage<=1?'disabled':''}><i class='bx bx-chevron-left'></i></button>
-    ${Array.from({length:Math.min(5,pages)},(_,i)=>{
-      const p=Math.max(1,Math.min(currentPage-2,pages-4))+i;
-      return p<=pages?`<button class="page-btn ${p===currentPage?'active':''}" onclick="changePage(${p})">${p}</button>`:'';
-    }).join('')}
-    <button class="page-btn" onclick="changePage(${currentPage+1})" ${currentPage>=pages?'disabled':''}><i class='bx bx-chevron-right'></i></button>
-  `;
-}
-
-function changePage(p) { currentPage = p; loadProducts(); window.scrollTo(0,0); }
-
-async function loadStats() {
-  const { data } = await _sb.from('products').select('is_active,stock,min_stock');
-  const all = data || [];
-  document.getElementById('s-total').textContent = all.length;
-  document.getElementById('s-active').textContent = all.filter(p=>p.is_active).length;
-  document.getElementById('s-low').textContent = all.filter(p=>p.stock>0&&p.stock<=(p.min_stock||10)).length;
-  document.getElementById('s-zero').textContent = all.filter(p=>p.stock===0).length;
+    </tr>
+  `).join('');
 }
 
 function openAddModal() {
   editingId = null;
-  document.getElementById('modal-title').textContent = 'Tambah Produk Baru';
-  ['p-name','p-sku','p-unit','p-cost','p-price','p-min-price','p-stock','p-min-stock','p-barcode','p-desc'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  document.getElementById('p-category').value = '';
-  document.getElementById('p-active').checked = true;
+  document.getElementById('modal-title').textContent = 'Tambah Produk';
   document.getElementById('product-modal').classList.add('active');
 }
 
-function editProduct(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  editingId = id;
-  document.getElementById('modal-title').textContent = 'Edit Produk';
-  document.getElementById('p-name').value = p.name || '';
-  document.getElementById('p-sku').value = p.sku || '';
-  document.getElementById('p-unit').value = p.unit || '';
-  document.getElementById('p-cost').value = p.cost_price || 0;
-  document.getElementById('p-price').value = p.selling_price || p.price || 0;
-  document.getElementById('p-min-price').value = p.min_price || 0;
-  document.getElementById('p-stock').value = p.stock || 0;
-  document.getElementById('p-min-stock').value = p.min_stock || 5;
-  document.getElementById('p-barcode').value = p.barcode || '';
-  document.getElementById('p-desc').value = p.description || '';
-  document.getElementById('p-category').value = p.category_id || '';
-  document.getElementById('p-active').checked = p.is_active !== false;
-  document.getElementById('product-modal').classList.add('active');
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
 }
 
 async function saveProduct() {
-  const name = document.getElementById('p-name').value.trim();
-  if (!name) { Toast.error('Nama produk wajib diisi.'); return; }
-  const btn = document.getElementById('btn-save-product');
-  btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Menyimpan...';
-
   const payload = {
-    name,
-    sku: document.getElementById('p-sku').value || generateSKU(name),
-    category_id: document.getElementById('p-category').value || null,
-    unit: document.getElementById('p-unit').value || 'pcs',
-    cost_price: parseFloat(document.getElementById('p-cost').value) || 0,
-    selling_price: parseFloat(document.getElementById('p-price').value) || 0,
-    price: parseFloat(document.getElementById('p-price').value) || 0,
-    min_price: parseFloat(document.getElementById('p-min-price').value) || 0,
-    stock: parseInt(document.getElementById('p-stock').value) || 0,
-    min_stock: parseInt(document.getElementById('p-min-stock').value) || 5,
-    barcode: document.getElementById('p-barcode').value || null,
-    description: document.getElementById('p-desc').value || null,
-    is_active: document.getElementById('p-active').checked,
+    name: document.getElementById('p-name').value,
+    sku: document.getElementById('p-sku').value,
+    parent_id: document.getElementById('p-parent').value || null,
+    category_id: document.getElementById('p-category').value,
+    cost_price: document.getElementById('p-cost').value,
+    min_selling_price: document.getElementById('p-min-price').value,
+    standard_selling_price: document.getElementById('p-std-price').value,
+    stock: document.getElementById('p-stock').value
   };
-
-  try {
-    if (editingId) {
-      await _sb.from('products').update(payload).eq('id', editingId);
-      Toast.success('Produk berhasil diperbarui!');
-    } else {
-      const user = getCurrentUser();
-      await _sb.from('products').insert({ ...payload, created_by: user?.id });
-      Toast.success('Produk berhasil ditambahkan!');
-    }
-    closeModal('product-modal');
-    loadProducts(); loadStats();
-  } catch(e) { Toast.error(e.message || 'Gagal menyimpan.'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="bx bx-save"></i> Simpan'; }
+  
+  if (editingId) {
+    await KasirkuDB.Products.update(editingId, payload);
+  } else {
+    await KasirkuDB.Products.create(payload);
+  }
+  closeModal('product-modal');
+  loadProducts();
 }
 
-function generateSKU(name) {
-  const prefix = name.replace(/[^a-zA-Z]/g,'').substring(0,3).toUpperCase();
-  return prefix + '-' + Date.now().toString().slice(-6);
+async function editProduct(id) {
+  editingId = id;
+  const p = products.find(x => x.id === id);
+  document.getElementById('p-name').value = p.name;
+  document.getElementById('p-sku').value = p.sku || '';
+  document.getElementById('p-parent').value = p.parent_id || '';
+  document.getElementById('p-category').value = p.category_id || '';
+  document.getElementById('p-cost').value = p.cost_price;
+  document.getElementById('p-min-price').value = p.min_selling_price;
+  document.getElementById('p-std-price').value = p.standard_selling_price;
+  document.getElementById('p-stock').value = p.stock;
+  document.getElementById('modal-title').textContent = 'Edit Produk';
+  document.getElementById('product-modal').classList.add('active');
 }
-
-function deleteProduct(id, name) {
-  Modal.confirm('Hapus Produk', `Yakin ingin menghapus <strong>${name}</strong>? Data stok juga akan terhapus.`,
-    async () => {
-      try { await _sb.from('products').delete().eq('id', id); Toast.success('Produk dihapus.'); loadProducts(); loadStats(); }
-      catch(e) { Toast.error(e.message || 'Gagal menghapus.'); }
-    }
-  );
-}
-
-function openStockModal(id, name, current) {
-  stockProductId = id;
-  document.getElementById('stock-product-name').textContent = name;
-  document.getElementById('stock-current').textContent = current;
-  document.getElementById('stock-qty').value = '';
-  document.getElementById('stock-note').value = '';
-  document.getElementById('stock-type').value = 'add';
-  document.getElementById('stock-modal').classList.add('active');
-}
-
-async function saveStockAdjustment() {
-  const type = document.getElementById('stock-type').value;
-  const qty  = parseInt(document.getElementById('stock-qty').value) || 0;
-  if (qty <= 0) { Toast.error('Jumlah harus lebih dari 0.'); return; }
-
-  const p = products.find(x => x.id === stockProductId);
-  let newStock = p?.stock || 0;
-  if (type === 'add') newStock += qty;
-  else if (type === 'subtract') newStock = Math.max(0, newStock - qty);
-  else if (type === 'set') newStock = qty;
-
-  try {
-    await _sb.from('products').update({ stock: newStock }).eq('id', stockProductId);
-    Toast.success(`Stok berhasil disesuaikan → ${newStock}`);
-    closeModal('stock-modal');
-    loadProducts(); loadStats();
-  } catch(e) { Toast.error(e.message || 'Gagal menyesuaikan stok.'); }
-}
-
-function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
-
-function exportExcel() { Toast.info('Fitur export akan segera tersedia.'); }
 </script>
 </body>
 </html>

@@ -2,7 +2,6 @@
 // Shared sidebar + theme + auth guard
 
 (function () {
-  // ── Theme init (IIFE, berjalan sebelum render) ──
   const theme = localStorage.getItem('tokku_theme') || 'dark';
   if (theme === 'light') document.documentElement.classList.add('light-theme');
 
@@ -12,52 +11,49 @@
       else document.documentElement.classList.remove('light-theme');
     }
   });
-  try {
-    const ch = new BroadcastChannel('tokku_theme_channel');
-    ch.onmessage = e => {
-      if (e.data?.theme === 'light') document.documentElement.classList.add('light-theme');
-      else document.documentElement.classList.remove('light-theme');
-    };
-  } catch(e) {}
 })();
 
-// ── Render sidebar ──
 function renderSidebar(activePage) {
   const navItems = [
-    { section: 'Utama' },
-    { href: 'dashboard.html',        icon: 'bxs-dashboard',        label: 'Dashboard' },
-    { href: 'kasir.html',            icon: 'bx-receipt',           label: 'Kasir / POS', badge: 'HOT' },
-    { href: 'transaksi.html',        icon: 'bx-list-ul',           label: 'Riwayat Transaksi' },
-    { section: 'Inventori' },
-    { href: 'produk.html',           icon: 'bx-package',           label: 'Produk & Stok' },
-    { href: 'kategori.html',         icon: 'bx-folder-open',       label: 'Kategori' },
-    { href: 'stok.html',             icon: 'bx-stats',             label: 'Monitor Stok' },
-    { href: 'laporan-stok.html',     icon: 'bx-trending-up',       label: 'Laporan Stok' },
-    { section: 'Keuangan' },
-    { href: 'keuangan.html',         icon: 'bx-wallet-alt',        label: 'Keuangan & Kas' },
-    { href: 'utang-piutang.html',    icon: 'bx-transfer-alt',      label: 'Utang & Piutang' },
-    { section: 'Relasi' },
-    { href: 'pelanggan.html',        icon: 'bx-group',             label: 'Pelanggan' },
-    { section: 'Laporan' },
-    { href: 'laporan-dashboard.html',icon: 'bx-pie-chart-alt-2',   label: 'Dashboard Laporan' },
-    { href: 'laporan.html',          icon: 'bx-bar-chart-alt-2',   label: 'Laporan Penjualan' },
-    { section: 'Pengaturan' },
-    { href: 'cabang.html',           icon: 'bx-buildings',         label: 'Toko Cabang' },
-    { href: 'pengguna.html',         icon: 'bx-user-circle',       label: 'Manajemen User' },
-    { href: 'pengaturan.html',       icon: 'bx-cog',               label: 'Pengaturan' },
+    { href: 'laporan-dashboard.html', icon: 'bx-pie-chart-alt-2', label: '1. Laporan' },
+    { href: 'keuangan.html',         icon: 'bx-wallet-alt',      label: '2. Kas Harian' },
+    { href: 'transaksi.html',        icon: 'bx-list-ul',         label: '3. Riwayat Transaksi' },
+    { href: 'stok.html',             icon: 'bx-stats',           label: '4. Stok' },
+    { 
+      section: '5. Products',
+      items: [
+        { href: 'produk.html',       icon: 'bx-package',         label: 'SKU Master' },
+        { href: 'kategori.html',     icon: 'bx-folder-open',     label: 'Kategori' },
+      ]
+    },
+    { href: 'retur.html',            icon: 'bx-undo',            label: '6. Retur' },
+    { href: 'pelanggan.html',        icon: 'bx-group',           label: '7. Relasi' },
+    { href: 'deposit.html',          icon: 'bx-credit-card',     label: '8. Deposit' },
+    { href: 'utang-piutang.html',    icon: 'bx-transfer-alt',    label: '9. Utang dan Piutang' },
+    { href: 'pembayaran.html',       icon: 'bx-money',           label: '10. Pembayaran' },
+    { href: 'pengaturan.html',       icon: 'bx-cog',             label: '11. Master' },
+    { section: 'POS' },
+    { href: 'kasir.html',            icon: 'bx-receipt',         label: 'Kasir / POS', badge: 'HOT' },
   ];
 
   const navHTML = navItems.map(item => {
-    if (item.section) return `<div class="nav-section">${item.section}</div>`;
+    if (item.section && !item.items) return `<div class="nav-section">${item.section}</div>`;
+    if (item.section && item.items) {
+      const subItems = item.items.map(sub => {
+        const isActive = activePage === sub.href ? 'active' : '';
+        return `<a href="${sub.href}" class="nav-item sub-item ${isActive}"><i class='bx ${sub.icon}'></i> ${sub.label}</a>`;
+      }).join('');
+      return `<div class="nav-section">${item.section}</div>${subItems}`;
+    }
     const isActive = activePage === item.href ? 'active' : '';
     const badge = item.badge ? `<span class="nav-badge">${item.badge}</span>` : '';
     return `<a href="${item.href}" class="nav-item ${isActive}"><i class='bx ${item.icon}'></i> ${item.label}${badge}</a>`;
   }).join('');
 
   const user = getCurrentUser() || {};
-  const name = user.name || user.email || 'User';
+  const name = user.full_name || user.email || 'User';
   const role = user.role || 'kasir';
-  const roleLabel = { owner: 'Pemilik', manager: 'Manajer', kasir: 'Kasir', stoker: 'Stoker', admin: 'Admin' }[role] || role;
+  const roleLabel = { owner: 'Pemilik', admin: 'Admin', kasir: 'Kasir', stoker: 'Stoker' }[role] || role;
   const initial = name.charAt(0).toUpperCase();
 
   return `
@@ -112,17 +108,8 @@ async function handleLogout() {
   window.location.href = '../index.html';
 }
 
-// ── Auth guard ──
-async function requireAuth() {
-  await window.__KASIRKU_READY__;
-  const isAuth = await KasirkuDB.Auth.isAuthenticated();
-  if (!isAuth) window.location.href = '../index.html';
-}
-
-// ── Toggle theme ──
 function toggleTheme() {
   const isLight = document.documentElement.classList.toggle('light-theme');
   const newTheme = isLight ? 'light' : 'dark';
   localStorage.setItem('tokku_theme', newTheme);
-  try { new BroadcastChannel('tokku_theme_channel').postMessage({ theme: newTheme }); } catch(e) {}
 }
