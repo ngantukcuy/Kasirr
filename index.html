@@ -1025,7 +1025,31 @@
       }, 1400);
     } catch (error) {
       console.error('Register error:', error);
-      showToast(error.message || 'Registrasi gagal.', 'error');
+      const msg = (error && error.message) || '';
+      const alreadyRegistered = /already registered|already exists/i.test(msg);
+
+      if (!alreadyRegistered) {
+        showToast(msg || 'Registrasi gagal.', 'error');
+      } else {
+        // Email sudah terdaftar di server (mis. dari perangkat lain / percobaan sebelumnya),
+        // tapi belum tersimpan di perangkat ini. Verifikasi lewat password, lalu tautkan akun
+        // + PIN yang baru saja diisi ke perangkat ini — tanpa perlu mendaftar ulang.
+        btn.innerHTML = "<div class='spin'></div> Menautkan akun...";
+        try {
+          await KasirkuDB.Auth.login(email, password);
+          const profile = getCurrentUser() || {};
+          saveAccount(profile.full_name || name, email, hashPin(pin, email), encodePassword(password, email), profile.role || role);
+          showToast('Email sudah terdaftar — akun berhasil ditautkan ke perangkat ini!', 'success');
+          selectedAccountEmail = email;
+          setTimeout(() => {
+            resetRegisterForm();
+            switchView('login');
+          }, 1400);
+        } catch (loginErr) {
+          console.error('Link account error:', loginErr);
+          showToast('Email ini sudah terdaftar. Masukkan password akun tersebut yang benar untuk menautkannya ke perangkat ini.', 'error');
+        }
+      }
     } finally {
       btn.disabled = false; btn.innerHTML = "<i class='bx bx-user-plus'></i> Buat Akun";
     }
