@@ -242,7 +242,7 @@ const KasirkuDB = {
         type,
         quantity: qty,
         notes,
-        user_id: user?.id || null,
+        created_by: user?.id || null,
       }).then(() => {}).catch(() => {}); // non-fatal
       return data;
     }

@@ -150,7 +150,8 @@
     const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
     document.getElementById('date-from').value = firstDay;
     document.getElementById('date-to').value = today;
-    document.getElementById('exp-date').value = today;
+    const expDateEl = document.getElementById('exp-date');
+    if (expDateEl) expDateEl.value = today;
     await loadReport();
   }
 

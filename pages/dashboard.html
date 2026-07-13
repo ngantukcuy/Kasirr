@@ -169,13 +169,13 @@
   async function loadSalesChart(days = 30) {
     const end = new Date(); const start = new Date(); start.setDate(start.getDate() - days);
     try {
-      const { data } = await _sb.from('transactions').select('created_at,total').eq('status','completed').gte('created_at', start.toISOString()).lte('created_at', end.toISOString());
+      const { data } = await _sb.from('transactions').select('created_at,total_amount').eq('payment_status','lunas').gte('created_at', start.toISOString()).lte('created_at', end.toISOString());
       const grouped = {};
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date(); d.setDate(d.getDate() - i);
         grouped[d.toISOString().split('T')[0]] = 0;
       }
-      (data || []).forEach(t => { const k = t.created_at.split('T')[0]; if (grouped[k] !== undefined) grouped[k] += (t.total || 0); });
+      (data || []).forEach(t => { const k = t.created_at.split('T')[0]; if (grouped[k] !== undefined) grouped[k] += (t.total_amount || 0); });
       const labels = Object.keys(grouped).map(d => { const dt = new Date(d); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}); });
       const values = Object.values(grouped);
       const ctx = document.getElementById('salesChart').getContext('2d');
@@ -220,8 +220,8 @@
     const today = getToday();
     try {
       // Revenue today
-      const { data: txToday } = await _sb.from('transactions').select('total').eq('status','completed').gte('created_at', today + 'T00:00:00').lte('created_at', today + 'T23:59:59');
-      const revenue = (txToday || []).reduce((s, t) => s + (t.total || 0), 0);
+      const { data: txToday } = await _sb.from('transactions').select('total_amount').eq('payment_status','lunas').gte('created_at', today + 'T00:00:00').lte('created_at', today + 'T23:59:59');
+      const revenue = (txToday || []).reduce((s, t) => s + (t.total_amount || 0), 0);
       document.getElementById('stat-revenue').textContent = formatCurrency(revenue);
       document.getElementById('stat-transactions').textContent = (txToday || []).length;
 
@@ -229,9 +229,7 @@
       const { count: prodCount } = await _sb.from('products').select('id', {count:'exact',head:true}).eq('is_active', true);
       document.getElementById('stat-products').textContent = formatNumber(prodCount || 0);
 
-      // Low stock
-      const { data: lowStock } = await _sb.from('products').select('name,stock,min_stock').eq('is_active',true).not('min_stock','is',null).lte('stock', _sb.from('products').select('min_stock')).limit(8);
-      // Simplified: get products where stock <= min_stock
+      // Low stock (produk dengan stok menipis / habis)
       const { data: lowStockSimple } = await _sb.from('products').select('name,stock,min_stock').eq('is_active',true).lte('stock', 10).gt('stock', 0).order('stock').limit(8);
       const { data: zeroStock } = await _sb.from('products').select('name,stock').eq('is_active',true).eq('stock', 0).limit(5);
       const allLow = [...(zeroStock||[]).map(p => ({...p, min_stock:1})), ...(lowStockSimple||[])].slice(0, 8);
@@ -251,15 +249,15 @@
       }
 
       // Recent transactions
-      const { data: recentTx } = await _sb.from('transactions').select('id,invoice_no,total,payment_method,created_at,customers(name)').eq('status','completed').order('created_at', {ascending:false}).limit(6);
+      const { data: recentTx } = await _sb.from('transactions').select('id,invoice_number,total_amount,payment_method,created_at,customers(name)').eq('payment_status','lunas').order('created_at', {ascending:false}).limit(6);
       document.getElementById('recent-tx-body').innerHTML = recentTx?.length ? recentTx.map(t => `
         <div class="activity-item">
           <div class="activity-icon" style="background:var(--brand-glow);color:var(--brand-light)"><i class='bx bx-receipt'></i></div>
           <div class="activity-info">
-            <div class="activity-title">${t.invoice_no || 'TRX-'+t.id?.slice(0,6)}</div>
+            <div class="activity-title">${t.invoice_number || 'TRX-'+t.id?.slice(0,6)}</div>
             <div class="activity-sub">${t.customers?.name || 'Umum'} · ${formatDate(t.created_at,'datetime')}</div>
           </div>
-          <div class="activity-amount">${formatCurrency(t.total)}</div>
+          <div class="activity-amount">${formatCurrency(t.total_amount)}</div>
         </div>
       `).join('') : '<div class="table-empty"><i class="bx bx-receipt"></i><p>Belum ada transaksi hari ini</p></div>';
 

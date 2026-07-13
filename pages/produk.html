@@ -115,6 +115,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase.js"></script>
 <script src="../js/app.js?v=17"></script>
+<script src="../js/helpers.js?v=1"></script>
 <script src="_sidebar.js"></script>
 <script>
 let products = [], categories = [], editingId = null;
@@ -138,6 +139,29 @@ async function loadProducts() {
   renderTable(products);
   document.getElementById('p-parent').innerHTML = '<option value="">-- Bukan Produk Eceran --</option>' + 
     products.filter(p => !p.parent_id).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function handleSearch(v) {
+  const q = (v || '').trim().toLowerCase();
+  if (!q) { renderTable(products); return; }
+  const filtered = products.filter(p =>
+    (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+function exportExcel() {
+  if (!products.length) { Toast?.warning ? Toast.warning('Tidak ada data produk untuk diekspor.') : alert('Tidak ada data produk untuk diekspor.'); return; }
+  const rows = products.map(p => ({
+    Nama: p.name,
+    SKU: p.sku || '',
+    Kategori: p.categories?.name || '',
+    'Harga Modal': p.cost_price,
+    'Harga Jual Minimum': p.min_selling_price,
+    'Harga Jual Standar': p.standard_selling_price,
+    Stok: p.stock
+  }));
+  exportToCSV(rows, 'daftar-produk');
 }
 
 function renderTable(rows) {

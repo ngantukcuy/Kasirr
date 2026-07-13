@@ -1,0 +1,21 @@
+{
+  "name": "kasirku-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for KASIRKU (Tokku) POS app using Playwright",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:auth": "playwright test tests/auth",
+    "test:pages": "playwright test tests/pages",
+    "test:pos": "playwright test tests/pos",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:4173"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "dotenv": "^16.4.5"
+  }
+}

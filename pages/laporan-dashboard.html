@@ -326,8 +326,8 @@
         _sb.from('stock_movements').select('*, products(name)')
           .gte('created_at', from + 'T00:00:00').lte('created_at', to + 'T23:59:59'),
         _sb.from('expenses').select('*')
-          .gte('date', from).lte('date', to)
-          .order('date', { ascending: false })
+          .gte('created_at', from + 'T00:00:00').lte('created_at', to + 'T23:59:59')
+          .order('created_at', { ascending: false })
       ]);
 
       salesData = salesRes.data || [];
