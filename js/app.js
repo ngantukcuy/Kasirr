@@ -145,7 +145,7 @@ const KasirkuDB = {
     async login(email, password) {
       const { data, error } = await _sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const profile = await KasirkuDB.Auth._loadProfile(data.user.id);
+      const profile = await KasirkuDB.Auth._loadProfile(data.user.id, { email });
       _saveUser(profile);
       return data;
     },
@@ -158,24 +158,40 @@ const KasirkuDB = {
       await _waitReady();
       const { data: { session } } = await _sb.auth.getSession();
       if (!session) return false;
-      try { const profile = await KasirkuDB.Auth._loadProfile(session.user.id); _saveUser(profile); } catch {}
+      try { const profile = await KasirkuDB.Auth._loadProfile(session.user.id, { email: session.user.email }); _saveUser(profile); } catch (e) { console.warn('[KASIRKU] Gagal memuat profil:', e.message); }
       return true;
     },
     async register(email, password, fullName, role = 'kasir') {
       const { data, error } = await _sb.auth.signUp({ email, password });
       if (error) throw error;
       if (data.user) {
+        // Coba buat baris profil sekarang. Kalau gagal (mis. butuh verifikasi email dulu
+        // sehingga belum ada sesi aktif), jangan gagalkan seluruh registrasi — _loadProfile
+        // akan membuatnya otomatis (self-heal) saat login pertama kali berhasil.
         const { error: profileError } = await _sb.from('profiles').upsert({
           id: data.user.id, email, full_name: fullName, role,
         });
-        if (profileError) throw profileError;
+        if (profileError) console.warn('[KASIRKU] Profil belum bisa dibuat saat registrasi, akan dibuat otomatis saat login:', profileError.message);
       }
       return data;
     },
-    async _loadProfile(userId) {
-      const { data, error } = await _sb.from('profiles').select('*').eq('id', userId).single();
+    async _loadProfile(userId, fallback) {
+      const { data, error } = await _sb.from('profiles').select('*').eq('id', userId).maybeSingle();
       if (error) throw error;
-      return data;
+      if (data) return data;
+
+      // Baris profil belum ada untuk user ini — buat otomatis (self-heal) memakai data
+      // yang tersedia, supaya login/registrasi tidak gagal hanya karena profil kosong.
+      fallback = fallback || {};
+      const seed = {
+        id: userId,
+        email: fallback.email || '',
+        full_name: fallback.full_name || (fallback.email ? fallback.email.split('@')[0] : 'Pengguna'),
+        role: fallback.role || 'kasir',
+      };
+      const { data: created, error: createErr } = await _sb.from('profiles').upsert(seed).select().single();
+      if (createErr) throw createErr;
+      return created;
     }
   },
 
