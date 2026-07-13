@@ -505,14 +505,39 @@
             <p>Pilih akun Anda, lalu masukkan PIN untuk melanjutkan.</p>
           </div>
 
-          <!-- Empty state: belum ada akun tersimpan -->
+          <!-- Empty state: belum ada akun tersimpan di perangkat ini -->
           <div id="login-empty" hidden>
             <div class="empty-state">
               <span class="icon"><i class='bx bx-rocket'></i></span>
-              <h3>Belum ada akun</h3>
-              <p>Daftarkan akun baru di perangkat ini untuk mulai menggunakan Tokku.</p>
-              <button type="button" class="btn-primary" data-switch="register"><i class='bx bx-user-plus'></i> Daftar Sekarang</button>
+              <h3>Belum ada akun di perangkat ini</h3>
+              <p>Sudah pernah daftar sebelumnya? Masuk pakai email &amp; password untuk memuat akun Anda di perangkat ini.</p>
+              <button type="button" class="btn-primary" id="btn-show-manual-login-empty"><i class='bx bx-log-in'></i> Masuk dengan Email</button>
+              <div class="spacer-16"></div>
+              <p class="switch-text">Belum punya akun sama sekali? <a data-switch="register">Daftar Sekarang</a></p>
             </div>
+          </div>
+
+          <!-- Manual email/password login: jalur login asli ke Supabase, tidak tergantung localStorage -->
+          <div id="login-manual" hidden>
+            <div class="field-group">
+              <label class="field-label">Email</label>
+              <div class="input-box">
+                <input type="email" id="manual-email" placeholder="nama@email.com" autocomplete="email">
+                <i class='bx bxs-envelope field-icon'></i>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Password</label>
+              <div class="input-box">
+                <input type="password" id="manual-password" placeholder="Password akun Anda" autocomplete="current-password">
+                <i class='bx bxs-hide field-icon clickable' id="manual-pwd-toggle"></i>
+              </div>
+            </div>
+            <button type="button" class="btn-primary" id="btn-manual-login">
+              <i class='bx bx-log-in'></i> Masuk
+            </button>
+            <div class="spacer-16"></div>
+            <button type="button" class="btn-ghost" id="btn-back-to-picker"><i class='bx bx-arrow-back'></i> Kembali</button>
           </div>
 
           <!-- Main state: ada akun tersimpan -->
@@ -559,6 +584,7 @@
 
             <div class="spacer-16"></div>
             <button type="button" class="btn-ghost" id="btn-add-account"><i class='bx bx-user-plus'></i> Tambah akun baru</button>
+            <button type="button" class="btn-ghost" id="btn-show-manual-login-main"><i class='bx bx-log-in'></i> Masuk pakai email lain</button>
           </div>
         </section>
 
@@ -928,8 +954,10 @@
 
   function showAccountSelector() {
     const accounts = getSavedAccounts();
-    const emptyEl = document.getElementById('login-empty');
-    const mainEl  = document.getElementById('login-main');
+    const emptyEl  = document.getElementById('login-empty');
+    const mainEl   = document.getElementById('login-main');
+    const manualEl = document.getElementById('login-manual');
+    manualEl.hidden = true;
     if (accounts.length === 0) {
       emptyEl.hidden = false; mainEl.hidden = true;
       return;
@@ -995,6 +1023,49 @@
   }
 
   document.getElementById('btn-add-account').addEventListener('click', () => switchView('register'));
+
+  /* ══════════════ Manual login (email/password langsung ke Supabase) ══════════════ */
+  function showManualLogin() {
+    document.getElementById('login-empty').hidden = true;
+    document.getElementById('login-main').hidden = true;
+    document.getElementById('login-manual').hidden = false;
+    setTimeout(() => { document.getElementById('manual-email').focus(); }, 100);
+  }
+  document.getElementById('btn-show-manual-login-empty').addEventListener('click', showManualLogin);
+  document.getElementById('btn-show-manual-login-main').addEventListener('click', showManualLogin);
+  document.getElementById('btn-back-to-picker').addEventListener('click', () => {
+    document.getElementById('login-manual').hidden = true;
+    showAccountSelector();
+  });
+  document.getElementById('manual-pwd-toggle').addEventListener('click', function () { togglePwd('manual-password', this); });
+
+  async function handleManualLogin() {
+    const email = document.getElementById('manual-email').value.trim();
+    const password = document.getElementById('manual-password').value;
+    if (!email || !password) { showToast('Email dan password wajib diisi.', 'error'); return; }
+
+    const btn = document.getElementById('btn-manual-login');
+    btn.disabled = true; btn.innerHTML = "<div class='spin'></div> Memproses...";
+    try {
+      await KasirkuDB.Auth.login(email, password);
+      const profile = getCurrentUser() || {};
+      // Cache akun ini di perangkat sekarang supaya lain kali langsung muncul di PIN-picker.
+      // Belum ada PIN untuk perangkat ini — nanti diminta atur PIN via menu Pengaturan,
+      // sementara itu bisa pakai tombol "Masuk Langsung".
+      saveAccount(profile.full_name || email.split('@')[0], email, null, encodePassword(password, email), profile.role || 'kasir');
+      goDashboard();
+    } catch (e) {
+      const msg = (e && e.message) || '';
+      const friendly = /invalid login credentials/i.test(msg)
+        ? 'Email atau password salah.'
+        : (msg || 'Gagal masuk. Coba lagi.');
+      showToast(friendly, 'error');
+    } finally {
+      btn.disabled = false; btn.innerHTML = "<i class='bx bx-log-in'></i> Masuk";
+    }
+  }
+  document.getElementById('btn-manual-login').addEventListener('click', handleManualLogin);
+  document.getElementById('manual-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleManualLogin(); });
 
   /* ══════════════ Register handler ══════════════ */
   async function handleRegister() {
