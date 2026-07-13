@@ -1,766 +1,823 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tokku — Login</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Tokku">
-  <meta name="theme-color" content="#1a3a6e">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tokku — Masuk</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tokku">
+<meta name="theme-color" content="#1a3a8c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    :root {
-      --blue:    #2a5fdc;
-      --blue-dk: #1a3a8c;
-      --blue-lt: #5b8aff;
-      --accent:  #f0c040;
-      --bg:      #f0f4ff;
-      --white:   #ffffff;
-      --text:    #0d1b3e;
-      --muted:   #6b7fa3;
-      --border:  #d6dff5;
-      --panel-w: 420px;
+  :root {
+    --blue:      #2a5fdc;
+    --blue-dk:   #12245c;
+    --blue-dk2:  #1a3a8c;
+    --blue-lt:   #5b8aff;
+    --accent:    #f7c948;
+    --bg:        #eef2fc;
+    --white:     #ffffff;
+    --text:      #0d1b3e;
+    --muted:     #66759c;
+    --muted-lt:  #9aa8cc;
+    --border:    #dde5f8;
+    --danger:    #ef4444;
+    --success:   #16a34a;
+    --r-lg:      22px;
+    --r-md:      16px;
+    --r-sm:      12px;
+    --shadow:    0 20px 50px -12px rgba(18, 36, 92, 0.18);
+    --nav-h:     72px;
+    color-scheme: light;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 65% 45% at 12% 8%, rgba(42,95,220,0.14) 0%, transparent 62%),
+      radial-gradient(ellipse 55% 45% at 92% 96%, rgba(91,138,255,0.12) 0%, transparent 58%);
+  }
+
+  button, input, select { font-family: inherit; }
+  ::selection { background: rgba(42,95,220,0.18); }
+
+  /* ══════════════ APP SHELL / ADAPTIVE LAYOUT ══════════════ */
+  .app-shell {
+    position: relative; z-index: 1;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Brand panel — desktop only (split layout) */
+  .brand-panel { display: none; }
+
+  .auth-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-height: 100dvh;
+  }
+
+  .auth-scroll {
+    width: 100%;
+    max-width: 460px;
+    padding: max(22px, env(safe-area-inset-top)) 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + 28px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mini-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+  }
+  .mini-logo .dot { color: var(--accent); }
+  .mini-logo-badge {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-dk2));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1rem; box-shadow: 0 6px 16px rgba(42,95,220,0.35);
+  }
+
+  .auth-card {
+    background: transparent;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    animation: cardIn 0.5s cubic-bezier(.2,.8,.2,1);
+  }
+
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ══════════════ VIEW SWITCHING ══════════════ */
+  .auth-view { display: none; }
+  .auth-view.active { display: flex; flex-direction: column; animation: viewIn 0.4s cubic-bezier(.2,.8,.2,1); }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .view-head { margin-bottom: 22px; }
+  .view-head h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 5px;
+  }
+  .view-head p { font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
+
+  /* ══════════════ FIELD GROUPS / INPUTS ══════════════ */
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .field-label .req { color: var(--blue); }
+
+  .input-box { position: relative; }
+  .input-box input,
+  .input-box select {
+    width: 100%;
+    padding: 14px 44px 14px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 0.92rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .input-box input::placeholder { color: var(--muted-lt); }
+  .input-box input:focus,
+  .input-box select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(42,95,220,0.12);
+  }
+  .input-box input.field-error { border-color: var(--danger); }
+  .input-box i.field-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 19px; color: var(--muted-lt); pointer-events: none;
+  }
+  .input-box i.clickable { pointer-events: all; cursor: pointer; transition: color 0.2s; }
+  .input-box i.clickable:hover { color: var(--blue); }
+  .input-box.select-box::after {
+    content: '';
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%) translateY(2px);
+    border: 5px solid transparent; border-top-color: var(--muted-lt);
+    pointer-events: none;
+  }
+  .field-msg { font-size: 0.72rem; margin-top: 6px; display: flex; align-items: center; gap: 4px; min-height: 15px; }
+  .field-msg.ok { color: var(--success); }
+  .field-msg.err { color: var(--danger); }
+
+  .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+  .strength-bar div { flex: 1; height: 4px; border-radius: 3px; background: var(--border); transition: background 0.3s; }
+
+  /* ══════════════ ACCOUNT PICKER ══════════════ */
+  .account-picker { position: relative; }
+  .account-picker-trigger {
+    width: 100%;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .account-picker-trigger:hover { border-color: var(--blue-lt); }
+  .account-picker-trigger:focus-visible,
+  .account-picker.open .account-picker-trigger { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(42,95,220,0.12); }
+  .account-picker.single .account-picker-trigger { cursor: default; }
+  .account-picker.single .account-picker-trigger:hover { border-color: var(--border); }
+
+  .avatar {
+    width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--blue), #5b3adc);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: #fff;
+  }
+  .account-meta { flex: 1; min-width: 0; }
+  .account-name { font-weight: 700; font-size: 0.9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .account-email { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chevron { font-size: 20px; color: var(--muted); flex-shrink: 0; transition: transform 0.25s; }
+  .account-picker.open .chevron { transform: rotate(180deg); }
+
+  .account-dropdown {
+    position: absolute; left: 0; right: 0; top: calc(100% + 8px);
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    box-shadow: 0 16px 40px rgba(18,36,92,0.18);
+    z-index: 30;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.28s cubic-bezier(.2,.8,.2,1), opacity 0.2s;
+    pointer-events: none;
+  }
+  .account-picker.open .account-dropdown {
+    max-height: 280px; opacity: 1; pointer-events: all;
+    overflow-y: auto;
+  }
+  .dropdown-account-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .dropdown-account-item:last-child { border-bottom: none; }
+  .dropdown-account-item:hover { background: var(--bg); }
+  .dropdown-account-item.active { background: rgba(42,95,220,0.08); }
+  .dropdown-account-item .avatar { width: 32px; height: 32px; font-size: 0.85rem; border-radius: 9px; }
+  .dropdown-account-item .account-name { font-size: 0.85rem; }
+  .dropdown-account-item .account-email { font-size: 0.72rem; }
+  .dropdown-account-item .role-chip {
+    margin-left: auto; font-size: 0.65rem; font-weight: 700; color: var(--blue);
+    background: rgba(42,95,220,0.08); padding: 3px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+  .dropdown-empty { padding: 20px; text-align: center; font-size: 0.8rem; color: var(--muted); }
+  .dropdown-footer {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 14px; cursor: pointer; color: var(--blue); font-weight: 700; font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+  }
+  .dropdown-footer:hover { background: var(--bg); }
+
+  /* ══════════════ PIN GRID ══════════════ */
+  .pin-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .pin-dot {
+    width: 100%; height: 50px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    text-align: center;
+    font-size: 1.35rem; font-weight: 800; color: var(--blue);
+    outline: none; caret-color: transparent;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+    font-family: 'Syne', sans-serif;
+  }
+  .pin-dot:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(42,95,220,0.12); }
+  .pin-dot.filled { transform: scale(1.02); }
+  .pin-dot.pin-shake { animation: shake 0.4s; border-color: var(--danger); }
+  @keyframes shake { 20%,60%{transform:translateX(-5px);} 40%,80%{transform:translateX(5px);} }
+
+  .pin-for-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+  .pin-for-label strong { color: var(--blue); }
+  .field-hint { font-size: 0.72rem; color: var(--muted-lt); margin-top: 8px; }
+
+  /* ══════════════ EMPTY / NO-PIN STATES ══════════════ */
+  .empty-state { text-align: center; padding: 26px 8px 10px; }
+  .empty-state .icon {
+    width: 68px; height: 68px; margin: 0 auto 16px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(42,95,220,0.12), rgba(91,58,220,0.12));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--blue);
+  }
+  .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+  .empty-state p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+
+  .no-pin-box {
+    background: rgba(42,95,220,0.05);
+    border: 1px solid rgba(42,95,220,0.15);
+    border-radius: var(--r-sm);
+    padding: 16px; text-align: center;
+  }
+  .no-pin-box p { font-size: 0.83rem; color: var(--blue); margin-bottom: 4px; font-weight: 600; }
+  .no-pin-box .sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 14px; }
+
+  /* ══════════════ BUTTONS ══════════════ */
+  .btn-primary {
+    width: 100%; height: 50px;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dk2) 100%);
+    border-radius: var(--r-sm); border: none; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 10px 24px rgba(42,95,220,0.32);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  }
+  .btn-primary:active { transform: translateY(1px) scale(0.99); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    width: 100%; height: 46px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm); cursor: pointer;
+    font-size: 0.84rem; font-weight: 700; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--blue); color: var(--blue); background: rgba(42,95,220,0.04); }
+
+  .switch-text {
+    text-align: center; margin-top: 20px; font-size: 0.82rem; color: var(--muted);
+  }
+  .switch-text a { color: var(--blue); font-weight: 700; text-decoration: none; cursor: pointer; }
+  .switch-text a:hover { text-decoration: underline; }
+
+  .spacer-16 { height: 16px; }
+
+  /* ══════════════ TOAST ══════════════ */
+  .toast-container { position: fixed; top: max(16px, env(safe-area-inset-top)); right: 16px; left: 16px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+  .toast {
+    padding: 12px 16px; border-radius: var(--r-sm);
+    font-size: 0.84rem; font-weight: 600; color: #fff;
+    animation: toastIn 0.25s ease;
+    max-width: 320px; width: max-content;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    pointer-events: all;
+  }
+  @keyframes toastIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.success { background: var(--success); }
+  .toast.error   { background: var(--danger); }
+  .toast.info    { background: var(--blue); }
+
+  .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══════════════ BOTTOM NAVIGATION ══════════════ */
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    display: flex;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-top: 1px solid rgba(221,229,248,0.8);
+    box-shadow: 0 -8px 30px rgba(18,36,92,0.08);
+  }
+  .bottom-nav-inner { position: relative; display: flex; flex: 1; }
+  .nav-indicator {
+    position: absolute; top: 4px; left: 0; height: calc(100% - 8px);
+    width: 25%;
+    background: linear-gradient(135deg, rgba(42,95,220,0.12), rgba(91,58,220,0.10));
+    border-radius: 14px;
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1);
+    z-index: 0;
+  }
+  .nav-item {
+    position: relative; z-index: 1;
+    flex: 1;
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    padding: 8px 4px 6px;
+    color: var(--muted);
+    transition: color 0.2s, transform 0.15s;
+  }
+  .nav-item:active { transform: scale(0.94); }
+  .nav-item i { font-size: 21px; transition: transform 0.25s; }
+  .nav-item span { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.01em; }
+  .nav-item.active { color: var(--blue); }
+  .nav-item.active i { transform: translateY(-1px); }
+  .nav-dot {
+    position: absolute; top: 4px; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent); opacity: 0; transition: opacity 0.2s;
+  }
+  .nav-item.active .nav-dot { opacity: 1; }
+
+  /* ══════════════ TABLET (≥640px): centered card ══════════════ */
+  @media (min-width: 640px) {
+    .auth-panel { align-items: center; padding: 32px 24px; min-height: 100dvh; }
+    .auth-scroll {
+      max-width: 480px;
+      padding: 40px 40px calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
+      background: var(--white);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
     }
+    .mini-logo { margin-bottom: 26px; }
+  }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      background: var(--bg);
+  /* ══════════════ DESKTOP (≥1024px): split layout ══════════════ */
+  @media (min-width: 1024px) {
+    .app-shell { flex-direction: row; }
+
+    .brand-panel {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex: 1 1 44%;
+      position: relative;
+      min-height: 100dvh;
+      align-items: center; justify-content: center;
+      padding: 60px;
+      background: linear-gradient(155deg, var(--blue-dk) 0%, var(--blue-dk2) 45%, var(--blue) 100%);
       overflow: hidden;
     }
-
-    /* Background decoration */
-    body::before {
+    .brand-panel::before {
       content: '';
-      position: fixed; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 70% 60% at 15% 10%, rgba(42,95,220,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 85% 90%, rgba(91,138,255,0.1) 0%, transparent 55%);
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='1.4' fill='%23ffffff' fill-opacity='0.08'/%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.8;
+    }
+    .brand-blob {
+      position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.35;
+    }
+    .brand-blob.b1 { width: 340px; height: 340px; background: var(--blue-lt); top: -80px; right: -80px; }
+    .brand-blob.b2 { width: 280px; height: 280px; background: var(--accent); bottom: -100px; left: -60px; opacity: 0.18; }
+
+    .brand-inner { position: relative; z-index: 1; max-width: 420px; color: #fff; }
+    .brand-logo { font-family: 'Syne', sans-serif; font-size: 2.1rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+    .brand-logo span { color: var(--accent); }
+    .brand-tag { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.65; margin-bottom: 36px; }
+    .brand-headline { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; line-height: 1.3; margin-bottom: 14px; }
+    .brand-desc { font-size: 0.92rem; opacity: 0.8; line-height: 1.7; margin-bottom: 34px; }
+
+    .brand-benefits { display: flex; flex-direction: column; gap: 16px; }
+    .brand-benefit { display: flex; align-items: center; gap: 12px; font-size: 0.86rem; opacity: 0.92; }
+    .brand-benefit .bi {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
     }
 
-    /* ── Container ── */
-    .container {
-      position: relative;
-      width: 860px;
-      max-width: calc(100vw - 32px);
-      height: 580px;
-      background: var(--white);
-      border-radius: 28px;
-      box-shadow: 0 8px 60px rgba(20,50,130,0.18), 0 1px 0 rgba(255,255,255,0.9) inset;
-      overflow: hidden;
-      display: flex;
-    }
-
-    /* ── Form boxes ── */
-    .form-box {
-      position: absolute;
-      top: 0; right: 0;
-      width: 50%; height: 100%;
-      background: var(--white);
-      display: flex;
-      align-items: center;
-      padding: 40px 44px;
-      z-index: 1;
-      transition: right 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                  visibility 0s linear 0s;
-    }
-    .form-box form, .form-box .form-inner { width: 100%; }
-
-    .form-box.login  { right: 0; }
-    .form-box.register {
-      right: 0;
-      visibility: hidden;
-      transition: right 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                  visibility 0s linear 1s;
-    }
-
-    .container.active .form-box.login {
-      right: 50%;
-      transition: right 0.65s cubic-bezier(.77,0,.18,1) 0.3s;
-    }
-    .container.active .form-box.register {
-      right: 50%;
-      visibility: visible;
-      transition: right 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                  visibility 0s linear 0s;
-    }
-
-    /* ── Form typography ── */
-    .form-box h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 4px;
-      letter-spacing: -0.5px;
-    }
-    .form-box .subtitle {
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 24px;
-    }
-
-    /* ── Inputs ── */
-    .input-box {
-      position: relative;
-      margin-bottom: 14px;
-    }
-    .input-box input,
-    .input-box select {
-      width: 100%;
-      padding: 12px 42px 12px 16px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.875rem;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    .input-box input::placeholder { color: #b0bcd8; }
-    .input-box input:focus,
-    .input-box select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(42,95,220,0.12);
-    }
-    .input-box i {
-      position: absolute;
-      right: 13px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      color: #b0bcd8;
-      pointer-events: none;
-    }
-    .input-box i.clickable {
-      pointer-events: all;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .input-box i.clickable:hover { color: var(--blue); }
-
-    /* Dropdown arrow */
-    .input-box.select-box::after {
-      content: '';
-      position: absolute;
-      right: 14px; top: 50%;
-      transform: translateY(-50%);
-      border: 5px solid transparent;
-      border-top-color: #b0bcd8;
-      pointer-events: none;
-      margin-top: 3px;
-    }
-
-    /* ── PIN Grid ── */
-    .pin-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 6px;
-      display: block;
-    }
-    .pin-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-    .pin-dot {
-      width: 100%; height: 44px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      text-align: center;
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--blue);
-      outline: none;
-      caret-color: transparent;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      padding: 0;
-      font-family: 'Syne', sans-serif;
-    }
-    .pin-dot:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(42,95,220,0.12);
-    }
-
-    /* ── Account dropdown ── */
-    .account-dropdown-wrap {
-      margin-bottom: 4px;
-    }
-    .selected-account-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-    .selected-account-card:hover { border-color: var(--blue); }
-    .account-avatar {
-      width: 36px; height: 36px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, var(--blue), #5b3adc);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-weight: 800; font-size: 1rem; color: #fff;
-      flex-shrink: 0;
-    }
-    .acc-info .acc-name { font-weight: 600; font-size: 0.875rem; color: var(--text); }
-    .acc-info .acc-role { font-size: 0.72rem; color: var(--muted); }
-    .acc-chevron { margin-left: auto; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
-    .acc-chevron.open { transform: rotate(180deg); }
-
-    /* Dropdown list */
-    .account-dropdown-list {
-      display: none;
-      position: absolute;
-      left: 0; right: 0;
-      top: calc(100% + 6px);
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(20,50,130,0.12);
-      z-index: 10;
-      overflow: hidden;
-      max-height: 220px;
-      overflow-y: auto;
-    }
-    .account-dropdown-list.open { display: block; }
-    .dropdown-account-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .dropdown-account-item:hover { background: var(--bg); }
-    .dropdown-account-item.active { background: rgba(42,95,220,0.07); }
-    .dropdown-no-account {
-      padding: 20px; text-align: center;
-      font-size: 0.82rem; color: var(--muted);
-    }
-
-    /* ── PIN section in login ── */
-    #pin-section { margin-top: 4px; }
-    .pin-for-label {
-      font-size: 0.75rem; color: var(--muted);
-      text-align: center; margin-bottom: 8px;
-    }
-    .pin-for-label strong { color: var(--blue); }
-    .pin-hint { font-size: 0.7rem; color: #b0bcd8; text-align: center; margin-top: -8px; margin-bottom: 14px; }
-
-    /* No-PIN notice */
-    .no-pin-box {
-      background: rgba(42,95,220,0.05);
-      border: 1px solid rgba(42,95,220,0.15);
-      border-radius: 10px;
-      padding: 14px;
-      text-align: center;
-      margin-top: 4px;
-    }
-    .no-pin-box p { font-size: 0.8rem; color: var(--blue); margin-bottom: 3px; }
-    .no-pin-box .sub { font-size: 0.73rem; color: var(--muted); margin-bottom: 12px; }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 10px 0 18px;
-    }
-    .empty-state .icon { font-size: 42px; display: block; margin-bottom: 10px; }
-    .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 5px; }
-    .empty-state p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-
-    /* ── Buttons ── */
-    .btn {
-      width: 100%; height: 46px;
-      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dk) 100%);
-      border-radius: 10px; border: none; cursor: pointer;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.9rem; font-weight: 700;
-      color: #fff;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 4px 16px rgba(42,95,220,0.3);
-      transition: all 0.2s;
-      margin-bottom: 10px;
-    }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(42,95,220,0.4); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-ghost {
-      width: 100%; height: 42px;
+    .auth-panel { flex: 1 1 56%; padding: 40px; align-items: center; }
+    .auth-scroll {
+      max-width: 420px;
+      box-shadow: none;
+      border-radius: 0;
       background: transparent;
-      border: 1.5px solid var(--border);
-      border-radius: 10px; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem; font-weight: 600;
-      color: var(--muted);
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all 0.2s;
-      margin-bottom: 0;
+      padding: 20px 4px 20px;
     }
-    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); background: rgba(42,95,220,0.04); }
+    .mini-logo { display: none; }
 
-    .switch-text {
-      text-align: center;
-      margin-top: 14px;
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-    .switch-text a {
-      color: var(--blue);
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .switch-text a:hover { text-decoration: underline; }
+    .bottom-nav { display: none; }
+  }
 
-    /* Password strength */
-    .strength-bar { display: flex; gap: 3px; margin-top: 6px; }
-    .strength-bar div { flex: 1; height: 3px; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+  @media (max-width: 380px) {
+    .auth-scroll { padding-left: 16px; padding-right: 16px; }
+  }
 
-    /* ── Toggle Panel (animated sliding overlay) ── */
-    .toggle-box {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 2;
-    }
-    /* The sliding blue overlay */
-    .toggle-box::before {
-      content: '';
-      position: absolute;
-      left: -250%;
-      width: 300%;
-      height: 100%;
-      background: linear-gradient(135deg, var(--blue-dk) 0%, var(--blue) 50%, #4a7aee 100%);
-      border-radius: 160px;
-      z-index: 2;
-      transition: left 1.6s cubic-bezier(.77,0,.18,1);
-      pointer-events: none;
-    }
-    .toggle-box::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='%23ffffff' fill-opacity='0.06'/%3E%3C/g%3E%3C/svg%3E");
-      z-index: 1;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-
-    .container.active .toggle-box::before { left: 50%; }
-
-    .toggle-panel {
-      position: absolute;
-      width: 50%; height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 48px 40px;
-      z-index: 3;
-      color: #fff;
-      pointer-events: all;
-      transition: transform 0.65s cubic-bezier(.77,0,.18,1);
-    }
-
-    .toggle-panel .tp-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 2rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 6px;
-    }
-    .toggle-panel .tp-logo span { color: var(--accent); }
-    .toggle-panel .tp-sub {
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      opacity: 0.6;
-      margin-bottom: 28px;
-    }
-    .toggle-panel h2 {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
-    .toggle-panel p {
-      font-size: 0.82rem;
-      opacity: 0.75;
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-    .toggle-panel .btn-outline-tp {
-      padding: 10px 32px;
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.7);
-      border-radius: 40px;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.03em;
-    }
-    .toggle-panel .btn-outline-tp:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: #fff;
-    }
-
-    .toggle-panel.toggle-left {
-      left: 0;
-      transition-delay: 0.4s;
-    }
-    .container.active .toggle-panel.toggle-left {
-      transform: translateX(-100%);
-      transition-delay: 0s;
-    }
-    .toggle-panel.toggle-right {
-      right: 0;
-      transform: translateX(100%);
-      transition-delay: 0s;
-    }
-    .container.active .toggle-panel.toggle-right {
-      transform: translateX(0);
-      transition-delay: 0.4s;
-    }
-
-    /* Features list in toggle */
-    .tp-features {
-      display: flex; flex-direction: column;
-      gap: 7px; margin-bottom: 28px; align-self: stretch;
-    }
-    .tp-feat {
-      display: flex; align-items: center; gap: 9px;
-      font-size: 0.78rem; opacity: 0.82;
-    }
-    .tp-feat-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent); flex-shrink: 0;
-    }
-
-    /* ── Toast ── */
-    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 11px 16px; border-radius: 10px;
-      font-size: 0.845rem; font-weight: 600; color: #fff;
-      animation: toastIn 0.25s ease;
-      max-width: 300px;
-      display: flex; align-items: center; gap: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    }
-    @keyframes toastIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .toast.success { background: #10b981; }
-    .toast.error   { background: #ef4444; }
-    .toast.info    { background: var(--blue); }
-
-    /* Spinner */
-    .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Mobile ── */
-    @media (max-width: 680px) {
-      .container {
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-        flex-direction: column;
-      }
-      .form-box {
-        width: 100%; height: 70%;
-        top: auto; bottom: 0; right: 0 !important;
-        padding: 28px 24px;
-        transition: bottom 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                    visibility 0s linear 0s;
-      }
-      .form-box.register {
-        visibility: hidden;
-        transition: bottom 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                    visibility 0s linear 1s;
-      }
-      .container.active .form-box.login { bottom: 70%; right: 0 !important; }
-      .container.active .form-box.register {
-        bottom: 0; right: 0 !important;
-        visibility: visible;
-        transition: bottom 0.65s cubic-bezier(.77,0,.18,1) 0.3s,
-                    visibility 0s linear 0s;
-      }
-      .toggle-box::before {
-        left: 0; top: -250%; right: auto;
-        width: 100%; height: 300%;
-        border-radius: 0 0 40vw 40vw;
-        transition: top 1.6s cubic-bezier(.77,0,.18,1);
-      }
-      .container.active .toggle-box::before { top: 70%; left: 0; }
-      .toggle-panel { width: 100%; height: 30%; padding: 20px 28px; }
-      .toggle-panel.toggle-left { top: 0; left: 0; transform: none; transition: top 0.65s cubic-bezier(.77,0,.18,1) 0.4s; }
-      .container.active .toggle-panel.toggle-left { top: -30%; transform: none; transition-delay: 0s; }
-      .toggle-panel.toggle-right { right: 0; bottom: -30%; top: auto; transform: none; transition: bottom 0.65s cubic-bezier(.77,0,.18,1) 0s; }
-      .container.active .toggle-panel.toggle-right { bottom: 0; transform: none; transition-delay: 0.4s; }
-      .tp-features { display: none; }
-      .toggle-panel .tp-logo { font-size: 1.5rem; margin-bottom: 4px; }
-      .toggle-panel .tp-sub { margin-bottom: 12px; }
-      .toggle-panel h2 { font-size: 1.1rem; margin-bottom: 6px; }
-      .toggle-panel p { margin-bottom: 14px; font-size: 0.78rem; }
-    }
-    @media (max-width: 380px) {
-      .form-box { padding: 20px 16px; }
-    }
-  </style>
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .auth-panel { padding-top: 40px; }
+  }
+</style>
 </head>
 <body>
+
 <div class="toast-container" id="toast-container"></div>
 
-<div class="container" id="main-container">
+<div class="app-shell">
 
-  <!-- ══ LOGIN FORM ══ -->
-  <div class="form-box login">
-    <div class="form-inner" style="width:100%">
-      <h1>Masuk 👋</h1>
-      <p class="subtitle">Pilih akun & masukkan PIN Anda</p>
+  <!-- ══════ BRAND PANEL (desktop split layout) ══════ -->
+  <aside class="brand-panel">
+    <div class="brand-blob b1"></div>
+    <div class="brand-blob b2"></div>
+    <div class="brand-inner">
+      <div class="brand-logo">Tokku<span>.</span></div>
+      <div class="brand-tag">Toko Bangunan ERP / POS</div>
+      <h1 class="brand-headline">Kelola toko bangunan Anda lebih cerdas &amp; cepat</h1>
+      <p class="brand-desc">Satu aplikasi untuk kasir, stok, keuangan, dan tim Anda — dirancang agar terasa seringan aplikasi mobile.</p>
+      <div class="brand-benefits">
+        <div class="brand-benefit"><span class="bi"><i class='bx bx-receipt'></i></span> Kasir POS super cepat</div>
+        <div class="brand-benefit"><span class="bi"><i class='bx bx-box'></i></span> Manajemen stok &amp; inventori</div>
+        <div class="brand-benefit"><span class="bi"><i class='bx bx-line-chart'></i></span> Laporan keuangan real-time</div>
+        <div class="brand-benefit"><span class="bi"><i class='bx bx-group'></i></span> Multi-user &amp; role management</div>
+      </div>
+    </div>
+  </aside>
 
-      <!-- Empty state (no accounts) -->
-      <div id="login-empty" style="display:none;">
-        <div class="empty-state">
-          <span class="icon">🚀</span>
-          <h3>Belum ada akun</h3>
-          <p>Daftarkan akun baru untuk mulai menggunakan Tokku.</p>
-          <button class="btn register-btn"><i class='bx bx-user-plus'></i> Daftar Sekarang</button>
-        </div>
+  <!-- ══════ AUTH PANEL ══════ -->
+  <main class="auth-panel">
+    <div class="auth-scroll">
+      <div class="mini-logo">
+        <span class="mini-logo-badge">T</span>
+        Tokku<span class="dot">.</span>
       </div>
 
-      <!-- Has accounts -->
-      <div id="login-main">
-        <!-- Account dropdown -->
-        <div class="account-dropdown-wrap" style="position:relative;">
-          <div class="selected-account-card" id="selected-account-card" onclick="toggleDropdown()">
-            <div class="account-avatar" id="sel-avatar">?</div>
-            <div class="acc-info">
-              <div class="acc-name" id="sel-name">Pilih akun...</div>
-              <div class="acc-role" id="sel-role"></div>
+      <div class="auth-card">
+
+        <!-- ══════════ LOGIN VIEW ══════════ -->
+        <section class="auth-view active" id="view-login">
+          <div class="view-head">
+            <h1>Masuk 👋</h1>
+            <p>Pilih akun Anda, lalu masukkan PIN untuk melanjutkan.</p>
+          </div>
+
+          <!-- Empty state: belum ada akun tersimpan -->
+          <div id="login-empty" hidden>
+            <div class="empty-state">
+              <span class="icon"><i class='bx bx-rocket'></i></span>
+              <h3>Belum ada akun</h3>
+              <p>Daftarkan akun baru di perangkat ini untuk mulai menggunakan Tokku.</p>
+              <button type="button" class="btn-primary" data-switch="register"><i class='bx bx-user-plus'></i> Daftar Sekarang</button>
             </div>
-            <i class='bx bx-chevron-down acc-chevron' id="acc-chevron"></i>
           </div>
-          <div class="account-dropdown-list" id="account-dropdown-list"></div>
-        </div>
 
-        <!-- PIN section -->
-        <div id="pin-section" style="display:none; margin-top:16px;">
-          <p class="pin-for-label">PIN untuk: <strong id="pin-target-name"></strong></p>
-          <div class="pin-grid" id="pin-grid">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-            <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+          <!-- Main state: ada akun tersimpan -->
+          <div id="login-main" hidden>
+            <div class="field-group">
+              <label class="field-label">Akun</label>
+              <div class="account-picker" id="account-picker">
+                <button type="button" class="account-picker-trigger" id="account-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="avatar" id="sel-avatar">?</span>
+                  <span class="account-meta">
+                    <span class="account-name" id="sel-name">Pilih akun</span>
+                    <span class="account-email" id="sel-email"></span>
+                  </span>
+                  <i class='bx bx-chevron-down chevron' id="acc-chevron"></i>
+                </button>
+                <div class="account-dropdown" id="account-dropdown" role="listbox"></div>
+              </div>
+            </div>
+
+            <div class="field-group" id="pin-section" hidden>
+              <label class="field-label">PIN — <span id="pin-target-name" style="text-transform:none;"></span></label>
+              <div class="pin-grid" id="pin-grid">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+                <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              </div>
+              <p class="field-hint">Masukkan 6 digit PIN kasir Anda</p>
+              <div class="spacer-16"></div>
+              <button type="button" class="btn-primary" id="btn-pin-login">
+                <i class='bx bx-log-in'></i> Masuk
+              </button>
+            </div>
+
+            <div class="no-pin-box" id="no-pin-notice" hidden>
+              <p>Akun ini belum memiliki PIN.</p>
+              <p class="sub">Atur PIN di menu Pengaturan setelah masuk.</p>
+              <button type="button" class="btn-primary" id="btn-direct-login">
+                <i class='bx bx-log-in'></i> Masuk Langsung
+              </button>
+            </div>
+
+            <div class="spacer-16"></div>
+            <button type="button" class="btn-ghost" id="btn-add-account"><i class='bx bx-user-plus'></i> Tambah akun baru</button>
           </div>
-          <p class="pin-hint">Ketik 6 digit PIN</p>
-          <button class="btn" id="btn-pin-login" onclick="handlePinLogin()">
-            <i class='bx bx-log-in'></i> Masuk dengan PIN
+        </section>
+
+        <!-- ══════════ REGISTER VIEW ══════════ -->
+        <section class="auth-view" id="view-register">
+          <div class="view-head">
+            <h1>Daftar 🚀</h1>
+            <p>Buat akun untuk mulai kelola toko Anda dengan Tokku.</p>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Nama Lengkap</label>
+            <div class="input-box">
+              <input type="text" id="reg-name" placeholder="cth. Mahdi Noval Masri" autocomplete="name">
+              <i class='bx bxs-user field-icon'></i>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Email</label>
+            <div class="input-box">
+              <input type="email" id="reg-email" placeholder="nama@email.com" autocomplete="email">
+              <i class='bx bxs-envelope field-icon'></i>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Password</label>
+            <div class="input-box">
+              <input type="password" id="reg-password" placeholder="Minimal 8 karakter" oninput="checkStrength(this.value); syncPasswordMatch();" autocomplete="new-password">
+              <i class='bx bxs-hide field-icon clickable' id="reg-pwd-toggle"></i>
+            </div>
+            <div class="strength-bar" id="strength-bar"><div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div></div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Konfirmasi Password</label>
+            <div class="input-box">
+              <input type="password" id="reg-password2" placeholder="Ulangi password" oninput="syncPasswordMatch()" autocomplete="new-password">
+              <i class='bx bxs-hide field-icon clickable' id="reg-pwd2-toggle"></i>
+            </div>
+            <p class="field-msg" id="pwd-match-msg"></p>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">PIN Kasir (6 digit) <span class="req">*</span></label>
+            <div class="pin-grid" id="reg-pin-grid">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            </div>
+            <p class="field-hint">PIN ini dipakai untuk login cepat berikutnya</p>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Konfirmasi PIN</label>
+            <div class="pin-grid" id="reg-pin-confirm-grid">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+              <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
+            </div>
+            <p class="field-msg" id="pin-match-msg"></p>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Peran</label>
+            <div class="input-box select-box">
+              <select id="reg-role">
+                <option value="kasir">🧾 Kasir</option>
+                <option value="manager">📊 Manajer</option>
+                <option value="owner">👑 Pemilik</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary" id="btn-register">
+            <i class='bx bx-user-plus'></i> Buat Akun
           </button>
-        </div>
+          <p class="switch-text">Sudah punya akun? <a data-switch="login">Masuk</a></p>
+        </section>
 
-        <!-- No-PIN notice -->
-        <div class="no-pin-box" id="no-pin-notice" style="display:none; margin-top:16px;">
-          <p>Akun ini belum memiliki PIN.</p>
-          <p class="sub">Daftarkan PIN di Pengaturan setelah masuk.</p>
-          <button class="btn" onclick="handleDirectSessionLogin()" style="margin-top:10px;">
-            <i class='bx bx-log-in'></i> Masuk Langsung
-          </button>
-        </div>
-
-        <div style="margin-top:10px;">
-          <button class="btn-ghost register-btn"><i class='bx bx-user-plus'></i> Tambah akun baru</button>
-        </div>
       </div>
     </div>
+  </main>
+</div>
+
+<!-- ══════ BOTTOM NAVIGATION ══════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bottom-nav-inner" id="bottom-nav-inner">
+    <span class="nav-indicator" id="nav-indicator"></span>
+    <button type="button" class="nav-item" data-nav="dashboard">
+      <span class="nav-dot"></span>
+      <i class='bx bx-home-alt-2'></i>
+      <span>Dashboard</span>
+    </button>
+    <button type="button" class="nav-item active" data-nav="login">
+      <span class="nav-dot"></span>
+      <i class='bx bx-log-in'></i>
+      <span>Masuk</span>
+    </button>
+    <button type="button" class="nav-item" data-nav="register">
+      <span class="nav-dot"></span>
+      <i class='bx bx-user-plus'></i>
+      <span>Daftar</span>
+    </button>
+    <button type="button" class="nav-item" data-nav="profile">
+      <span class="nav-dot"></span>
+      <i class='bx bxs-user-circle'></i>
+      <span>Profil</span>
+    </button>
   </div>
-
-  <!-- ══ REGISTER FORM ══ -->
-  <div class="form-box register">
-    <div class="form-inner" style="width:100%; overflow-y:auto; max-height:100%;">
-      <h1>Daftar 🚀</h1>
-      <p class="subtitle">Buat akun untuk mulai kelola toko</p>
-
-      <div class="input-box">
-        <input type="text" id="reg-name" placeholder="Nama lengkap" autocomplete="name">
-        <i class='bx bxs-user'></i>
-      </div>
-      <div class="input-box">
-        <input type="email" id="reg-email" placeholder="nama@email.com" autocomplete="email">
-        <i class='bx bxs-envelope'></i>
-      </div>
-      <div class="input-box">
-        <input type="password" id="reg-password" placeholder="Password (min. 8 karakter)" oninput="checkStrength(this.value)" autocomplete="new-password">
-        <i class='bx bxs-hide clickable' id="reg-pwd-toggle" onclick="togglePwd('reg-password','reg-pwd-toggle')"></i>
-      </div>
-      <div class="strength-bar" id="strength-bar"><div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div></div>
-
-      <div style="margin: 14px 0 6px;">
-        <span class="pin-label">PIN Kasir (6 digit) <span style="color:var(--blue);">*</span></span>
-        <div class="pin-grid" id="reg-pin-grid">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-          <input class="pin-dot" maxlength="1" inputmode="numeric" type="password">
-        </div>
-        <p class="pin-hint" style="margin-top:-8px; margin-bottom:12px;">PIN untuk login cepat</p>
-      </div>
-
-      <!-- Role -->
-      <div class="input-box select-box" style="margin-bottom:16px;">
-        <select id="reg-role">
-          <option value="kasir">🧾 Kasir</option>
-          <option value="manager">📊 Manajer</option>
-          <option value="owner">👑 Pemilik</option>
-        </select>
-      </div>
-
-      <button class="btn" id="btn-register" onclick="handleRegister()">
-        <i class='bx bx-user-plus'></i> Buat Akun
-      </button>
-      <p class="switch-text">Sudah punya akun? <a onclick="showLogin()">Kembali</a></p>
-    </div>
-  </div>
-
-  <!-- ══ TOGGLE OVERLAY ══ -->
-  <div class="toggle-box">
-    <!-- Left panel: shown when login is active -->
-    <div class="toggle-panel toggle-left">
-      <div class="tp-logo">Tokku<span>.</span></div>
-      <div class="tp-sub">Toko Bangunan ERP/POS</div>
-      <div class="tp-features">
-        <div class="tp-feat"><div class="tp-feat-dot"></div><span>Kasir POS super cepat</span></div>
-        <div class="tp-feat"><div class="tp-feat-dot"></div><span>Manajemen stok & inventori</span></div>
-        <div class="tp-feat"><div class="tp-feat-dot"></div><span>Laporan keuangan real-time</span></div>
-        <div class="tp-feat"><div class="tp-feat-dot"></div><span>Multi-user & role management</span></div>
-      </div>
-      <h2>Belum punya akun?</h2>
-      <p>Daftar sekarang dan mulai kelola toko Anda dengan lebih cerdas.</p>
-      <button class="btn-outline-tp register-btn">Daftar Sekarang</button>
-    </div>
-
-    <!-- Right panel: shown when register is active -->
-    <div class="toggle-panel toggle-right">
-      <div class="tp-logo">Tokku<span>.</span></div>
-      <div class="tp-sub">Toko Bangunan ERP/POS</div>
-      <h2>Sudah punya akun?</h2>
-      <p>Masuk dan lanjutkan aktivitas Anda di Tokku.</p>
-      <button class="btn-outline-tp login-btn">Masuk Sekarang</button>
-    </div>
-  </div>
-
-</div><!-- /container -->
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="js/supabase.js?v=15"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/supabase.js?v=16"></script>
+<script src="js/app.js?v=18"></script>
 <script>
-  const container = document.getElementById('main-container');
+(function () {
+  'use strict';
 
-  // ── Toggle login ↔ register ──
-  function showRegister() { container.classList.add('active'); }
-  function showLogin()    { container.classList.remove('active'); }
+  /* ══════════════ VIEW SWITCHING ══════════════ */
+  const viewLogin    = document.getElementById('view-login');
+  const viewRegister = document.getElementById('view-register');
+  let currentView = 'login';
 
-  document.querySelectorAll('.register-btn').forEach(b => b.addEventListener('click', showRegister));
-  document.querySelectorAll('.login-btn').forEach(b => b.addEventListener('click', showLogin));
+  function switchView(name) {
+    currentView = name;
+    viewLogin.classList.toggle('active', name === 'login');
+    viewLogin.hidden = name !== 'login';
+    viewRegister.classList.toggle('active', name === 'register');
+    viewRegister.hidden = name !== 'register';
+    setActiveNav(name === 'register' ? 'register' : 'login');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (name === 'login') showAccountSelector();
+  }
 
-  // ── Toast ──
-  function showToast(msg, type = 'info') {
+  document.querySelectorAll('[data-switch]').forEach(el => {
+    el.addEventListener('click', () => switchView(el.dataset.switch));
+  });
+
+  /* ══════════════ TOAST ══════════════ */
+  function showToast(msg, type) {
+    type = type || 'info';
     const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    const icons = { success:'✓', error:'✕', info:'ℹ' };
-    t.innerHTML = `<span>${icons[type]||'ℹ'}</span> ${msg}`;
+    t.className = 'toast ' + type;
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const iconEl = document.createElement('span');
+    iconEl.textContent = icons[type] || 'ℹ';
+    const msgEl = document.createElement('span');
+    msgEl.textContent = msg;
+    t.appendChild(iconEl); t.appendChild(msgEl);
     document.getElementById('toast-container').appendChild(t);
     setTimeout(() => t.remove(), 3500);
   }
 
-  // ── PIN Grid ──
+  /* ══════════════ PIN GRID ══════════════ */
   function initPinGrid(gridId, onComplete) {
-    const inputs = document.querySelectorAll(`#${gridId} .pin-dot`);
+    const inputs = [...document.querySelectorAll('#' + gridId + ' .pin-dot')];
     inputs.forEach((inp, idx) => {
       inp.autocomplete = 'off';
       inp.addEventListener('input', e => {
         const raw = e.target.value.replace(/\D/g, '');
         e.target.value = raw ? raw.slice(-1) : '';
-        if (e.target.value && idx < inputs.length - 1) inputs[idx+1].focus();
+        e.target.classList.toggle('filled', !!e.target.value);
+        if (e.target.value && idx < inputs.length - 1) inputs[idx + 1].focus();
         if (onComplete) {
-          const full = [...inputs].every(i => i.value.length === 1);
-          if (full) setTimeout(onComplete, 180);
+          const full = inputs.every(i => i.value.length === 1);
+          if (full) setTimeout(onComplete, 150);
         }
       });
       inp.addEventListener('keydown', e => {
         if (e.key === 'Backspace') {
-          if (inp.value) inp.value = '';
-          else if (idx > 0) { inputs[idx-1].value = ''; inputs[idx-1].focus(); }
+          if (inp.value) { inp.value = ''; inp.classList.remove('filled'); }
+          else if (idx > 0) { inputs[idx - 1].value = ''; inputs[idx - 1].classList.remove('filled'); inputs[idx - 1].focus(); }
           e.preventDefault();
         }
-        if (!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+        if (!/^\d$/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
       });
       inp.addEventListener('paste', e => {
-        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
         e.preventDefault();
-        inputs.forEach((d, i) => { d.value = text[i] || ''; });
+        inputs.forEach((d, i) => { d.value = text[i] || ''; d.classList.toggle('filled', !!d.value); });
         const last = Math.min(text.length, inputs.length) - 1;
         if (last >= 0) inputs[last].focus();
+        if (onComplete) {
+          const full = inputs.every(i => i.value.length === 1);
+          if (full) setTimeout(onComplete, 150);
+        }
       });
     });
   }
-  function getPinValue(gridId) { return [...document.querySelectorAll(`#${gridId} .pin-dot`)].map(i => i.value).join(''); }
-  function clearPin(gridId) { document.querySelectorAll(`#${gridId} .pin-dot`).forEach(i => i.value = ''); document.querySelector(`#${gridId} .pin-dot`)?.focus(); }
+  function getPinValue(gridId) { return [...document.querySelectorAll('#' + gridId + ' .pin-dot')].map(i => i.value).join(''); }
+  function clearPin(gridId) {
+    const inputs = document.querySelectorAll('#' + gridId + ' .pin-dot');
+    inputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+    inputs[0] && inputs[0].focus();
+  }
+  function shakePin(gridId) {
+    const el = document.getElementById(gridId);
+    el.classList.add('pin-shake');
+    setTimeout(() => el.classList.remove('pin-shake'), 400);
+  }
 
   initPinGrid('pin-grid', handlePinLogin);
   initPinGrid('reg-pin-grid', null);
+  initPinGrid('reg-pin-confirm-grid', () => syncPinMatch(true));
 
-  // ── Password toggle ──
-  function togglePwd(inputId, iconId) {
+  /* ══════════════ Password toggle & strength ══════════════ */
+  function togglePwd(inputId, iconEl) {
     const inp = document.getElementById(inputId);
-    const ico = document.getElementById(iconId);
-    if (inp.type === 'password') { inp.type = 'text'; ico.classList.replace('bxs-hide','bxs-show'); }
-    else { inp.type = 'password'; ico.classList.replace('bxs-show','bxs-hide'); }
+    if (inp.type === 'password') { inp.type = 'text'; iconEl.classList.replace('bxs-hide', 'bxs-show'); }
+    else { inp.type = 'password'; iconEl.classList.replace('bxs-show', 'bxs-hide'); }
   }
+  document.getElementById('reg-pwd-toggle').addEventListener('click', function () { togglePwd('reg-password', this); });
+  document.getElementById('reg-pwd2-toggle').addEventListener('click', function () { togglePwd('reg-password2', this); });
 
-  // ── Strength ──
   function checkStrength(val) {
     let score = 0;
     if (val.length >= 8) score++;
     if (/[A-Z]/.test(val)) score++;
     if (/[0-9]/.test(val)) score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
-    const colors = ['var(--border)','#ef4444','#f59e0b','#10b981','var(--blue)'];
-    for (let i = 1; i <= 4; i++) document.getElementById('s'+i).style.background = i <= score ? colors[score] : 'var(--border)';
+    const colors = ['var(--border)', '#ef4444', '#f59e0b', '#10b981', 'var(--blue)'];
+    for (let i = 1; i <= 4; i++) document.getElementById('s' + i).style.background = i <= score ? colors[score] : 'var(--border)';
   }
+  window.checkStrength = checkStrength;
 
-  // ── Saved Accounts ──
-  function getSavedAccounts() { try { return JSON.parse(localStorage.getItem('tokku_saved_accounts') || '[]'); } catch { return []; } }
-  function saveAccount(name, email, pinHash, encPwd) {
+  function syncPasswordMatch() {
+    const p1 = document.getElementById('reg-password').value;
+    const p2 = document.getElementById('reg-password2').value;
+    const msg = document.getElementById('pwd-match-msg');
+    if (!p2) { msg.textContent = ''; msg.className = 'field-msg'; return; }
+    if (p1 === p2) { msg.textContent = 'Password cocok'; msg.className = 'field-msg ok'; }
+    else { msg.textContent = 'Password tidak sama'; msg.className = 'field-msg err'; }
+  }
+  window.syncPasswordMatch = syncPasswordMatch;
+
+  function syncPinMatch(showEvenIfShort) {
+    const p1 = getPinValue('reg-pin-grid');
+    const p2 = getPinValue('reg-pin-confirm-grid');
+    const msg = document.getElementById('pin-match-msg');
+    if (!p2 || (!showEvenIfShort && p2.length < 6)) { msg.textContent = ''; msg.className = 'field-msg'; return; }
+    if (p1 === p2 && p2.length === 6) { msg.textContent = 'PIN cocok'; msg.className = 'field-msg ok'; }
+    else { msg.textContent = 'PIN tidak sama'; msg.className = 'field-msg err'; }
+  }
+  document.querySelectorAll('#reg-pin-confirm-grid .pin-dot').forEach(inp => inp.addEventListener('input', () => syncPinMatch(false)));
+
+  /* ══════════════ Saved accounts (local, per device) ══════════════ */
+  function getSavedAccounts() { try { return JSON.parse(localStorage.getItem('tokku_saved_accounts') || '[]'); } catch (e) { return []; } }
+  function saveAccount(name, email, pinHash, encPwd, role) {
     const accounts = getSavedAccounts().filter(a => a.email !== email);
-    accounts.unshift({ name, email, pinHash, encPwd: encPwd || null, addedAt: Date.now() });
-    localStorage.setItem('tokku_saved_accounts', JSON.stringify(accounts.slice(0, 5)));
+    accounts.unshift({ name: name, email: email, pinHash: pinHash, encPwd: encPwd || null, role: role || 'kasir', addedAt: Date.now() });
+    localStorage.setItem('tokku_saved_accounts', JSON.stringify(accounts.slice(0, 6)));
   }
   function encodePassword(password, email) {
     const key = email + 'tokku_pwd_2025';
@@ -775,7 +832,7 @@
       let result = '';
       for (let i = 0; i < raw.length; i++) result += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
       return result;
-    } catch { return null; }
+    } catch (e) { return null; }
   }
   function hashPin(pin, email) {
     let h = 0;
@@ -783,100 +840,126 @@
     for (let i = 0; i < str.length; i++) { h = (Math.imul(31, h) + str.charCodeAt(i)) | 0; }
     return h.toString(36);
   }
+  function roleLabel(role) { return ({ owner: '👑 Pemilik', manager: '📊 Manajer', kasir: '🧾 Kasir' })[role] || role || ''; }
 
-  // ── Dropdown ──
+  /* ══════════════ Account picker ══════════════ */
+  const pickerEl   = document.getElementById('account-picker');
+  const triggerEl  = document.getElementById('account-trigger');
+  const dropdownEl = document.getElementById('account-dropdown');
   let selectedAccountEmail = null;
-  let dropdownOpen = false;
 
-  function toggleDropdown() {
-    dropdownOpen = !dropdownOpen;
-    const list = document.getElementById('account-dropdown-list');
-    const chev = document.getElementById('acc-chevron');
-    list.classList.toggle('open', dropdownOpen);
-    chev.classList.toggle('open', dropdownOpen);
+  function toggleDropdown(force) {
+    if (pickerEl.classList.contains('single')) return;
+    const open = typeof force === 'boolean' ? force : !pickerEl.classList.contains('open');
+    pickerEl.classList.toggle('open', open);
+    triggerEl.setAttribute('aria-expanded', String(open));
   }
-
+  triggerEl.addEventListener('click', () => toggleDropdown());
   document.addEventListener('click', e => {
-    if (!e.target.closest('.account-dropdown-wrap')) {
-      dropdownOpen = false;
-      document.getElementById('account-dropdown-list').classList.remove('open');
-      document.getElementById('acc-chevron').classList.remove('open');
-    }
+    if (!e.target.closest('.account-picker')) toggleDropdown(false);
   });
-
-  function roleLabel(role) {
-    return { owner:'👑 Pemilik', manager:'📊 Manajer', kasir:'🧾 Kasir' }[role] || role;
-  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') toggleDropdown(false); });
 
   function buildDropdown() {
     const accounts = getSavedAccounts();
-    const list = document.getElementById('account-dropdown-list');
+    dropdownEl.innerHTML = '';
     if (accounts.length === 0) {
-      list.innerHTML = '<div class="dropdown-no-account">Belum ada akun tersimpan</div>';
+      const empty = document.createElement('div');
+      empty.className = 'dropdown-empty';
+      empty.textContent = 'Belum ada akun tersimpan';
+      dropdownEl.appendChild(empty);
       return;
     }
-    list.innerHTML = accounts.map(a => `
-      <div class="dropdown-account-item ${a.email === selectedAccountEmail ? 'active' : ''}" onclick="selectAccount('${a.email}','${a.name}',event)">
-        <div class="account-avatar" style="width:30px;height:30px;font-size:0.85rem;border-radius:7px;">${a.name.charAt(0).toUpperCase()}</div>
-        <div class="acc-info">
-          <div class="acc-name">${a.name}</div>
-          <div class="acc-role">${a.email}</div>
-        </div>
-      </div>
-    `).join('');
+    accounts.forEach(a => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-account-item' + (a.email === selectedAccountEmail ? ' active' : '');
+      item.setAttribute('role', 'option');
+
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      av.textContent = a.name.charAt(0).toUpperCase();
+
+      const meta = document.createElement('div');
+      meta.className = 'account-meta';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'account-name';
+      nameEl.textContent = a.name;
+      const emailEl = document.createElement('div');
+      emailEl.className = 'account-email';
+      emailEl.textContent = a.email;
+      meta.appendChild(nameEl); meta.appendChild(emailEl);
+
+      const chip = document.createElement('span');
+      chip.className = 'role-chip';
+      chip.textContent = roleLabel(a.role).replace(/^[^ ]+ /, '');
+
+      item.appendChild(av); item.appendChild(meta); item.appendChild(chip);
+      item.addEventListener('click', e => { e.stopPropagation(); selectAccount(a.email, a.name); });
+      dropdownEl.appendChild(item);
+    });
+
+    const footer = document.createElement('div');
+    footer.className = 'dropdown-footer';
+    footer.innerHTML = "<i class='bx bx-user-plus'></i> Tambah akun baru";
+    footer.addEventListener('click', e => { e.stopPropagation(); toggleDropdown(false); switchView('register'); });
+    dropdownEl.appendChild(footer);
   }
 
-  function selectAccount(email, name, e) {
-    e && e.stopPropagation();
+  function selectAccount(email, name) {
     selectedAccountEmail = email;
-    // Update card
+    const acc = getSavedAccounts().find(a => a.email === email);
+
     document.getElementById('sel-avatar').textContent = name.charAt(0).toUpperCase();
     document.getElementById('sel-name').textContent = name;
-    const acc = getSavedAccounts().find(a => a.email === email);
-    document.getElementById('sel-role').textContent = acc ? roleLabel(acc.role) : '';
-    // Close dropdown
-    dropdownOpen = false;
-    document.getElementById('account-dropdown-list').classList.remove('open');
-    document.getElementById('acc-chevron').classList.remove('open');
+    document.getElementById('sel-email').textContent = acc ? acc.email : '';
+
+    toggleDropdown(false);
     buildDropdown();
-    // Show PIN / no-PIN
+
     document.getElementById('pin-target-name').textContent = name;
-    const hasPin = acc?.pinHash && acc.pinHash !== '';
-    document.getElementById('pin-section').style.display = hasPin ? 'block' : 'none';
-    document.getElementById('no-pin-notice').style.display = hasPin ? 'none' : 'block';
-    if (hasPin) { clearPin('pin-grid'); setTimeout(() => document.querySelector('#pin-grid .pin-dot').focus(), 100); }
+    const hasPin = acc && acc.pinHash;
+    document.getElementById('pin-section').hidden = !hasPin;
+    document.getElementById('no-pin-notice').hidden = !!hasPin;
+    if (hasPin) {
+      clearPin('pin-grid');
+      setTimeout(() => { const el = document.querySelector('#pin-grid .pin-dot'); el && el.focus(); }, 150);
+    }
   }
 
   function showAccountSelector() {
     const accounts = getSavedAccounts();
+    const emptyEl = document.getElementById('login-empty');
+    const mainEl  = document.getElementById('login-main');
     if (accounts.length === 0) {
-      document.getElementById('login-empty').style.display = 'block';
-      document.getElementById('login-main').style.display = 'none';
-    } else {
-      document.getElementById('login-empty').style.display = 'none';
-      document.getElementById('login-main').style.display = 'block';
-      buildDropdown();
-      // Auto-select first account
-      const first = accounts[0];
-      selectAccount(first.email, first.name, null);
+      emptyEl.hidden = false; mainEl.hidden = true;
+      return;
     }
+    emptyEl.hidden = true; mainEl.hidden = false;
+    pickerEl.classList.toggle('single', accounts.length === 1);
+    buildDropdown();
+    const keep = accounts.find(a => a.email === selectedAccountEmail) || accounts[0];
+    selectAccount(keep.email, keep.name);
   }
 
-  // ── Login handlers ──
+  /* ══════════════ Login handlers ══════════════ */
   async function handleDirectSessionLogin() {
     if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
+    const btn = document.getElementById('btn-direct-login');
+    btn.disabled = true; btn.innerHTML = "<div class='spin'></div> Memproses...";
     try {
       const isAuth = await KasirkuDB.Auth.isAuthenticated();
       const user = getCurrentUser();
-      if (isAuth && user?.email === selectedAccountEmail) { showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
+      if (isAuth && user && user.email === selectedAccountEmail) { return goDashboard(); }
       const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
-      if (acc?.encPwd) {
+      if (acc && acc.encPwd) {
         const pwd = decodePassword(acc.encPwd, selectedAccountEmail);
-        if (pwd) { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
+        if (pwd) { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); return goDashboard(); }
       }
       showToast('Sesi habis. Silakan daftar ulang.', 'error');
-    } catch(e) { showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error'); }
+    } catch (e) { showToast('Gagal masuk: ' + (e.message || 'Coba lagi.'), 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = "<i class='bx bx-log-in'></i> Masuk Langsung"; }
   }
+  document.getElementById('btn-direct-login').addEventListener('click', handleDirectSessionLogin);
 
   async function handlePinLogin() {
     if (!selectedAccountEmail) { showToast('Pilih akun terlebih dahulu.', 'error'); return; }
@@ -884,56 +967,136 @@
     if (pin.length !== 6) return;
     const acc = getSavedAccounts().find(a => a.email === selectedAccountEmail);
     if (!acc) { showToast('Akun tidak ditemukan.', 'error'); return; }
-    if (hashPin(pin, selectedAccountEmail) !== acc.pinHash) { showToast('PIN salah. Coba lagi.', 'error'); clearPin('pin-grid'); return; }
+    if (hashPin(pin, selectedAccountEmail) !== acc.pinHash) {
+      showToast('PIN salah. Coba lagi.', 'error');
+      shakePin('pin-grid');
+      clearPin('pin-grid');
+      return;
+    }
     const btn = document.getElementById('btn-pin-login');
-    btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Memverifikasi...';
+    btn.disabled = true; btn.innerHTML = "<div class='spin'></div> Memverifikasi...";
     try {
       const isAuth = await KasirkuDB.Auth.isAuthenticated();
       const user = getCurrentUser();
-      if (isAuth && user?.email === selectedAccountEmail) { showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
+      if (isAuth && user && user.email === selectedAccountEmail) { return goDashboard(); }
       if (acc.encPwd) {
         const pwd = decodePassword(acc.encPwd, selectedAccountEmail);
-        if (pwd) { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); showToast('Berhasil masuk!', 'success'); setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 600); return; }
+        if (pwd) { await KasirkuDB.Auth.login(selectedAccountEmail, pwd); return goDashboard(); }
       }
       showToast('Sesi habis. Hubungi admin.', 'error');
-    } catch(e) { showToast('Gagal: ' + (e.message || 'Coba lagi.'), 'error'); }
-    finally { btn.disabled = false; btn.innerHTML = "<i class='bx bx-log-in'></i> Masuk dengan PIN"; }
+    } catch (e) { showToast('Gagal: ' + (e.message || 'Coba lagi.'), 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = "<i class='bx bx-log-in'></i> Masuk"; }
+  }
+  document.getElementById('btn-pin-login').addEventListener('click', handlePinLogin);
+
+  function goDashboard() {
+    showToast('Berhasil masuk!', 'success');
+    setTimeout(() => { window.location.href = 'pages/dashboard.html'; }, 500);
   }
 
-  // ── Register handler ──
+  document.getElementById('btn-add-account').addEventListener('click', () => switchView('register'));
+
+  /* ══════════════ Register handler ══════════════ */
   async function handleRegister() {
     const name     = document.getElementById('reg-name').value.trim();
     const email    = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
+    const password2= document.getElementById('reg-password2').value;
     const pin      = getPinValue('reg-pin-grid');
+    const pin2     = getPinValue('reg-pin-confirm-grid');
     const role     = document.getElementById('reg-role').value;
+
     if (!name || !email || !password) { showToast('Semua field wajib diisi.', 'error'); return; }
     if (password.length < 8) { showToast('Password minimal 8 karakter.', 'error'); return; }
+    if (password !== password2) { showToast('Konfirmasi password tidak sama.', 'error'); return; }
     if (pin.length !== 6) { showToast('PIN harus 6 digit.', 'error'); return; }
+    if (pin !== pin2) { showToast('Konfirmasi PIN tidak sama.', 'error'); shakePin('reg-pin-confirm-grid'); return; }
+
     const btn = document.getElementById('btn-register');
-    btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Mendaftarkan...';
+    btn.disabled = true; btn.innerHTML = "<div class='spin'></div> Mendaftarkan...";
     try {
       await KasirkuDB.Auth.register(email, password, name, role);
-      saveAccount(name, email, hashPin(pin, email), encodePassword(password, email));
+      saveAccount(name, email, hashPin(pin, email), encodePassword(password, email), role);
       showToast('Registrasi berhasil! Cek email untuk verifikasi.', 'success');
-      setTimeout(() => { showLogin(); showAccountSelector(); }, 2000);
-    } catch(error) { console.error('Register error:', error); showToast(error.message || 'Registrasi gagal.', 'error'); }
-    finally { btn.disabled = false; btn.innerHTML = "<i class='bx bx-user-plus'></i> Buat Akun"; }
+      selectedAccountEmail = email;
+      setTimeout(() => {
+        resetRegisterForm();
+        switchView('login');
+      }, 1400);
+    } catch (error) {
+      console.error('Register error:', error);
+      showToast(error.message || 'Registrasi gagal.', 'error');
+    } finally {
+      btn.disabled = false; btn.innerHTML = "<i class='bx bx-user-plus'></i> Buat Akun";
+    }
+  }
+  document.getElementById('btn-register').addEventListener('click', handleRegister);
+
+  function resetRegisterForm() {
+    ['reg-name', 'reg-email', 'reg-password', 'reg-password2'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('reg-role').value = 'kasir';
+    clearPin('reg-pin-grid'); clearPin('reg-pin-confirm-grid');
+    document.getElementById('pwd-match-msg').textContent = '';
+    document.getElementById('pin-match-msg').textContent = '';
+    checkStrength('');
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      if (!container.classList.contains('active')) handlePinLogin();
-      else handleRegister();
-    }
+    if (e.key !== 'Enter') return;
+    const active = document.activeElement;
+    if (active && active.tagName === 'SELECT') return;
+    if (currentView === 'login') { if (getPinValue('pin-grid').length === 6) handlePinLogin(); }
+    else { handleRegister(); }
   });
 
-  // ── Init ──
+  /* ══════════════ Bottom navigation ══════════════ */
+  const navInner = document.getElementById('bottom-nav-inner');
+  const navIndicator = document.getElementById('nav-indicator');
+  const navItems = [...document.querySelectorAll('.nav-item')];
+
+  function moveIndicator(btn) {
+    if (!btn) return;
+    const idx = navItems.indexOf(btn);
+    navIndicator.style.transform = 'translateX(' + (idx * 100) + '%)';
+  }
+  function setActiveNav(key) {
+    navItems.forEach(b => b.classList.toggle('active', b.dataset.nav === key));
+    moveIndicator(navItems.find(b => b.dataset.nav === key));
+  }
+
+  navItems.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.dataset.nav;
+      if (key === 'login' || key === 'register') { switchView(key); return; }
+      // dashboard / profile require an authenticated session
+      try {
+        const isAuth = await KasirkuDB.Auth.isAuthenticated();
+        if (isAuth) {
+          window.location.href = key === 'dashboard' ? 'pages/dashboard.html' : 'pages/pengaturan.html';
+        } else {
+          showToast('Silakan masuk terlebih dahulu.', 'info');
+          switchView('login');
+        }
+      } catch (e) {
+        showToast('Silakan masuk terlebih dahulu.', 'info');
+        switchView('login');
+      }
+    });
+  });
+  window.addEventListener('resize', () => setActiveNav(currentView === 'register' ? 'register' : 'login'));
+
+  /* ══════════════ Init ══════════════ */
   (async () => {
-    if (window.location.hash?.includes('access_token')) await new Promise(r => setTimeout(r, 800));
-    try { const isAuth = await KasirkuDB.Auth.isAuthenticated(); if (isAuth) { window.location.href = 'pages/dashboard.html'; return; } } catch(e) {}
+    setActiveNav('login');
+    if (window.location.hash && window.location.hash.indexOf('access_token') !== -1) await new Promise(r => setTimeout(r, 800));
+    try {
+      const isAuth = await KasirkuDB.Auth.isAuthenticated();
+      if (isAuth) { window.location.href = 'pages/dashboard.html'; return; }
+    } catch (e) {}
     showAccountSelector();
   })();
+
+})();
 </script>
 </body>
 </html>
